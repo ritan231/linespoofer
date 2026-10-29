@@ -54,6 +54,11 @@ All notable changes to this project will be documented in this file.
   - Added keep rule for `my.shanunid.linespoofer.data.**` in `app/proguard-rules.pro`.
   - Removed obsolete dead code `BuildSerialHooks.java` (superseded by `BuildHooks.java`).
   - Updated project reference URL in `RealInfoActivity.kt`.
+- **Post-Audit Hardening M1–M10 (Fixes)**:
+  - Secured risk-gated toggle defaults (`isGpuSpoofEnabled` and `isLocationSpoofEnabled` default to `false` in `ConfigManager.java` to prevent unintended 3D shader crashes or anti-teleport fraud flags).
+  - Fixed UI profile persistence in `SpoofAppState.kt` by registering all new toggle keys into `toggleFields` and `allFields`, ensuring UI switches save and reload accurately.
+  - Added modern Android 13-16 export-flagged `registerReceiver` overloads in `BatteryHooks.java`.
+  - Hardened socket lifecycle in `WebUiServer.java` with `setReuseAddress(true)` and a managed 2-worker `ExecutorService`.
 
 ### Planned
 - **M1 (Foundation)**: Refactor package name and unified authorities, establish offline preset catalog and build configuration.
