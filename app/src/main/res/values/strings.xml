@@ -222,6 +222,11 @@
     <string name="settings_field_telephony">Spoof SIM and Telephony</string>
     <string name="settings_field_sensors">Simulate Natural Sensor Jitter</string>
     <string name="settings_field_webgl">Spoof WebView &amp; WebGL Fingerprint</string>
+    <string name="settings_section_system_hardware">System Telemetry &amp; Hardware</string>
+    <string name="settings_field_battery">Spoof Battery Telemetry</string>
+    <string name="settings_field_uptime">Spoof Boot Time &amp; Uptime</string>
+    <string name="settings_field_storage">Spoof Total &amp; Free Storage</string>
+    <string name="settings_field_audio">Spoof Audio HAL Fingerprint</string>
 
     <string name="diagnostics_logs_title">Diagnostics Log</string>
     <string name="log_export_button">Export Log</string>

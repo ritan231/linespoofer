@@ -130,7 +130,9 @@ public class ConfigProvider extends ContentProvider {
 
     @Nullable
     private String readConfigContent(String packageName) {
-        return AppProfileStore.resolveConfig(getContext(), packageName);
+        int callingUid = android.os.Binder.getCallingUid();
+        int userId = callingUid / 100000;
+        return AppProfileStore.resolveConfig(getContext(), packageName, userId);
     }
 
     private String resolvePackageName(Uri uri, String requestedPackage) {

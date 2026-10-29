@@ -220,6 +220,11 @@
     <string name="settings_field_telephony">伪装 SIM 卡与电话网络</string>
     <string name="settings_field_sensors">模拟自然传感器抖动</string>
     <string name="settings_field_webgl">伪装 WebView 与 WebGL 指纹</string>
+    <string name="settings_section_system_hardware">系统遥测与硬件</string>
+    <string name="settings_field_battery">伪装电池遥测数据</string>
+    <string name="settings_field_uptime">伪装开机时间与运行时间</string>
+    <string name="settings_field_storage">伪装总容量与可用空间</string>
+    <string name="settings_field_audio">伪装音频 HAL 指纹</string>
 
     <string name="diagnostics_logs_title">诊断日志</string>
     <string name="log_export_button">导出日志</string>

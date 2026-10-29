@@ -126,12 +126,22 @@ public final class AppProfileStore {
     }
 
     public static String resolveConfig(Context context, String packageName) {
+        return resolveConfig(context, packageName, 0);
+    }
+
+    public static String resolveConfig(Context context, String packageName, int userId) {
         if (context == null || packageName == null || packageName.trim().isEmpty()) {
             return null;
         }
         try {
             State state = parse(readFile(new File(context.getFilesDir(), FILE_NAME)));
-            String profileId = state.getAssignments().get(packageName);
+            String profileId = null;
+            if (userId > 0) {
+                profileId = state.getAssignments().get(packageName + "#" + userId);
+            }
+            if (profileId == null) {
+                profileId = state.getAssignments().get(packageName);
+            }
             if (profileId == null) {
                 return null;
             }

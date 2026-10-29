@@ -128,6 +128,13 @@ private val networkFields = listOf(
     EditorField(ConfigManager.FIELD_WEBGL, R.string.settings_field_webgl, isToggle = true),
 )
 
+private val systemFields = listOf(
+    EditorField(ConfigManager.FIELD_BATTERY, R.string.settings_field_battery, isToggle = true),
+    EditorField(ConfigManager.FIELD_UPTIME, R.string.settings_field_uptime, isToggle = true),
+    EditorField(ConfigManager.FIELD_STORAGE, R.string.settings_field_storage, isToggle = true),
+    EditorField(ConfigManager.FIELD_AUDIO, R.string.settings_field_audio, isToggle = true),
+)
+
 private val advancedFields = listOf(
     EditorField(ConfigManager.FIELD_ANDROID_ID, R.string.settings_field_device_id),
     EditorField(ConfigManager.FIELD_IMEI, R.string.settings_field_imei, numeric = true),
@@ -519,6 +526,13 @@ fun ProfileEditorForm(
             EditorSection(
                 title = stringResource(R.string.settings_section_network_region),
                 fields = networkFields,
+                editor = editor,
+            )
+        }
+        item {
+            EditorSection(
+                title = stringResource(R.string.settings_section_system_hardware),
+                fields = systemFields,
                 editor = editor,
             )
         }

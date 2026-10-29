@@ -82,6 +82,12 @@ public class ConfigManager {
     public static final String FIELD_TELEPHONY = "telephony";
     public static final String FIELD_SENSORS = "sensors";
     public static final String FIELD_WEBGL = "webgl";
+    public static final String FIELD_BATTERY = "battery";
+    public static final String FIELD_BATTERY_LEVEL = "battery_level";
+    public static final String FIELD_UPTIME = "uptime";
+    public static final String FIELD_STORAGE = "storage";
+    public static final String FIELD_STORAGE_GB = "storage_gb";
+    public static final String FIELD_AUDIO = "audio";
 
     private static final long RETRY_INTERVAL_MS = 1500L;
 
@@ -684,6 +690,44 @@ public class ConfigManager {
 
     public static boolean isWebGlSpoofEnabled() {
         return isSpoofEnabled(FIELD_WEBGL);
+    }
+
+    public static boolean isBatterySpoofEnabled() {
+        return isSpoofEnabled(FIELD_BATTERY);
+    }
+
+    public static int getBatteryLevel() {
+        String val = getConfigValue("device.battery.level");
+        if (val != null) {
+            try {
+                int level = Integer.parseInt(val.trim());
+                if (level >= 1 && level <= 100) return level;
+            } catch (Exception ignored) {}
+        }
+        return 78;
+    }
+
+    public static boolean isUptimeSpoofEnabled() {
+        return isSpoofEnabled(FIELD_UPTIME);
+    }
+
+    public static boolean isStorageSpoofEnabled() {
+        return isSpoofEnabled(FIELD_STORAGE);
+    }
+
+    public static long getStorageGb() {
+        String val = getConfigValue("device.storage.gb");
+        if (val != null) {
+            try {
+                long gb = Long.parseLong(val.trim());
+                if (gb > 0) return gb;
+            } catch (Exception ignored) {}
+        }
+        return 256L;
+    }
+
+    public static boolean isAudioSpoofEnabled() {
+        return isSpoofEnabled(FIELD_AUDIO);
     }
 
     public static String getWebGlVendor() {

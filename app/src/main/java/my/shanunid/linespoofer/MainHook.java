@@ -9,6 +9,8 @@ import android.os.Build;
 
 import my.shanunid.linespoofer.hooks.AdvertisingIdHooks;
 import my.shanunid.linespoofer.hooks.AppSetIdHooks;
+import my.shanunid.linespoofer.hooks.AudioHooks;
+import my.shanunid.linespoofer.hooks.BatteryHooks;
 import my.shanunid.linespoofer.hooks.BuildHooks;
 import my.shanunid.linespoofer.hooks.DisplayHooks;
 import my.shanunid.linespoofer.hooks.EmulatorDetectionHooks;
@@ -22,8 +24,10 @@ import my.shanunid.linespoofer.hooks.PackageManagerHooks;
 import my.shanunid.linespoofer.hooks.SensorHooks;
 import my.shanunid.linespoofer.hooks.SettingsHooks;
 import my.shanunid.linespoofer.hooks.SocketSecurityHooks;
+import my.shanunid.linespoofer.hooks.StorageHooks;
 import my.shanunid.linespoofer.hooks.SystemPropertiesHooks;
 import my.shanunid.linespoofer.hooks.TelephonyHooks;
+import my.shanunid.linespoofer.hooks.TimeHooks;
 import my.shanunid.linespoofer.hooks.VendorSystemPropertiesHooks;
 import my.shanunid.linespoofer.hooks.WebViewHooks;
 import my.shanunid.linespoofer.utils.AppLogger;
@@ -229,6 +233,34 @@ public class MainHook implements IXposedHookLoadPackage {
             AppLogger.debug(TAG, "PackageManagerHooks loaded");
         } catch (Exception exception) {
             AppLogger.logError(TAG, "PackageManagerHooks failed: " + exception.getMessage(), exception);
+        }
+
+        try {
+            BatteryHooks.hook(lpparam);
+            AppLogger.debug(TAG, "BatteryHooks loaded");
+        } catch (Exception exception) {
+            AppLogger.logError(TAG, "BatteryHooks failed: " + exception.getMessage(), exception);
+        }
+
+        try {
+            TimeHooks.hook(lpparam);
+            AppLogger.debug(TAG, "TimeHooks loaded");
+        } catch (Exception exception) {
+            AppLogger.logError(TAG, "TimeHooks failed: " + exception.getMessage(), exception);
+        }
+
+        try {
+            StorageHooks.hook(lpparam);
+            AppLogger.debug(TAG, "StorageHooks loaded");
+        } catch (Exception exception) {
+            AppLogger.logError(TAG, "StorageHooks failed: " + exception.getMessage(), exception);
+        }
+
+        try {
+            AudioHooks.hook(lpparam);
+            AppLogger.debug(TAG, "AudioHooks loaded");
+        } catch (Exception exception) {
+            AppLogger.logError(TAG, "AudioHooks failed: " + exception.getMessage(), exception);
         }
 
         AppLogger.info(TAG, "All hooks initialized for " + lpparam.packageName);

@@ -220,6 +220,11 @@
     <string name="settings_field_telephony">SIM・テレフォニー偽装</string>
     <string name="settings_field_sensors">自然なセンサージッターのシミュレーション</string>
     <string name="settings_field_webgl">WebViewおよびWebGL指紋の偽装</string>
+    <string name="settings_section_system_hardware">システムテレメトリとハードウェア</string>
+    <string name="settings_field_battery">バッテリーテレメトリの偽装</string>
+    <string name="settings_field_uptime">起動時間と稼働時間の偽装</string>
+    <string name="settings_field_storage">ストレージ容量の偽装</string>
+    <string name="settings_field_audio">オーディオHALフィンガープリントの偽装</string>
 
     <string name="diagnostics_logs_title">診断ログ</string>
     <string name="log_export_button">ログをエクスポート</string>

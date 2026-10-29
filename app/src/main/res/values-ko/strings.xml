@@ -220,6 +220,11 @@
     <string name="settings_field_telephony">SIM 및 텔레포니 위조</string>
     <string name="settings_field_sensors">자연스러운 센서 지터 시뮬레이션</string>
     <string name="settings_field_webgl">WebView 및 WebGL 핑거프린트 위조</string>
+    <string name="settings_section_system_hardware">시스템 텔레메트리 및 하드웨어</string>
+    <string name="settings_field_battery">배터리 텔레메트리 위조</string>
+    <string name="settings_field_uptime">부팅 시간 및 가동 시간 위조</string>
+    <string name="settings_field_storage">저장공간 용량 위조</string>
+    <string name="settings_field_audio">오디오 HAL 핑거프린트 위조</string>
 
     <string name="diagnostics_logs_title">진단 로그</string>
     <string name="log_export_button">로그 내보내기</string>
