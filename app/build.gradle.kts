@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "my.shanunid.linespoofer"
-    compileSdk = 37
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "my.shanunid.linespoofer"
         minSdk = 26
-        targetSdk = 37
+        targetSdk = 35
         versionCode = 10
         versionName = "2.0.1"
     }

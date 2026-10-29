@@ -59,6 +59,10 @@ All notable changes to this project will be documented in this file.
   - Fixed UI profile persistence in `SpoofAppState.kt` by registering all new toggle keys into `toggleFields` and `allFields`, ensuring UI switches save and reload accurately.
   - Added modern Android 13-16 export-flagged `registerReceiver` overloads in `BatteryHooks.java`.
   - Hardened socket lifecycle in `WebUiServer.java` with `setReuseAddress(true)` and a managed 2-worker `ExecutorService`.
+- **Target Device Optimization & Cloud CI/CD (POCO X7)**:
+  - Integrated dedicated preset for **POCO X7** (`2412DPC0AG`, codename `malachite`, MediaTek Dimensity 7300-Ultra / `mt6878`, ARM Mali-G615 MC2, 1220x2712 120Hz display, 446 DPI, HyperOS Android 14/15, and SuSFS 2.3.0 GKI synergy).
+  - Adjusted `compileSdk` and `targetSdk` to `35` (Android 15 stable target) to guarantee rock-solid build reproducibility.
+  - Implemented GitHub Actions Cloud Workflow (`.github/workflows/build.yml`) to compile and publish `LineSpoofer-Debug-APK` artifacts on cloud runners (16 GB RAM, 4 vCPU) with zero host laptop memory overhead.
 
 ### Planned
 - **M1 (Foundation)**: Refactor package name and unified authorities, establish offline preset catalog and build configuration.

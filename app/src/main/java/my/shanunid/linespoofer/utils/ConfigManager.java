@@ -835,6 +835,7 @@ public class ConfigManager {
             if (lower.contains("tensor g2")) return "Mali-G710";
             if (lower.contains("tensor")) return "Mali-G78";
             if (lower.contains("dimensity 9300") || lower.contains("dimensity 9200")) return "Immortalis-G720 MC12";
+            if (lower.contains("dimensity 7300") || lower.contains("mt6878")) return "Mali-G615 MC2";
             if (lower.contains("dimensity") || lower.contains("mt68")) return "Mali-G715-MC11";
             if (lower.contains("exynos 2400") || lower.contains("exynos 2200")) return "Samsung Xclipse 940";
             if (lower.contains("8 gen 3") || lower.contains("8s gen 3")) return "Adreno (TM) 750";

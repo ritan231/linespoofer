@@ -130,36 +130,36 @@ public class DevicePresetCatalog {
         s23.applyFallbacks();
         presets.add(new DevicePreset("galaxy_s23_ultra", "Samsung", "Galaxy S23 Ultra (SM-S918B)", "Snapdragon 8 Gen 2 - Android 14", s23));
 
-        // 3. Xiaomi POCO F6 / Redmi Turbo 3 (malachite)
+        // 3. Xiaomi POCO X7 (malachite) - Target User Device
         DeviceProfile poco = new DeviceProfile();
         poco.setBrand("POCO");
         poco.setManufacturer("Xiaomi");
-        poco.setModel("24095PCADG");
-        poco.setProductName("malachite");
+        poco.setModel("2412DPC0AG");
+        poco.setProductName("malachite_global");
         poco.setDeviceCode("malachite");
         poco.setBoard("malachite");
-        poco.setHardware("qcom");
-        poco.setBoardPlatform("crow");
+        poco.setHardware("mt6878");
+        poco.setBoardPlatform("mt6878");
         poco.setBuildFingerprint("POCO/malachite_global/malachite:14/UKQ1.231003.002/V816.0.4.0.UNPMIXM:user/release-keys");
         poco.setBuildId("UKQ1.231003.002");
         poco.setBuildDisplayId("UKQ1.231003.002");
         poco.setBuildIncremental("V816.0.4.0.UNPMIXM");
         poco.setBuildRelease("14");
         poco.setBuildSdk(34);
-        poco.setSecurityPatch("2024-05-01");
+        poco.setSecurityPatch("2024-11-01");
         poco.setScreenWidth(1220);
         poco.setScreenHeight(2712);
-        poco.setScreenDensity(440);
+        poco.setScreenDensity(446);
         poco.setCpuAbi("arm64-v8a");
         poco.setCpuAbiList("arm64-v8a");
         poco.setCpuAbiList64("arm64-v8a");
         poco.setCpuAbiList32("");
-        poco.setSocModel("Snapdragon 8s Gen 3");
-        poco.setSocManufacturer("Qualcomm");
+        poco.setSocModel("MediaTek Dimensity 7300-Ultra");
+        poco.setSocManufacturer("MediaTek");
         poco.setTimezone("Asia/Jakarta");
         poco.setLocale("id-ID");
         poco.applyFallbacks();
-        presets.add(new DevicePreset("poco_f6", "POCO", "POCO F6 (24095PCADG)", "Snapdragon 8s Gen 3 - Android 14", poco));
+        presets.add(new DevicePreset("poco_x7", "POCO", "POCO X7 (2412DPC0AG)", "Dimensity 7300-Ultra - Android 14", poco));
 
         // 4. Xiaomi 13 (fuxi)
         DeviceProfile xiaomi13 = new DeviceProfile();
