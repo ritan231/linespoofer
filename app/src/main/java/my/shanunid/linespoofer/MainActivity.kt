@@ -18,6 +18,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        try {
+            my.shanunid.linespoofer.webui.WebUiServer.start(this)
+        } catch (_: Throwable) {
+        }
+
         setContent {
             val appState = remember { SpoofAppState(this) }
             LaunchedEffect(appState) {
@@ -31,6 +36,14 @@ class MainActivity : AppCompatActivity() {
             ) {
                 LineSpooferApp(appState)
             }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        try {
+            my.shanunid.linespoofer.webui.WebUiServer.stop()
+        } catch (_: Throwable) {
         }
     }
 

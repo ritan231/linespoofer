@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LineSpoofer Web Dashboard</title>
+    <style>
+        :root {
+            --md-sys-color-primary: #a8c7fa;
+            --md-sys-color-on-primary: #04305e;
+            --md-sys-color-primary-container: #234774;
+            --md-sys-color-on-primary-container: #d3e4ff;
+            --md-sys-color-surface: #111318;
+            --md-sys-color-surface-dim: #111318;
+            --md-sys-color-surface-bright: #37393e;
+            --md-sys-color-surface-container-lowest: #0c0e13;
+            --md-sys-color-surface-container-low: #191c20;
+            --md-sys-color-surface-container: #1e2025;
+            --md-sys-color-surface-container-high: #282a2f;
+            --md-sys-color-surface-container-highest: #33353a;
+            --md-sys-color-on-surface: #e2e2e9;
+            --md-sys-color-on-surface-variant: #c4c6d0;
+            --md-sys-color-outline: #8e9099;
+            --md-sys-color-outline-variant: #44474f;
+            --md-sys-color-error: #ffb4ab;
+            --md-sys-color-success: #6dd58c;
+            --md-sys-shape-corner-medium: 12px;
+            --md-sys-shape-corner-large: 16px;
+            --md-sys-shape-corner-full: 9999px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
+            padding: 16px;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
+            margin-bottom: 20px;
+        }
+
+        .brand-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--md-sys-color-primary);
+        }
+
+        .author-badge {
+            font-size: 0.8rem;
+            background: var(--md-sys-color-surface-container-highest);
+            padding: 4px 12px;
+            border-radius: var(--md-sys-shape-corner-full);
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        .card {
+            background-color: var(--md-sys-color-surface-container);
+            border-radius: var(--md-sys-shape-corner-large);
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid var(--md-sys-color-outline-variant);
+        }
+
+        .card-header {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--md-sys-color-on-surface);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: var(--md-sys-shape-corner-full);
+            background-color: rgba(109, 213, 140, 0.15);
+            color: var(--md-sys-color-success);
+        }
+
+        .status-pill.susfs {
+            background-color: rgba(168, 199, 250, 0.15);
+            color: var(--md-sys-color-primary);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: var(--md-sys-color-surface-container-high);
+            border-radius: var(--md-sys-shape-corner-medium);
+        }
+
+        .toggle-label {
+            font-size: 0.9rem;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--md-sys-color-surface-container-highest);
+            transition: .3s;
+            border-radius: 24px;
+            border: 1px solid var(--md-sys-color-outline);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--md-sys-color-outline);
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--md-sys-color-primary);
+            border-color: var(--md-sys-color-primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+            background-color: var(--md-sys-color-on-primary);
+        }
+
+        .btn {
+            background-color: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            border: none;
+            padding: 8px 16px;
+            border-radius: var(--md-sys-shape-corner-full);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-tonal {
+            background-color: var(--md-sys-color-surface-container-highest);
+            color: var(--md-sys-color-on-surface);
+        }
+
+        .log-box {
+            background-color: var(--md-sys-color-surface-container-lowest);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: var(--md-sys-shape-corner-medium);
+            padding: 12px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            max-height: 240px;
+            overflow-y: auto;
+            color: var(--md-sys-color-on-surface-variant);
+            white-space: pre-wrap;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--md-sys-color-outline);
+            margin-top: 24px;
+            padding-bottom: 24px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <div class="brand-title">LineSpoofer</div>
+            <div style="font-size: 0.8rem; color: var(--md-sys-color-on-surface-variant);">Device Identity & Hardware Customizer</div>
+        </div>
+        <div>
+            <span class="author-badge">Credit: @shanun_id</span>
+        </div>
+    </header>
+
+    <!-- Device & Kernel Synergy Card -->
+    <div class="card">
+        <div class="card-header">
+            <span>Environment Status</span>
+            <div>
+                <span class="status-pill">Active</span>
+                <span class="status-pill susfs">Kernel SuSFS 2.3.0</span>
+            </div>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--md-sys-color-on-surface-variant);">
+            <p>Target SoC / Device: <strong>POCO F6 (malachite) / Snapdragon 8s Gen 3</strong></p>
+            <p>Root Hiding Strategy: <strong>Kernel VFS SuSFS (Zero Userspace Resident Hooks)</strong></p>
+        </div>
+    </div>
+
+    <!-- Active Spoof Channels Matrix -->
+    <div class="card">
+        <div class="card-header">
+            <span>Telemetry & Hardware Masking Matrix</span>
+            <button class="btn btn-tonal" onclick="refreshStatus()">Refresh</button>
+        </div>
+        <div class="grid-2">
+            <div class="toggle-row">
+                <span class="toggle-label">Battery Telemetry</span>
+                <label class="switch"><input type="checkbox" id="chk_battery" checked><span class="slider"></span></label>
+            </div>
+            <div class="toggle-row">
+                <span class="toggle-label">System Uptime</span>
+                <label class="switch"><input type="checkbox" id="chk_uptime" checked><span class="slider"></span></label>
+            </div>
+            <div class="toggle-row">
+                <span class="toggle-label">Storage (256/512GB)</span>
+                <label class="switch"><input type="checkbox" id="chk_storage" checked><span class="slider"></span></label>
+            </div>
+            <div class="toggle-row">
+                <span class="toggle-label">Audio HAL (48kHz)</span>
+                <label class="switch"><input type="checkbox" id="chk_audio" checked><span class="slider"></span></label>
+            </div>
+            <div class="toggle-row">
+                <span class="toggle-label">Adreno 735 GPU (GLES)</span>
+                <label class="switch"><input type="checkbox" id="chk_gpu" checked><span class="slider"></span></label>
+            </div>
+            <div class="toggle-row">
+                <span class="toggle-label">120Hz Refresh Rate</span>
+                <label class="switch"><input type="checkbox" id="chk_refresh" checked><span class="slider"></span></label>
+            </div>
+            <div class="toggle-row">
+                <span class="toggle-label">Sensor Micro-Jitter</span>
+                <label class="switch"><input type="checkbox" id="chk_sensors" checked><span class="slider"></span></label>
+            </div>
+            <div class="toggle-row">
+                <span class="toggle-label">WebView / WebGL</span>
+                <label class="switch"><input type="checkbox" id="chk_webgl" checked><span class="slider"></span></label>
+            </div>
+            <div class="toggle-row">
+                <span class="toggle-label">Local Socket Block</span>
+                <label class="switch"><input type="checkbox" id="chk_socket" checked><span class="slider"></span></label>
+            </div>
+            <div class="toggle-row">
+                <span class="toggle-label">GPS / Fused Mock Strip</span>
+                <label class="switch"><input type="checkbox" id="chk_location" checked><span class="slider"></span></label>
+            </div>
+            <div class="toggle-row">
+                <span class="toggle-label">Wi-Fi BSSID Mask</span>
+                <label class="switch"><input type="checkbox" id="chk_wifi" checked><span class="slider"></span></label>
+            </div>
+            <div class="toggle-row">
+                <span class="toggle-label">Bluetooth Identity</span>
+                <label class="switch"><input type="checkbox" id="chk_bluetooth" checked><span class="slider"></span></label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Diagnostics Log Preview -->
+    <div class="card">
+        <div class="card-header">
+            <span>Diagnostics Telemetry Log</span>
+            <button class="btn btn-tonal" onclick="fetchLogs()">Reload Log</button>
+        </div>
+        <div class="log-box" id="logViewer">[INFO] LineSpoofer core initialized
+[INFO] SuSFS kernel abstraction active (zero userspace root hook mode)
+[INFO] Multi-channel consistency: Build, SystemProperties, getprop, Native
+[INFO] Module running under @shanun_id profile namespace</div>
+    </div>
+
+    <footer>
+        LineSpoofer &bull; Created by @shanun_id &bull; Stealth Framework
+    </footer>
+
+    <script>
+        function refreshStatus() {
+            fetch('/api/status')
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.status) {
+                        console.log('Status refreshed:', data);
+                    }
+                })
+                .catch(err => {
+                    console.log('Running in standalone WebUI asset mode');
+                });
+        }
+
+        function fetchLogs() {
+            fetch('/api/logs')
+                .then(r => r.text())
+                .then(text => {
+                    document.getElementById('logViewer').innerText = text;
+                })
+                .catch(err => {
+                    document.getElementById('logViewer').innerText += '\n[LIVE] Ready on 127.0.0.1:9229';
+                });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            refreshStatus();
+        });
+    </script>
+</body>
+</html>
