@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">SpoofMyDevice</string>
+    <string name="app_name">LineSpoofer</string>
     <string name="xposed_description">위조 기기 프로필과 런타임 후킹 설정을 관리하는 LSPosed 컴패니언 도구입니다.</string>
     <string name="tab_home">홈</string>
-    <string name="home_title">Spoof My Device</string>
+    <string name="home_title">LineSpoofer</string>
     <string name="tab_app_settings">설정</string>
     <string name="tab_app_profiles">앱별 설정</string>
     <string name="tab_profile_management">프로필 관리</string>

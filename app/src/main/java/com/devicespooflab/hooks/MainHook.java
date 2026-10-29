@@ -45,7 +45,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  */
 public class MainHook implements IXposedHookLoadPackage {
 
-    private static final String TAG = "SpoofMyDevice";
+    private static final String TAG = "LineSpoofer";
     private static final String MODULE_PACKAGE = "com.spoofmydevice";
     private static final int REAL_SDK_INT = Build.VERSION.SDK_INT;
     private static final Set<String> INITIALIZED_HOOK_PROCESSES = ConcurrentHashMap.newKeySet();

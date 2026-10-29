@@ -11,7 +11,7 @@ import androidx.compose.runtime.remember
 import com.devicespooflab.hooks.data.AppSettingsStore
 import com.devicespooflab.hooks.ui.SafeModeScreen
 import com.devicespooflab.hooks.ui.SpoofAppState
-import com.devicespooflab.hooks.ui.SpoofMyDeviceTheme
+import com.devicespooflab.hooks.ui.LineSpooferTheme
 import java.util.LinkedHashSet
 
 class SafeModeAppsActivity : AppCompatActivity() {
@@ -25,7 +25,7 @@ class SafeModeAppsActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContent {
             val appState = remember { SpoofAppState(this) }
-            SpoofMyDeviceTheme {
+            LineSpooferTheme {
                 SafeModeScreen(
                     appState = appState,
                     initialSelectedPackages = selectedPackages,

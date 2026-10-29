@@ -9,7 +9,7 @@ import androidx.compose.runtime.remember
 import com.devicespooflab.hooks.data.AppSettingsStore
 import com.devicespooflab.hooks.ui.DiagnosticsScreen
 import com.devicespooflab.hooks.ui.SpoofAppState
-import com.devicespooflab.hooks.ui.SpoofMyDeviceTheme
+import com.devicespooflab.hooks.ui.LineSpooferTheme
 
 class DiagnosticsActivity : AppCompatActivity() {
 
@@ -20,7 +20,7 @@ class DiagnosticsActivity : AppCompatActivity() {
         setContent {
             val appState = remember { SpoofAppState(this) }
             LaunchedEffect(appState) { appState.initialize() }
-            SpoofMyDeviceTheme {
+            LineSpooferTheme {
                 DiagnosticsScreen(appState, onBack = ::finish)
             }
         }

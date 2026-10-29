@@ -305,7 +305,7 @@ public class DevicePresetCatalog {
         connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
         connection.setReadTimeout(READ_TIMEOUT_MS);
         connection.setRequestProperty("Accept", "application/vnd.github+json");
-        connection.setRequestProperty("User-Agent", "SpoofMyDevice");
+        connection.setRequestProperty("User-Agent", "LineSpoofer");
         connection.setInstanceFollowRedirects(true);
         try (InputStream inputStream = connection.getInputStream()) {
             return readFully(inputStream);

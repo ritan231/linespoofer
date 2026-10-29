@@ -12,7 +12,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  */
 public final class VendorSystemPropertiesHooks {
 
-    private static final String TAG = "SpoofMyDevice-VendorProps";
+    private static final String TAG = "LineSpoofer-VendorProps";
     private static final String[] CANDIDATE_CLASSES = {
         "android.os.SemSystemProperties",
         "com.samsung.android.os.SemSystemProperties"

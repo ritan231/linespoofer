@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">SpoofMyDevice</string>
+    <string name="app_name">LineSpoofer</string>
     <string name="xposed_description">偽装デバイスプロファイルと実行時フック設定を管理する LSPosed コンパニオンツールです。</string>
     <string name="tab_home">ホーム</string>
-    <string name="home_title">Spoof My Device</string>
+    <string name="home_title">LineSpoofer</string>
     <string name="tab_app_settings">設定</string>
     <string name="tab_app_profiles">アプリ別設定</string>
     <string name="tab_profile_management">プロファイル管理</string>

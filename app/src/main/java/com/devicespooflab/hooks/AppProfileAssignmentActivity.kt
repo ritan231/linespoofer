@@ -25,7 +25,7 @@ import com.devicespooflab.hooks.data.AppSettingsStore
 import com.devicespooflab.hooks.data.ConfigFileManager
 import com.devicespooflab.hooks.ui.AppProfileAssignmentScreen
 import com.devicespooflab.hooks.ui.AppProfileAssignmentLoadingScreen
-import com.devicespooflab.hooks.ui.SpoofMyDeviceTheme
+import com.devicespooflab.hooks.ui.LineSpooferTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -61,7 +61,7 @@ class AppProfileAssignmentActivity : AppCompatActivity() {
                 screenState = loadAssignmentState(targetPackage)
             }
 
-            SpoofMyDeviceTheme {
+            LineSpooferTheme {
                 val state = screenState
                 if (state == null) {
                     AppProfileAssignmentLoadingScreen(onBack = ::finish)

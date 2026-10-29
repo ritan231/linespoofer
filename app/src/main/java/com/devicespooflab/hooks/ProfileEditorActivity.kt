@@ -18,7 +18,7 @@ import com.devicespooflab.hooks.data.AppSettingsStore
 import com.devicespooflab.hooks.ui.ProfileEditorLoadingScreen
 import com.devicespooflab.hooks.ui.ProfileEditorScreen
 import com.devicespooflab.hooks.ui.SpoofAppState
-import com.devicespooflab.hooks.ui.SpoofMyDeviceTheme
+import com.devicespooflab.hooks.ui.LineSpooferTheme
 import kotlinx.coroutines.launch
 
 class ProfileEditorActivity : AppCompatActivity() {
@@ -51,7 +51,7 @@ class ProfileEditorActivity : AppCompatActivity() {
                 ready = true
             }
 
-            SpoofMyDeviceTheme(
+            LineSpooferTheme(
                 themeMode = appState.themeMode,
                 languageMode = appState.languageMode,
                 useSystemColor = appState.systemColorsEnabled,

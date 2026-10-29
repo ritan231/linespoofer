@@ -127,7 +127,7 @@ public class ConfigFileManager {
         profile.applyFallbacks();
 
         StringBuilder builder = new StringBuilder();
-        builder.append("# SpoofMyDevice generated profile\n");
+        builder.append("# LineSpoofer generated profile\n");
         builder.append("# meta.preset_id=").append(selectedPresetId == null ? "" : selectedPresetId).append('\n');
         builder.append("# meta.mode=").append(customMode ? "custom" : "preset").append("\n\n");
 

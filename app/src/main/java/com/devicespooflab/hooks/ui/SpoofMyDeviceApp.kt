@@ -82,7 +82,7 @@ private enum class NavigationType {
     ExperimentalMaterial3WindowSizeClassApi::class,
 )
 @Composable
-fun SpoofMyDeviceApp(appState: SpoofAppState) {
+fun LineSpooferApp(appState: SpoofAppState) {
     val snackbarHostState = remember { SnackbarHostState() }
     var destinationName by rememberSaveable { mutableStateOf(AppDestination.Home.name) }
     val destination = AppDestination.valueOf(destinationName)
@@ -298,4 +298,9 @@ private fun ExpandedNavigationDrawer(
             )
         }
     }
+}
+
+@Composable
+fun SpoofMyDeviceApp(appState: SpoofAppState) {
+    LineSpooferApp(appState)
 }

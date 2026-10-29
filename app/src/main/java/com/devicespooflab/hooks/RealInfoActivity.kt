@@ -43,7 +43,7 @@ import com.devicespooflab.hooks.data.AppSettingsStore
 import com.devicespooflab.hooks.ui.ConnectedInfoRow
 import com.devicespooflab.hooks.ui.ConnectedSettingsRow
 import com.devicespooflab.hooks.ui.SectionTitle
-import com.devicespooflab.hooks.ui.SpoofMyDeviceTheme
+import com.devicespooflab.hooks.ui.LineSpooferTheme
 
 class RealInfoActivity : AppCompatActivity() {
 
@@ -52,7 +52,7 @@ class RealInfoActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            SpoofMyDeviceTheme {
+            LineSpooferTheme {
                 AppInfoScreen(this)
             }
         }

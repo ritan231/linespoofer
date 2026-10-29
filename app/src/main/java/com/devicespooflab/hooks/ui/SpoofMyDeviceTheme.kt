@@ -30,7 +30,7 @@ private val roseSeed = Color(0xFF9B405E)
 private val amberSeed = Color(0xFF825500)
 
 @Composable
-fun SpoofMyDeviceTheme(
+fun LineSpooferTheme(
     themeMode: String? = null,
     languageMode: String? = null,
     useSystemColor: Boolean? = null,
@@ -105,6 +105,17 @@ fun SpoofMyDeviceTheme(
             content = content,
         )
     }
+}
+
+@Composable
+fun SpoofMyDeviceTheme(
+    themeMode: String? = null,
+    languageMode: String? = null,
+    useSystemColor: Boolean? = null,
+    colorStyle: String? = null,
+    content: @Composable () -> Unit,
+) {
+    LineSpooferTheme(themeMode, languageMode, useSystemColor, colorStyle, content)
 }
 
 private tailrec fun Context.findActivity(): Activity? {

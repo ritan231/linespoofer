@@ -26,7 +26,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  */
 public final class GetPropHooks {
 
-    private static final String TAG = "SpoofMyDevice-GetProp";
+    private static final String TAG = "LineSpoofer-GetProp";
 
     private GetPropHooks() {
     }

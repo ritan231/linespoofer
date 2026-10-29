@@ -7,9 +7,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import com.devicespooflab.hooks.data.AppSettingsStore
+import com.devicespooflab.hooks.ui.LineSpooferApp
+import com.devicespooflab.hooks.ui.LineSpooferTheme
 import com.devicespooflab.hooks.ui.SpoofAppState
-import com.devicespooflab.hooks.ui.SpoofMyDeviceApp
-import com.devicespooflab.hooks.ui.SpoofMyDeviceTheme
 
 class MainActivity : AppCompatActivity() {
 
@@ -23,13 +23,13 @@ class MainActivity : AppCompatActivity() {
             LaunchedEffect(appState) {
                 appState.initialize()
             }
-            SpoofMyDeviceTheme(
+            LineSpooferTheme(
                 themeMode = appState.themeMode,
                 languageMode = appState.languageMode,
                 useSystemColor = appState.systemColorsEnabled,
                 colorStyle = appState.colorStyle,
             ) {
-                SpoofMyDeviceApp(appState)
+                LineSpooferApp(appState)
             }
         }
     }
