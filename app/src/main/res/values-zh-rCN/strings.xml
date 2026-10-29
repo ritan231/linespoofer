@@ -225,6 +225,9 @@
     <string name="settings_field_uptime">伪装开机时间与运行时间</string>
     <string name="settings_field_storage">伪装总容量与可用空间</string>
     <string name="settings_field_audio">伪装音频 HAL 指纹</string>
+    <string name="settings_field_gpu">伪装 OpenGL ES GPU 渲染器</string>
+    <string name="settings_field_refresh_rate">伪装 120Hz 屏幕刷新率</string>
+    <string name="settings_field_bluetooth">伪装蓝牙设备标识</string>
 
     <string name="diagnostics_logs_title">诊断日志</string>
     <string name="log_export_button">导出日志</string>

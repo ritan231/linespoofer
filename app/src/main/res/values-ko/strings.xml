@@ -225,6 +225,9 @@
     <string name="settings_field_uptime">부팅 시간 및 가동 시간 위조</string>
     <string name="settings_field_storage">저장공간 용량 위조</string>
     <string name="settings_field_audio">오디오 HAL 핑거프린트 위조</string>
+    <string name="settings_field_gpu">OpenGL ES GPU 렌더러 위조</string>
+    <string name="settings_field_refresh_rate">120Hz 디스플레이 새로고침 빈도 위조</string>
+    <string name="settings_field_bluetooth">블루투스 기기 식별 위조</string>
 
     <string name="diagnostics_logs_title">진단 로그</string>
     <string name="log_export_button">로그 내보내기</string>

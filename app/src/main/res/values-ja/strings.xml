@@ -225,6 +225,9 @@
     <string name="settings_field_uptime">起動時間と稼働時間の偽装</string>
     <string name="settings_field_storage">ストレージ容量の偽装</string>
     <string name="settings_field_audio">オーディオHALフィンガープリントの偽装</string>
+    <string name="settings_field_gpu">OpenGL ES GPUレンダラーの偽装</string>
+    <string name="settings_field_refresh_rate">120Hzディスプレイリフレッシュレートの偽装</string>
+    <string name="settings_field_bluetooth">Bluetoothデバイス識別の偽装</string>
 
     <string name="diagnostics_logs_title">診断ログ</string>
     <string name="log_export_button">ログをエクスポート</string>

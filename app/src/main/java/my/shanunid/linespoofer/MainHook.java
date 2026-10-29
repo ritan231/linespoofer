@@ -11,10 +11,12 @@ import my.shanunid.linespoofer.hooks.AdvertisingIdHooks;
 import my.shanunid.linespoofer.hooks.AppSetIdHooks;
 import my.shanunid.linespoofer.hooks.AudioHooks;
 import my.shanunid.linespoofer.hooks.BatteryHooks;
+import my.shanunid.linespoofer.hooks.BluetoothHooks;
 import my.shanunid.linespoofer.hooks.BuildHooks;
 import my.shanunid.linespoofer.hooks.DisplayHooks;
 import my.shanunid.linespoofer.hooks.EmulatorDetectionHooks;
 import my.shanunid.linespoofer.hooks.GetPropHooks;
+import my.shanunid.linespoofer.hooks.GpuHooks;
 import my.shanunid.linespoofer.hooks.HardwareHooks;
 import my.shanunid.linespoofer.hooks.JavaSystemPropertyHooks;
 import my.shanunid.linespoofer.hooks.LocaleHooks;
@@ -261,6 +263,20 @@ public class MainHook implements IXposedHookLoadPackage {
             AppLogger.debug(TAG, "AudioHooks loaded");
         } catch (Exception exception) {
             AppLogger.logError(TAG, "AudioHooks failed: " + exception.getMessage(), exception);
+        }
+
+        try {
+            GpuHooks.hook(lpparam);
+            AppLogger.debug(TAG, "GpuHooks loaded");
+        } catch (Exception exception) {
+            AppLogger.logError(TAG, "GpuHooks failed: " + exception.getMessage(), exception);
+        }
+
+        try {
+            BluetoothHooks.hook(lpparam);
+            AppLogger.debug(TAG, "BluetoothHooks loaded");
+        } catch (Exception exception) {
+            AppLogger.logError(TAG, "BluetoothHooks failed: " + exception.getMessage(), exception);
         }
 
         AppLogger.info(TAG, "All hooks initialized for " + lpparam.packageName);

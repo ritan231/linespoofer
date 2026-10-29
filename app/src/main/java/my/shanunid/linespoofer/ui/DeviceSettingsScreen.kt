@@ -133,6 +133,9 @@ private val systemFields = listOf(
     EditorField(ConfigManager.FIELD_UPTIME, R.string.settings_field_uptime, isToggle = true),
     EditorField(ConfigManager.FIELD_STORAGE, R.string.settings_field_storage, isToggle = true),
     EditorField(ConfigManager.FIELD_AUDIO, R.string.settings_field_audio, isToggle = true),
+    EditorField(ConfigManager.FIELD_GPU, R.string.settings_field_gpu, isToggle = true),
+    EditorField(ConfigManager.FIELD_REFRESH_RATE, R.string.settings_field_refresh_rate, isToggle = true),
+    EditorField(ConfigManager.FIELD_BLUETOOTH, R.string.settings_field_bluetooth, isToggle = true),
 )
 
 private val advancedFields = listOf(

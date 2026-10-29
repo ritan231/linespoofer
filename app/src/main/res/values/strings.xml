@@ -227,6 +227,9 @@
     <string name="settings_field_uptime">Spoof Boot Time &amp; Uptime</string>
     <string name="settings_field_storage">Spoof Total &amp; Free Storage</string>
     <string name="settings_field_audio">Spoof Audio HAL Fingerprint</string>
+    <string name="settings_field_gpu">Spoof OpenGL ES GPU Renderer</string>
+    <string name="settings_field_refresh_rate">Spoof 120Hz Display Refresh Rate</string>
+    <string name="settings_field_bluetooth">Spoof Bluetooth Device Identity</string>
 
     <string name="diagnostics_logs_title">Diagnostics Log</string>
     <string name="log_export_button">Export Log</string>

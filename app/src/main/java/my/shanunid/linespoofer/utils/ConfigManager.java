@@ -88,6 +88,10 @@ public class ConfigManager {
     public static final String FIELD_STORAGE = "storage";
     public static final String FIELD_STORAGE_GB = "storage_gb";
     public static final String FIELD_AUDIO = "audio";
+    public static final String FIELD_GPU = "gpu";
+    public static final String FIELD_GPU_RENDERER = "gpu_renderer";
+    public static final String FIELD_REFRESH_RATE = "refresh_rate";
+    public static final String FIELD_BLUETOOTH = "bluetooth";
 
     private static final long RETRY_INTERVAL_MS = 1500L;
 
@@ -728,6 +732,42 @@ public class ConfigManager {
 
     public static boolean isAudioSpoofEnabled() {
         return isSpoofEnabled(FIELD_AUDIO);
+    }
+
+    public static boolean isGpuSpoofEnabled() {
+        return isSpoofEnabled(FIELD_GPU);
+    }
+
+    public static String getGpuRenderer() {
+        String val = getConfigValue("device.gpu.renderer");
+        if (val != null && !val.trim().isEmpty()) {
+            return val.trim();
+        }
+        return "Adreno (TM) 735";
+    }
+
+    public static String getGpuVendor() {
+        String vendor = getWebGlVendor();
+        return vendor.equals("Samsung") ? "Samsung Electronics" : vendor;
+    }
+
+    public static boolean isRefreshRateSpoofEnabled() {
+        return isSpoofEnabled(FIELD_REFRESH_RATE);
+    }
+
+    public static float getTargetRefreshRate() {
+        String val = getConfigValue("device.display.refresh_rate");
+        if (val != null) {
+            try {
+                float rate = Float.parseFloat(val.trim());
+                if (rate > 0) return rate;
+            } catch (Exception ignored) {}
+        }
+        return 120.0f;
+    }
+
+    public static boolean isBluetoothSpoofEnabled() {
+        return isSpoofEnabled(FIELD_BLUETOOTH);
     }
 
     public static String getWebGlVendor() {

@@ -135,6 +135,22 @@ public class DisplayHooks {
         hookDisplayDimension(displayClass, "getHeight", false);
 
         try {
+            XposedHelpers.findAndHookMethod(displayClass, "getRefreshRate",
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        try {
+                            if (ConfigManager.isRefreshRateSpoofEnabled()) {
+                                param.setResult(ConfigManager.getTargetRefreshRate());
+                            }
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                });
+        } catch (Throwable ignored) {
+        }
+
+        try {
             XposedHelpers.findAndHookMethod(displayClass, "getRectSize", Rect.class,
                 new XC_MethodHook() {
                     @Override
