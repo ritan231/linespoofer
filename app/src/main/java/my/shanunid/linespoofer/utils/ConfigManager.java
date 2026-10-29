@@ -952,6 +952,28 @@ public class ConfigManager {
         return getConfigValue("ro.product.cpu.abilist32");
     }
 
+    public static int getCpuCoreCount() {
+        String val = getConfigValue("ro.cpu.cores");
+        if (val != null) {
+            try {
+                int cores = Integer.parseInt(val.trim());
+                if (cores > 0) return cores;
+            } catch (Exception ignored) {}
+        }
+        return 8;
+    }
+
+    public static long getTotalRamBytes() {
+        String val = getConfigValue("ro.ram.bytes");
+        if (val != null) {
+            try {
+                long ram = Long.parseLong(val.trim());
+                if (ram > 0) return ram;
+            } catch (Exception ignored) {}
+        }
+        return 12L * 1024 * 1024 * 1024L;
+    }
+
     private static int parseInt(String value, int fallback) {
         try {
             return Integer.parseInt(value);

@@ -7,8 +7,13 @@ import my.shanunid.linespoofer.utils.ConfigManager;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.RandomAccessFile;
+import java.io.Reader;
+import java.util.Collections;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
@@ -16,37 +21,31 @@ import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
- * Hooks to spoof hardware specifications (CPU cores, RAM, CPU frequency, etc.)
- * to match real Pixel 7 Pro hardware.
- *
- * Real Pixel 7 Pro specs:
- * - CPU: Google Tensor G2 (8 cores: 2x2.85GHz + 2x2.35GHz + 4x1.80GHz)
- * - RAM: 12GB LPDDR5
- * - Architecture: ARM64-v8a
+ * Hooks to spoof hardware specifications (CPU cores, RAM, heap size, /proc/cpuinfo, /proc/meminfo)
+ * to match the configured device profile dynamically.
  */
 public class HardwareHooks {
 
     private static final String TAG = "LineSpoofer-Hardware";
 
-    // Pixel 7 Pro specs
-    private static final int PIXEL_7_PRO_CORES = 8;
-    private static final long PIXEL_7_PRO_RAM_BYTES = 12L * 1024 * 1024 * 1024; // 12GB
-    private static final long PIXEL_7_PRO_RAM_KB = 12L * 1024 * 1024; // 12GB in KB
+    // Track file reader instances opening /proc/cpuinfo or /proc/meminfo
+    private static final Map<Object, String[]> VIRTUAL_FILE_LINES = Collections.synchronizedMap(new WeakHashMap<>());
+    private static final Map<Object, Integer> VIRTUAL_FILE_OFFSETS = Collections.synchronizedMap(new WeakHashMap<>());
 
     public static void hook(XC_LoadPackage.LoadPackageParam lpparam) {
         try {
             hookRuntimeCores();
             hookActivityManagerMemory(lpparam);
             hookDebugMemory();
-            hookFileReads(); // Hook /proc/cpuinfo and /proc/meminfo reads
+            hookFileReads();
             XposedBridge.log(TAG + ": Successfully hooked hardware specs");
-        } catch (Exception e) {
+        } catch (Throwable e) {
             XposedBridge.log(TAG + ": Failed to hook hardware: " + e.getMessage());
         }
     }
 
     /**
-     * Hook Runtime.availableProcessors() to return 8 cores
+     * Hook Runtime.availableProcessors() to return the configured CPU core count.
      */
     private static void hookRuntimeCores() {
         try {
@@ -54,16 +53,16 @@ public class HardwareHooks {
                 new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        param.setResult(PIXEL_7_PRO_CORES);
+                        param.setResult(ConfigManager.getCpuCoreCount());
                     }
                 });
-        } catch (Exception e) {
+        } catch (Throwable e) {
             XposedBridge.log(TAG + ": Failed to hook Runtime.availableProcessors(): " + e.getMessage());
         }
     }
 
     /**
-     * Hook ActivityManager memory info methods
+     * Hook ActivityManager memory info methods with accurate proportional calculation.
      */
     private static void hookActivityManagerMemory(XC_LoadPackage.LoadPackageParam lpparam) {
         try {
@@ -82,14 +81,19 @@ public class HardwareHooks {
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                         ActivityManager.MemoryInfo memInfo = (ActivityManager.MemoryInfo) param.args[0];
                         if (memInfo != null) {
-                            // Spoof total RAM to 12GB
-                            memInfo.totalMem = PIXEL_7_PRO_RAM_BYTES;
-                            // Keep available/free memory proportional
+                            long targetTotal = ConfigManager.getTotalRamBytes();
                             long originalTotal = memInfo.totalMem;
+
+                            // Calculate available memory ratio before modifying totalMem
                             if (originalTotal > 0) {
-                                double usedRatio = 1.0 - ((double) memInfo.availMem / originalTotal);
-                                memInfo.availMem = (long) (PIXEL_7_PRO_RAM_BYTES * (1.0 - usedRatio));
+                                double availRatio = (double) memInfo.availMem / (double) originalTotal;
+                                if (availRatio < 0.0) availRatio = 0.0;
+                                if (availRatio > 1.0) availRatio = 1.0;
+                                memInfo.availMem = (long) (targetTotal * availRatio);
                             }
+
+                            // Overwrite totalMem after calculating proportional availMem
+                            memInfo.totalMem = targetTotal;
                         }
                     }
                 });
@@ -99,8 +103,9 @@ public class HardwareHooks {
                 new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        // Pixel 7 Pro typically has 512MB heap per app
-                        param.setResult(512);
+                        long totalMb = ConfigManager.getTotalRamBytes() / (1024L * 1024L);
+                        int heapMb = totalMb >= 8192 ? 512 : (totalMb >= 4096 ? 256 : 192);
+                        param.setResult(heapMb);
                     }
                 });
 
@@ -109,12 +114,13 @@ public class HardwareHooks {
                 new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        // Large heap on Pixel 7 Pro
-                        param.setResult(1024);
+                        long totalMb = ConfigManager.getTotalRamBytes() / (1024L * 1024L);
+                        int largeHeapMb = totalMb >= 8192 ? 1024 : (totalMb >= 4096 ? 512 : 384);
+                        param.setResult(largeHeapMb);
                     }
                 });
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             XposedBridge.log(TAG + ": Failed to hook ActivityManager memory: " + e.getMessage());
         }
     }
@@ -128,13 +134,17 @@ public class HardwareHooks {
                 new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        long originalSize = (Long) param.getResult();
-                        // Scale to 12GB device
-                        param.setResult(originalSize * 4);
+                        Object result = param.getResult();
+                        if (result instanceof Long) {
+                            long originalSize = (Long) result;
+                            long totalBytes = ConfigManager.getTotalRamBytes();
+                            long standardRef = 12L * 1024 * 1024 * 1024L;
+                            double scale = Math.max(1.0, (double) totalBytes / (standardRef / 4.0));
+                            param.setResult((long) (originalSize * scale));
+                        }
                     }
                 });
-        } catch (Exception e) {
-            // Method might not exist on all Android versions
+        } catch (Throwable ignored) {
         }
     }
 
@@ -142,60 +152,171 @@ public class HardwareHooks {
      * Hook file reads to intercept /proc/cpuinfo and /proc/meminfo
      */
     private static void hookFileReads() {
-        // Hook BufferedReader for /proc/cpuinfo
+        // 1. Hook FileReader(String) and FileReader(File)
         try {
-            XposedHelpers.findAndHookConstructor(BufferedReader.class,
-                java.io.Reader.class,
+            XposedHelpers.findAndHookConstructor(FileReader.class, String.class,
                 new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        BufferedReader reader = (BufferedReader) param.thisObject;
-                        // Check if reading from FileReader
-                        if (param.args[0] instanceof FileReader) {
-                            // We'll intercept readLine() calls instead
+                        String path = (String) param.args[0];
+                        bindVirtualFile(param.thisObject, path);
+                    }
+                });
+
+            XposedHelpers.findAndHookConstructor(FileReader.class, File.class,
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        File file = (File) param.args[0];
+                        if (file != null) {
+                            bindVirtualFile(param.thisObject, file.getAbsolutePath());
                         }
                     }
                 });
-        } catch (Exception e) {
-            // Ignore
+        } catch (Throwable ignored) {
         }
 
-        // Hook RandomAccessFile reads for /proc/meminfo
+        // 2. Hook BufferedReader constructor to propagate virtual file binding
         try {
-            XposedHelpers.findAndHookMethod(RandomAccessFile.class, "readLine",
+            XposedHelpers.findAndHookConstructor(BufferedReader.class, Reader.class,
                 new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        String line = (String) param.getResult();
-                        if (line != null) {
-                            // Spoof MemTotal in /proc/meminfo
-                            if (line.startsWith("MemTotal:")) {
-                                param.setResult("MemTotal:       " + PIXEL_7_PRO_RAM_KB + " kB");
+                        Reader inner = (Reader) param.args[0];
+                        if (inner != null && VIRTUAL_FILE_LINES.containsKey(inner)) {
+                            VIRTUAL_FILE_LINES.put(param.thisObject, VIRTUAL_FILE_LINES.get(inner));
+                            VIRTUAL_FILE_OFFSETS.put(param.thisObject, 0);
+                        }
+                    }
+                });
+        } catch (Throwable ignored) {
+        }
+
+        // 3. Hook BufferedReader.readLine()
+        try {
+            XposedHelpers.findAndHookMethod(BufferedReader.class, "readLine",
+                new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        String[] lines = VIRTUAL_FILE_LINES.get(param.thisObject);
+                        if (lines != null) {
+                            Integer offset = VIRTUAL_FILE_OFFSETS.get(param.thisObject);
+                            int cur = offset != null ? offset : 0;
+                            if (cur < lines.length) {
+                                VIRTUAL_FILE_OFFSETS.put(param.thisObject, cur + 1);
+                                param.setResult(lines[cur]);
+                            } else {
+                                param.setResult(null); // EOF
                             }
                         }
                     }
                 });
-        } catch (Exception e) {
-            // Ignore
+        } catch (Throwable ignored) {
         }
 
-        // Hook File operations for /proc/cpuinfo
+        // 4. Hook RandomAccessFile constructors & readLine()
         try {
-            XposedHelpers.findAndHookMethod(File.class, "exists",
+            XposedHelpers.findAndHookConstructor(RandomAccessFile.class, String.class, String.class,
                 new XC_MethodHook() {
                     @Override
-                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                        File file = (File) param.thisObject;
-                        String path = file.getAbsolutePath();
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        String path = (String) param.args[0];
+                        bindVirtualFile(param.thisObject, path);
+                    }
+                });
 
-                        // Ensure /proc/cpuinfo exists (some apps check this)
-                        if (path.equals("/proc/cpuinfo") || path.equals("/proc/meminfo")) {
-                            // Let it pass through normally
+            XposedHelpers.findAndHookConstructor(RandomAccessFile.class, File.class, String.class,
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        File file = (File) param.args[0];
+                        if (file != null) {
+                            bindVirtualFile(param.thisObject, file.getAbsolutePath());
                         }
                     }
                 });
-        } catch (Exception e) {
-            // Ignore
+
+            XposedHelpers.findAndHookMethod(RandomAccessFile.class, "readLine",
+                new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        String[] lines = VIRTUAL_FILE_LINES.get(param.thisObject);
+                        if (lines != null) {
+                            Integer offset = VIRTUAL_FILE_OFFSETS.get(param.thisObject);
+                            int cur = offset != null ? offset : 0;
+                            if (cur < lines.length) {
+                                VIRTUAL_FILE_OFFSETS.put(param.thisObject, cur + 1);
+                                param.setResult(lines[cur]);
+                            } else {
+                                param.setResult(null);
+                            }
+                        }
+                    }
+                });
+        } catch (Throwable ignored) {
         }
+    }
+
+    private static void bindVirtualFile(Object readerObj, String path) {
+        if (path == null) {
+            return;
+        }
+        if (path.equals("/proc/cpuinfo")) {
+            String[] lines = generateCpuInfo().split("\n");
+            VIRTUAL_FILE_LINES.put(readerObj, lines);
+            VIRTUAL_FILE_OFFSETS.put(readerObj, 0);
+        } else if (path.equals("/proc/meminfo")) {
+            String[] lines = generateMemInfo().split("\n");
+            VIRTUAL_FILE_LINES.put(readerObj, lines);
+            VIRTUAL_FILE_OFFSETS.put(readerObj, 0);
+        }
+    }
+
+    /**
+     * Generates a realistic /proc/cpuinfo matching the spoofed profile.
+     */
+    public static String generateCpuInfo() {
+        int cores = ConfigManager.getCpuCoreCount();
+        String hardware = ConfigManager.getBuildHardware();
+        if (hardware == null || hardware.trim().isEmpty()) {
+            hardware = "qcom";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < cores; i++) {
+            sb.append("processor\t: ").append(i).append("\n");
+            sb.append("BogoMIPS\t: 38.40\n");
+            sb.append("Features\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp\n");
+            sb.append("CPU implementer\t: 0x41\n");
+            sb.append("CPU architecture: 8\n");
+            sb.append("CPU variant\t: 0x1\n");
+            sb.append("CPU part\t: 0xd05\n");
+            sb.append("CPU revision\t: 0\n\n");
+        }
+        sb.append("Hardware\t: ").append(hardware).append("\n");
+        sb.append("Revision\t: 0000\n");
+        String serial = ConfigManager.getSerial();
+        if (serial != null && !serial.trim().isEmpty()) {
+            sb.append("Serial\t\t: ").append(serial).append("\n");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Generates a realistic /proc/meminfo matching the spoofed profile.
+     */
+    public static String generateMemInfo() {
+        long totalKb = ConfigManager.getTotalRamBytes() / 1024L;
+        long freeKb = totalKb / 3L;
+        long availKb = (long) (totalKb * 0.45);
+        StringBuilder sb = new StringBuilder();
+        sb.append("MemTotal:       ").append(totalKb).append(" kB\n");
+        sb.append("MemFree:        ").append(freeKb).append(" kB\n");
+        sb.append("MemAvailable:   ").append(availKb).append(" kB\n");
+        sb.append("Buffers:          128000 kB\n");
+        sb.append("Cached:          2048000 kB\n");
+        sb.append("SwapCached:            0 kB\n");
+        sb.append("Active:          3200000 kB\n");
+        sb.append("Inactive:        1200000 kB\n");
+        return sb.toString();
     }
 }

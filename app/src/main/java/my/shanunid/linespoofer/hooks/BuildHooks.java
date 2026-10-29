@@ -102,11 +102,14 @@ public class BuildHooks {
         setStaticStringArray(buildClass, "SUPPORTED_ABIS", splitAbis(ConfigManager.getCpuAbiList()));
         setStaticStringArray(buildClass, "SUPPORTED_64_BIT_ABIS", splitAbis(ConfigManager.getCpuAbiList64()));
         setStaticStringArray(buildClass, "SUPPORTED_32_BIT_ABIS", splitAbis(ConfigManager.getCpuAbiList32()));
-        setStaticString(buildClass, "CPU_ABI", ConfigManager.getCpuAbi());
+        String mainAbi = ConfigManager.getCpuAbi();
+        setStaticString(buildClass, "CPU_ABI", (mainAbi != null && !mainAbi.trim().isEmpty()) ? mainAbi.trim() : "arm64-v8a");
 
         String[] abi32 = splitAbis(ConfigManager.getCpuAbiList32());
         if (abi32.length > 0) {
             setStaticString(buildClass, "CPU_ABI2", abi32.length > 1 ? abi32[1] : abi32[0]);
+        } else {
+            setStaticString(buildClass, "CPU_ABI2", "");
         }
     }
 
@@ -301,9 +304,13 @@ public class BuildHooks {
             return new String[0];
         }
         String[] parts = value.split(",");
-        for (int index = 0; index < parts.length; index++) {
-            parts[index] = parts[index].trim();
+        java.util.List<String> valid = new java.util.ArrayList<>();
+        for (String part : parts) {
+            String trimmed = part.trim();
+            if (!trimmed.isEmpty()) {
+                valid.add(trimmed);
+            }
         }
-        return parts;
+        return valid.toArray(new String[0]);
     }
 }

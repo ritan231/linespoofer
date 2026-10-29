@@ -138,6 +138,16 @@ public final class GetPropHooks {
             return new GetPropRequest(true, null);
         }
 
+        if ("cat".equals(first) && normalized.size() >= 2) {
+            String target = normalized.get(1);
+            if ("/proc/cpuinfo".equals(target) || "cpuinfo".equals(target)) {
+                return new GetPropRequest(false, null, true, false);
+            }
+            if ("/proc/meminfo".equals(target) || "meminfo".equals(target)) {
+                return new GetPropRequest(false, null, false, true);
+            }
+        }
+
         if (("sh".equals(first) || "su".equals(first)) && normalized.size() >= 3) {
             int commandIndex = normalized.indexOf("-c");
             if (commandIndex >= 0 && commandIndex + 1 < normalized.size()) {
@@ -160,6 +170,15 @@ public final class GetPropHooks {
             return null;
         }
         String first = leafName(parts[0]);
+        if ("cat".equals(first) && parts.length >= 2) {
+            String target = parts[1];
+            if ("/proc/cpuinfo".equals(target) || "cpuinfo".equals(target)) {
+                return new GetPropRequest(false, null, true, false);
+            }
+            if ("/proc/meminfo".equals(target) || "meminfo".equals(target)) {
+                return new GetPropRequest(false, null, false, true);
+            }
+        }
         if (!"getprop".equals(first)) {
             return null;
         }
@@ -170,6 +189,14 @@ public final class GetPropHooks {
     }
 
     private static Process buildReplacementProcess(Process originalProcess, GetPropRequest request, String packageName) {
+        if (request.isCpuInfo) {
+            readStream(originalProcess.getInputStream());
+            return new SimpleProcess(HardwareHooks.generateCpuInfo(), "", 0);
+        }
+        if (request.isMemInfo) {
+            readStream(originalProcess.getInputStream());
+            return new SimpleProcess(HardwareHooks.generateMemInfo(), "", 0);
+        }
         if (request.fullDump) {
             String originalStdout = readStream(originalProcess.getInputStream());
             String originalStderr = readStream(originalProcess.getErrorStream());
@@ -293,10 +320,18 @@ public final class GetPropHooks {
     private static final class GetPropRequest {
         final boolean fullDump;
         final String propertyKey;
+        final boolean isCpuInfo;
+        final boolean isMemInfo;
 
         GetPropRequest(boolean fullDump, String propertyKey) {
+            this(fullDump, propertyKey, false, false);
+        }
+
+        GetPropRequest(boolean fullDump, String propertyKey, boolean isCpuInfo, boolean isMemInfo) {
             this.fullDump = fullDump;
             this.propertyKey = propertyKey;
+            this.isCpuInfo = isCpuInfo;
+            this.isMemInfo = isMemInfo;
         }
     }
 

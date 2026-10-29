@@ -15,6 +15,10 @@ All notable changes to this project will be documented in this file.
 - **Milestone 1**: Updated IPC broadcast action and internal thread naming to LineSpoofer.
 - **Milestone 1**: Updated Xposed asset `xposed_init` to `my.shanunid.linespoofer.MainHook`.
 - **Milestone 1**: Renamed application themes and styles to `LineSpoofer`.
+- **Milestone 2 (Core Spoofing & Bug Fixes)**: Fixed critical memory overwrite order in `HardwareHooks.java` and restored proportional `availMem` calculations.
+- **Milestone 2 (Core Spoofing & Bug Fixes)**: Connected RAM capacity (`getTotalRamBytes()`) and CPU cores (`getCpuCoreCount()`) dynamically to `ConfigManager` instead of hardcoded Pixel 7 Pro specs.
+- **Milestone 2 (Core Spoofing & Bug Fixes)**: Implemented full procfs `/proc/cpuinfo` and `/proc/meminfo` interception across Java readers (`BufferedReader`, `FileReader`, `RandomAccessFile`) and shell commands (`ProcessBuilder`, `Runtime.exec`) to prevent real SoC and memory leakage.
+- **Milestone 2 (Core Spoofing & Bug Fixes)**: Hardened ABI parsing and fallback in `BuildHooks.java` with safe 64-bit defaults.
 
 ### Planned
 - **M1 (Foundation)**: Refactor package name and unified authorities, establish offline preset catalog and build configuration.
