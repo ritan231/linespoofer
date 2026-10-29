@@ -218,4 +218,13 @@
     <string name="safe_mode_more_options">その他のオプション</string>
     <string name="settings_field_block_local_socket">ローカルソケット/LANスキャン遮断</string>
     <string name="settings_field_telephony">SIM・テレフォニー偽装</string>
+
+    <string name="diagnostics_logs_title">診断ログ</string>
+    <string name="log_export_button">ログをエクスポート</string>
+    <string name="log_clear_button">ログを消去</string>
+    <string name="log_export_title">診断ログを共有</string>
+    <string name="log_cleared_toast">診断ログが消去されました</string>
+    <string name="log_empty_hint">ログは現在空です。</string>
+    <string name="log_preview_title">最近のログ出力</string>
+    <string name="log_refresh_button">更新</string>
 </resources>

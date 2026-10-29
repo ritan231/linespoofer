@@ -218,4 +218,13 @@
     <string name="safe_mode_more_options">더보기</string>
     <string name="settings_field_block_local_socket">로컬 소켓/LAN 스캔 차단</string>
     <string name="settings_field_telephony">SIM 및 텔레포니 위조</string>
+
+    <string name="diagnostics_logs_title">진단 로그</string>
+    <string name="log_export_button">로그 내보내기</string>
+    <string name="log_clear_button">로그 지우기</string>
+    <string name="log_export_title">진단 로그 공유</string>
+    <string name="log_cleared_toast">진단 로그가 삭제되었습니다</string>
+    <string name="log_empty_hint">로그가 현재 비어 있습니다.</string>
+    <string name="log_preview_title">최근 로그 출력</string>
+    <string name="log_refresh_button">새로고침</string>
 </resources>

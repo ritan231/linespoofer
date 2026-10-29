@@ -131,6 +131,7 @@ public class ConfigManager {
         usingEmbeddedDefaults = loadedProperties.fromEmbeddedDefaults;
         assignedProfile = !usingEmbeddedDefaults && !allProperties.isEmpty();
         resetGeneratedCaches();
+        AppLogger.info("ConfigManager", "Config loaded for " + targetPackageName + ": " + allProperties.size() + " properties (embedded=" + usingEmbeddedDefaults + ", assigned=" + assignedProfile + ")");
     }
 
     private static void ensureFreshConfig() {

@@ -221,6 +221,15 @@
     <string name="settings_field_block_local_socket">Block Local Socket / LAN Scan</string>
     <string name="settings_field_telephony">Spoof SIM and Telephony</string>
 
+    <string name="diagnostics_logs_title">Diagnostics Log</string>
+    <string name="log_export_button">Export Log</string>
+    <string name="log_clear_button">Clear Log</string>
+    <string name="log_export_title">Share Diagnostics Log</string>
+    <string name="log_cleared_toast">Diagnostics log cleared</string>
+    <string name="log_empty_hint">Log is currently empty.</string>
+    <string name="log_preview_title">Recent Log Output</string>
+    <string name="log_refresh_button">Refresh</string>
+
     <!-- Empty scope - user selects apps in LSPosed -->
     <string-array name="xposed_scope" />
 </resources>

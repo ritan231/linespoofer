@@ -523,6 +523,86 @@ public class ConfigFileManager {
         void set(String value);
     }
 
+    public static String exportProfileToJson(DeviceProfile profile) throws Exception {
+        if (profile == null) return "{}";
+        org.json.JSONObject obj = new org.json.JSONObject();
+        obj.put("brand", profile.getBrand());
+        obj.put("manufacturer", profile.getManufacturer());
+        obj.put("model", profile.getModel());
+        obj.put("productName", profile.getProductName());
+        obj.put("deviceCode", profile.getDeviceCode());
+        obj.put("board", profile.getBoard());
+        obj.put("hardware", profile.getHardware());
+        obj.put("boardPlatform", profile.getBoardPlatform());
+        obj.put("buildFingerprint", profile.getBuildFingerprint());
+        obj.put("buildId", profile.getBuildId());
+        obj.put("buildDisplayId", profile.getBuildDisplayId());
+        obj.put("buildIncremental", profile.getBuildIncremental());
+        obj.put("buildRelease", profile.getBuildRelease());
+        obj.put("buildSdk", profile.getBuildSdk());
+        obj.put("securityPatch", profile.getSecurityPatch());
+        obj.put("screenWidth", profile.getScreenWidth());
+        obj.put("screenHeight", profile.getScreenHeight());
+        obj.put("screenDensity", profile.getScreenDensity());
+        obj.put("cpuAbi", profile.getCpuAbi());
+        obj.put("cpuAbiList", profile.getCpuAbiList());
+        obj.put("cpuAbiList64", profile.getCpuAbiList64());
+        obj.put("cpuAbiList32", profile.getCpuAbiList32());
+        obj.put("socModel", profile.getSocModel());
+        obj.put("socManufacturer", profile.getSocManufacturer());
+        obj.put("timezone", profile.getTimezone());
+        obj.put("locale", profile.getLocale());
+        obj.put("userAgent", profile.getUserAgent());
+        obj.put("bootloader", profile.getBootloader());
+        obj.put("operatorAlpha", profile.getOperatorAlpha());
+        obj.put("operatorNumeric", profile.getOperatorNumeric());
+        obj.put("simOperatorAlpha", profile.getSimOperatorAlpha());
+        obj.put("simOperatorNumeric", profile.getSimOperatorNumeric());
+        obj.put("simCountryIso", profile.getSimCountryIso());
+        return obj.toString(2);
+    }
+
+    public static DeviceProfile importProfileFromJson(String json) throws Exception {
+        if (json == null || json.trim().isEmpty()) return new DeviceProfile();
+        org.json.JSONObject obj = new org.json.JSONObject(json);
+        DeviceProfile profile = new DeviceProfile();
+        profile.setBrand(obj.optString("brand"));
+        profile.setManufacturer(obj.optString("manufacturer"));
+        profile.setModel(obj.optString("model"));
+        profile.setProductName(obj.optString("productName"));
+        profile.setDeviceCode(obj.optString("deviceCode"));
+        profile.setBoard(obj.optString("board"));
+        profile.setHardware(obj.optString("hardware"));
+        profile.setBoardPlatform(obj.optString("boardPlatform"));
+        profile.setBuildFingerprint(obj.optString("buildFingerprint"));
+        profile.setBuildId(obj.optString("buildId"));
+        profile.setBuildDisplayId(obj.optString("buildDisplayId"));
+        profile.setBuildIncremental(obj.optString("buildIncremental"));
+        profile.setBuildRelease(obj.optString("buildRelease"));
+        profile.setBuildSdk(obj.optInt("buildSdk"));
+        profile.setSecurityPatch(obj.optString("securityPatch"));
+        profile.setScreenWidth(obj.optInt("screenWidth"));
+        profile.setScreenHeight(obj.optInt("screenHeight"));
+        profile.setScreenDensity(obj.optInt("screenDensity"));
+        profile.setCpuAbi(obj.optString("cpuAbi"));
+        profile.setCpuAbiList(obj.optString("cpuAbiList"));
+        profile.setCpuAbiList64(obj.optString("cpuAbiList64"));
+        profile.setCpuAbiList32(obj.optString("cpuAbiList32"));
+        profile.setSocModel(obj.optString("socModel"));
+        profile.setSocManufacturer(obj.optString("socManufacturer"));
+        profile.setTimezone(obj.optString("timezone"));
+        profile.setLocale(obj.optString("locale"));
+        profile.setUserAgent(obj.optString("userAgent"));
+        profile.setBootloader(obj.optString("bootloader"));
+        profile.setOperatorAlpha(obj.optString("operatorAlpha"));
+        profile.setOperatorNumeric(obj.optString("operatorNumeric"));
+        profile.setSimOperatorAlpha(obj.optString("simOperatorAlpha"));
+        profile.setSimOperatorNumeric(obj.optString("simOperatorNumeric"));
+        profile.setSimCountryIso(obj.optString("simCountryIso"));
+        profile.applyFallbacks();
+        return profile;
+    }
+
     public static class LoadedConfig {
         private final File configFile;
         private final DeviceProfile profile;

@@ -219,5 +219,14 @@
     <string name="settings_field_block_local_socket">阻止本地 Socket / 局域网扫描</string>
     <string name="settings_field_telephony">伪装 SIM 卡与电话网络</string>
 
+    <string name="diagnostics_logs_title">诊断日志</string>
+    <string name="log_export_button">导出日志</string>
+    <string name="log_clear_button">清除日志</string>
+    <string name="log_export_title">共享诊断日志</string>
+    <string name="log_cleared_toast">诊断日志已清除</string>
+    <string name="log_empty_hint">日志当前为空。</string>
+    <string name="log_preview_title">最近日志输出</string>
+    <string name="log_refresh_button">刷新</string>
+
     <string-array name="xposed_scope" />
 </resources>

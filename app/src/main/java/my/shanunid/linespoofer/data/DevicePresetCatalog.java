@@ -40,7 +40,8 @@ public class DevicePresetCatalog {
         if (!cachedPresets.isEmpty()) {
             return withCurrentDevicePreset(context, cachedPresets);
         }
-        return withCurrentDevicePreset(context, refreshRemote(context, AppSettingsStore.getPresetSourceUrl(context)));
+        // Offline-first architecture: return robust offline bundled presets without blocking on network
+        return withCurrentDevicePreset(context, getBundledOfflinePresets());
     }
 
     public List<DevicePreset> refreshRemote(Context context, String sourceUrl) {
@@ -53,7 +54,145 @@ public class DevicePresetCatalog {
             }
         } catch (Exception ignored) {
         }
-        return withCurrentDevicePreset(context, loadFromCache(context));
+        List<DevicePreset> cached = loadFromCache(context);
+        if (!cached.isEmpty()) {
+            return withCurrentDevicePreset(context, cached);
+        }
+        return withCurrentDevicePreset(context, getBundledOfflinePresets());
+    }
+
+    /**
+     * Curated list of realistic offline device presets bundled directly inside LineSpoofer.
+     * Guarantees 100% offline functionality without external network dependencies.
+     */
+    public List<DevicePreset> getBundledOfflinePresets() {
+        List<DevicePreset> presets = new ArrayList<>();
+
+        // 1. Google Pixel 7 Pro (cheetah)
+        DeviceProfile pixel = new DeviceProfile();
+        pixel.setBrand("google");
+        pixel.setManufacturer("Google");
+        pixel.setModel("Pixel 7 Pro");
+        pixel.setProductName("cheetah");
+        pixel.setDeviceCode("cheetah");
+        pixel.setBoard("cheetah");
+        pixel.setHardware("cheetah");
+        pixel.setBoardPlatform("gs201");
+        pixel.setBuildFingerprint("google/cheetah/cheetah:14/AP2A.240805.005/12025142:user/release-keys");
+        pixel.setBuildId("AP2A.240805.005");
+        pixel.setBuildDisplayId("AP2A.240805.005");
+        pixel.setBuildIncremental("12025142");
+        pixel.setBuildRelease("14");
+        pixel.setBuildSdk(34);
+        pixel.setSecurityPatch("2024-08-05");
+        pixel.setScreenWidth(1440);
+        pixel.setScreenHeight(3120);
+        pixel.setScreenDensity(560);
+        pixel.setCpuAbi("arm64-v8a");
+        pixel.setCpuAbiList("arm64-v8a");
+        pixel.setCpuAbiList64("arm64-v8a");
+        pixel.setCpuAbiList32("");
+        pixel.setSocModel("Tensor G2");
+        pixel.setSocManufacturer("Google");
+        pixel.setTimezone("America/New_York");
+        pixel.setLocale("en-US");
+        pixel.applyFallbacks();
+        presets.add(new DevicePreset("pixel_7_pro", "Google", "Pixel 7 Pro", "Tensor G2 - Android 14", pixel));
+
+        // 2. Samsung Galaxy S23 Ultra (SM-S918B)
+        DeviceProfile s23 = new DeviceProfile();
+        s23.setBrand("samsung");
+        s23.setManufacturer("samsung");
+        s23.setModel("SM-S918B");
+        s23.setProductName("dm3qxxx");
+        s23.setDeviceCode("dm3q");
+        s23.setBoard("kalama");
+        s23.setHardware("qcom");
+        s23.setBoardPlatform("kalama");
+        s23.setBuildFingerprint("samsung/dm3qxxx/dm3q:14/UP1A.231005.007/S918BXXU3BWJM:user/release-keys");
+        s23.setBuildId("UP1A.231005.007");
+        s23.setBuildDisplayId("UP1A.231005.007.S918BXXU3BWJM");
+        s23.setBuildIncremental("S918BXXU3BWJM");
+        s23.setBuildRelease("14");
+        s23.setBuildSdk(34);
+        s23.setSecurityPatch("2024-03-01");
+        s23.setScreenWidth(1440);
+        s23.setScreenHeight(3088);
+        s23.setScreenDensity(500);
+        s23.setCpuAbi("arm64-v8a");
+        s23.setCpuAbiList("arm64-v8a,armeabi-v7a,armeabi");
+        s23.setCpuAbiList64("arm64-v8a");
+        s23.setCpuAbiList32("armeabi-v7a,armeabi");
+        s23.setSocModel("Snapdragon 8 Gen 2");
+        s23.setSocManufacturer("Qualcomm");
+        s23.setTimezone("America/New_York");
+        s23.setLocale("en-US");
+        s23.applyFallbacks();
+        presets.add(new DevicePreset("galaxy_s23_ultra", "Samsung", "Galaxy S23 Ultra (SM-S918B)", "Snapdragon 8 Gen 2 - Android 14", s23));
+
+        // 3. Xiaomi POCO F6 / Redmi Turbo 3 (malachite)
+        DeviceProfile poco = new DeviceProfile();
+        poco.setBrand("POCO");
+        poco.setManufacturer("Xiaomi");
+        poco.setModel("24095PCADG");
+        poco.setProductName("malachite");
+        poco.setDeviceCode("malachite");
+        poco.setBoard("malachite");
+        poco.setHardware("qcom");
+        poco.setBoardPlatform("crow");
+        poco.setBuildFingerprint("POCO/malachite_global/malachite:14/UKQ1.231003.002/V816.0.4.0.UNPMIXM:user/release-keys");
+        poco.setBuildId("UKQ1.231003.002");
+        poco.setBuildDisplayId("UKQ1.231003.002");
+        poco.setBuildIncremental("V816.0.4.0.UNPMIXM");
+        poco.setBuildRelease("14");
+        poco.setBuildSdk(34);
+        poco.setSecurityPatch("2024-05-01");
+        poco.setScreenWidth(1220);
+        poco.setScreenHeight(2712);
+        poco.setScreenDensity(440);
+        poco.setCpuAbi("arm64-v8a");
+        poco.setCpuAbiList("arm64-v8a");
+        poco.setCpuAbiList64("arm64-v8a");
+        poco.setCpuAbiList32("");
+        poco.setSocModel("Snapdragon 8s Gen 3");
+        poco.setSocManufacturer("Qualcomm");
+        poco.setTimezone("Asia/Jakarta");
+        poco.setLocale("id-ID");
+        poco.applyFallbacks();
+        presets.add(new DevicePreset("poco_f6", "POCO", "POCO F6 (24095PCADG)", "Snapdragon 8s Gen 3 - Android 14", poco));
+
+        // 4. Xiaomi 13 (fuxi)
+        DeviceProfile xiaomi13 = new DeviceProfile();
+        xiaomi13.setBrand("Xiaomi");
+        xiaomi13.setManufacturer("Xiaomi");
+        xiaomi13.setModel("2211133G");
+        xiaomi13.setProductName("fuxi");
+        xiaomi13.setDeviceCode("fuxi");
+        xiaomi13.setBoard("fuxi");
+        xiaomi13.setHardware("qcom");
+        xiaomi13.setBoardPlatform("kalama");
+        xiaomi13.setBuildFingerprint("Xiaomi/fuxi_eea/fuxi:14/UKQ1.230804.001/V816.0.1.0.UMCEUXM:user/release-keys");
+        xiaomi13.setBuildId("UKQ1.230804.001");
+        xiaomi13.setBuildDisplayId("UKQ1.230804.001");
+        xiaomi13.setBuildIncremental("V816.0.1.0.UMCEUXM");
+        xiaomi13.setBuildRelease("14");
+        xiaomi13.setBuildSdk(34);
+        xiaomi13.setSecurityPatch("2024-01-01");
+        xiaomi13.setScreenWidth(1080);
+        xiaomi13.setScreenHeight(2400);
+        xiaomi13.setScreenDensity(440);
+        xiaomi13.setCpuAbi("arm64-v8a");
+        xiaomi13.setCpuAbiList("arm64-v8a");
+        xiaomi13.setCpuAbiList64("arm64-v8a");
+        xiaomi13.setCpuAbiList32("");
+        xiaomi13.setSocModel("Snapdragon 8 Gen 2");
+        xiaomi13.setSocManufacturer("Qualcomm");
+        xiaomi13.setTimezone("Europe/Berlin");
+        xiaomi13.setLocale("de-DE");
+        xiaomi13.applyFallbacks();
+        presets.add(new DevicePreset("xiaomi_13", "Xiaomi", "Xiaomi 13 (2211133G)", "Snapdragon 8 Gen 2 - Android 14", xiaomi13));
+
+        return presets;
     }
 
     public List<DevicePreset> localizeCurrentDevicePreset(Context context, List<DevicePreset> presets) {

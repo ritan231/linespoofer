@@ -55,6 +55,16 @@
             android:exported="true"
             android:grantUriPermissions="true" />
 
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="my.shanunid.linespoofer.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
         <receiver
             android:name=".ConfigBridgeReceiver"
             android:exported="true">

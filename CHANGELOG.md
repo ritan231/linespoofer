@@ -25,6 +25,12 @@ All notable changes to this project will be documented in this file.
 - **Milestone 4 (Telephony/SIM Lanjutan & Block Local Socket)**: Implemented selective localhost socket scan blocking in `SocketSecurityHooks.java` (throwing `ConnectException` on sensitive reverse-engineering probe ports: Frida 27042/range, GDB, LLDB, IDA, and local proxies).
 - **Milestone 4 (Telephony/SIM Lanjutan & Block Local Socket)**: Enhanced `TelephonyHooks.java` with advanced telephony hooks for network type (LTE/5G), connected data state, and non-roaming status.
 - **Milestone 4 (Telephony/SIM Lanjutan & Block Local Socket)**: Added on/off toggles for `Block Local Socket / LAN Scan` and `Spoof SIM and Telephony` in `ConfigManager.java` and UI `DeviceSettingsScreen.kt`.
+- **Milestone 5 (Profile System & Logger UI)**: Implemented centralized thread-safe, asynchronous file logger `AppLogger.java` with automatic 2 MB log rotation and dual logging to logcat/XposedBridge.
+- **Milestone 5 (Profile System & Logger UI)**: Wired `AppLogger` into `ConfigProvider.java`, `MainHook.java`, and `ConfigManager.java` for comprehensive IPC and hook tracking.
+- **Milestone 5 (Profile System & Logger UI)**: Built Log Viewer & Diagnostics UI in `DiagnosticsScreen.kt` featuring live log preview, Android Share Sheet export with `FileProvider`, clear log functionality, and refresh controls.
+- **Milestone 5 (Profile System & Logger UI)**: Hardened `DevicePresetCatalog.java` with offline-first loading and bundled realistic presets (Pixel 7 Pro, Galaxy S23 Ultra, POCO F6 / malachite, Xiaomi 13), eliminating mandatory GitHub API dependencies.
+- **Milestone 5 (Profile System & Logger UI)**: Added offline JSON profile export and import methods in `ConfigFileManager.java`.
+- **Milestone 5 (Profile System & Logger UI)**: Added `FileProvider` in `AndroidManifest.xml` and complete localization strings across English, Japanese, Korean, and Simplified Chinese.
 
 ### Planned
 - **M1 (Foundation)**: Refactor package name and unified authorities, establish offline preset catalog and build configuration.
