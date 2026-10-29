@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.DeviceSpoofLab" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.LineSpoofer" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/dsl_primary</item>
         <item name="colorOnPrimary">@color/dsl_on_primary</item>
         <item name="colorPrimaryContainer">@color/dsl_primary_container</item>
@@ -24,7 +24,7 @@
         <item name="android:windowLightStatusBar">false</item>
     </style>
 
-    <style name="Theme.DeviceSpoofLab.Blue" parent="Theme.DeviceSpoofLab">
+    <style name="Theme.LineSpoofer.Blue" parent="Theme.LineSpoofer">
         <item name="colorPrimary">@color/dsl_blue_primary</item>
         <item name="colorOnPrimary">@color/dsl_blue_on_primary</item>
         <item name="colorPrimaryContainer">@color/dsl_blue_primary_container</item>
@@ -46,7 +46,7 @@
         <item name="android:navigationBarColor">@color/dsl_blue_background</item>
     </style>
 
-    <style name="Theme.DeviceSpoofLab.Rose" parent="Theme.DeviceSpoofLab">
+    <style name="Theme.LineSpoofer.Rose" parent="Theme.LineSpoofer">
         <item name="colorPrimary">@color/dsl_rose_primary</item>
         <item name="colorOnPrimary">@color/dsl_rose_on_primary</item>
         <item name="colorPrimaryContainer">@color/dsl_rose_primary_container</item>
@@ -68,7 +68,7 @@
         <item name="android:navigationBarColor">@color/dsl_rose_background</item>
     </style>
 
-    <style name="Theme.DeviceSpoofLab.Amber" parent="Theme.DeviceSpoofLab">
+    <style name="Theme.LineSpoofer.Amber" parent="Theme.LineSpoofer">
         <item name="colorPrimary">@color/dsl_amber_primary</item>
         <item name="colorOnPrimary">@color/dsl_amber_on_primary</item>
         <item name="colorPrimaryContainer">@color/dsl_amber_primary_container</item>
@@ -90,5 +90,5 @@
         <item name="android:navigationBarColor">@color/dsl_amber_background</item>
     </style>
 
-    <style name="Theme.DeviceSpoofLab.Dynamic" parent="Theme.DeviceSpoofLab" />
+    <style name="Theme.LineSpoofer.Dynamic" parent="Theme.LineSpoofer" />
 </resources>

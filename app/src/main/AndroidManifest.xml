@@ -14,7 +14,7 @@
         android:allowBackup="false"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.DeviceSpoofLab">
+        android:theme="@style/Theme.LineSpoofer">
 
         <!-- Main Activity - Auto-creates config file on first launch -->
         <activity
@@ -51,7 +51,7 @@
 
         <provider
             android:name=".ConfigProvider"
-            android:authorities="com.spoofmydevice.configprovider"
+            android:authorities="my.shanunid.linespoofer.configprovider"
             android:exported="true"
             android:grantUriPermissions="true" />
 
@@ -59,7 +59,7 @@
             android:name=".ConfigBridgeReceiver"
             android:exported="true">
             <intent-filter>
-                <action android:name="com.spoofmydevice.action.GET_CONFIG" />
+                <action android:name="my.shanunid.linespoofer.action.GET_CONFIG" />
             </intent-filter>
         </receiver>
 

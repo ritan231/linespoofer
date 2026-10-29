@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.devicespooflab.hooks"
+    namespace = "my.shanunid.linespoofer"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.spoofmydevice"
+        applicationId = "my.shanunid.linespoofer"
         minSdk = 26
         targetSdk = 37
         versionCode = 10

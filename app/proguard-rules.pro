@@ -3,10 +3,10 @@
 # in /sdk/tools/proguard/proguard-android.txt
 
 # Keep Xposed entry point
--keep class com.devicespooflab.hooks.MainHook { *; }
+-keep class my.shanunid.linespoofer.MainHook { *; }
 
 # Keep all hook classes
--keep class com.devicespooflab.hooks.hooks.** { *; }
+-keep class my.shanunid.linespoofer.hooks.** { *; }
 
 # Keep utility classes
--keep class com.devicespooflab.hooks.utils.** { *; }
+-keep class my.shanunid.linespoofer.utils.** { *; }

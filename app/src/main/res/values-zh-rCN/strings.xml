@@ -192,7 +192,7 @@
     <string name="app_info_package_title">包名</string>
     <string name="app_info_version_format">版本 %1$s (%2$d)</string>
     <string name="app_info_overview_format">应用名：%1$s\n版本：%2$s (%3$d)\n包名：%4$s</string>
-    <string name="app_info_credits_body">基于原始 DeviceSpoofLab Hooks 项目开发。感谢 LSPosed 与 Xposed 社区。</string>
+    <string name="app_info_credits_body">由 Code Line 创建并维护。基于 SpoofMyDevice (BuSung-dev) 开发，感谢 LSPosed 与 Xposed 社区。</string>
     <string name="app_info_links_body">GitHub 项目链接与后续资源链接会显示在这里。</string>
     <string name="app_info_github_button">打开 GitHub</string>
     <string name="app_info_github_title">GitHub</string>
