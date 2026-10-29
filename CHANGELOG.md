@@ -22,6 +22,9 @@ All notable changes to this project will be documented in this file.
 - **Milestone 3 (Security & Network Hooks)**: Implemented Developer Options & ADB anti-detection in `SettingsHooks.java` (mocking `adb_enabled` and `development_settings_enabled` to 0).
 - **Milestone 3 (Security & Network Hooks)**: Created `NetworkSecurityHooks.java` hiding VPN transports (`TRANSPORT_VPN`), asserting `NET_CAPABILITY_NOT_VPN`, masking proxy settings, and hiding tun/tap virtual interfaces.
 - **Milestone 3 (Security & Network Hooks)**: Implemented Play Store installer spoofing in `PackageManagerHooks.java` (`getInstallerPackageName` and Android 11+ `InstallSourceInfo` set to `com.android.vending`).
+- **Milestone 4 (Telephony/SIM Lanjutan & Block Local Socket)**: Implemented selective localhost socket scan blocking in `SocketSecurityHooks.java` (throwing `ConnectException` on sensitive reverse-engineering probe ports: Frida 27042/range, GDB, LLDB, IDA, and local proxies).
+- **Milestone 4 (Telephony/SIM Lanjutan & Block Local Socket)**: Enhanced `TelephonyHooks.java` with advanced telephony hooks for network type (LTE/5G), connected data state, and non-roaming status.
+- **Milestone 4 (Telephony/SIM Lanjutan & Block Local Socket)**: Added on/off toggles for `Block Local Socket / LAN Scan` and `Spoof SIM and Telephony` in `ConfigManager.java` and UI `DeviceSettingsScreen.kt`.
 
 ### Planned
 - **M1 (Foundation)**: Refactor package name and unified authorities, establish offline preset catalog and build configuration.

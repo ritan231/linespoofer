@@ -115,11 +115,13 @@ private val buildFields = listOf(
 )
 
 private val networkFields = listOf(
+    EditorField(ConfigManager.FIELD_TELEPHONY, R.string.settings_field_telephony),
     EditorField(ConfigManager.FIELD_OPERATOR_ALPHA, R.string.settings_field_operator_name),
     EditorField(ConfigManager.FIELD_OPERATOR_NUMERIC, R.string.settings_field_operator_numeric, numeric = true),
     EditorField(ConfigManager.FIELD_SIM_COUNTRY, R.string.settings_field_sim_country_iso),
     EditorField(ConfigManager.FIELD_TIMEZONE, R.string.settings_field_timezone),
     EditorField(ConfigManager.FIELD_LOCALE, R.string.settings_field_locale),
+    EditorField(ConfigManager.FIELD_BLOCK_LOCAL_SOCKET, R.string.settings_field_block_local_socket),
 )
 
 private val advancedFields = listOf(

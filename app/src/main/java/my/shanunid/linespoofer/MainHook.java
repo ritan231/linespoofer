@@ -20,6 +20,7 @@ import my.shanunid.linespoofer.hooks.MediaDrmHooks;
 import my.shanunid.linespoofer.hooks.NetworkSecurityHooks;
 import my.shanunid.linespoofer.hooks.PackageManagerHooks;
 import my.shanunid.linespoofer.hooks.SettingsHooks;
+import my.shanunid.linespoofer.hooks.SocketSecurityHooks;
 import my.shanunid.linespoofer.hooks.SystemPropertiesHooks;
 import my.shanunid.linespoofer.hooks.TelephonyHooks;
 import my.shanunid.linespoofer.hooks.VendorSystemPropertiesHooks;
@@ -174,6 +175,13 @@ public class MainHook implements IXposedHookLoadPackage {
             XposedBridge.log(TAG + ": NetworkSecurityHooks loaded");
         } catch (Exception exception) {
             XposedBridge.log(TAG + ": NetworkSecurityHooks failed: " + exception.getMessage());
+        }
+
+        try {
+            SocketSecurityHooks.hook(lpparam);
+            XposedBridge.log(TAG + ": SocketSecurityHooks loaded");
+        } catch (Exception exception) {
+            XposedBridge.log(TAG + ": SocketSecurityHooks failed: " + exception.getMessage());
         }
 
         try {

@@ -216,4 +216,6 @@
     <string name="safe_mode_selected_count">%1$d개 선택됨</string>
     <string name="safe_mode_dont_show_again">다시 보지 않기</string>
     <string name="safe_mode_more_options">더보기</string>
+    <string name="settings_field_block_local_socket">로컬 소켓/LAN 스캔 차단</string>
+    <string name="settings_field_telephony">SIM 및 텔레포니 위조</string>
 </resources>

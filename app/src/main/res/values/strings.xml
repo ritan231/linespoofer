@@ -218,6 +218,9 @@
     <string name="safe_mode_dont_show_again">Don\'t show again</string>
     <string name="safe_mode_more_options">More options</string>
 
+    <string name="settings_field_block_local_socket">Block Local Socket / LAN Scan</string>
+    <string name="settings_field_telephony">Spoof SIM and Telephony</string>
+
     <!-- Empty scope - user selects apps in LSPosed -->
     <string-array name="xposed_scope" />
 </resources>

@@ -216,4 +216,6 @@
     <string name="safe_mode_selected_count">%1$d個を選択</string>
     <string name="safe_mode_dont_show_again">今後表示しない</string>
     <string name="safe_mode_more_options">その他のオプション</string>
+    <string name="settings_field_block_local_socket">ローカルソケット/LANスキャン遮断</string>
+    <string name="settings_field_telephony">SIM・テレフォニー偽装</string>
 </resources>

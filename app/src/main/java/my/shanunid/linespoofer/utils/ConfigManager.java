@@ -78,6 +78,8 @@ public class ConfigManager {
     public static final String FIELD_GSF_ID = "gsf_id";
     public static final String FIELD_MEDIA_DRM_ID = "media_drm_id";
     public static final String FIELD_APP_SET_ID = "app_set_id";
+    public static final String FIELD_BLOCK_LOCAL_SOCKET = "block_local_socket";
+    public static final String FIELD_TELEPHONY = "telephony";
 
     private static final long RETRY_INTERVAL_MS = 1500L;
 
@@ -565,6 +567,9 @@ public class ConfigManager {
     }
 
     public static boolean shouldExposeTelephony() {
+        if (!isTelephonySpoofEnabled()) {
+            return false;
+        }
         return hasTelephonySupport() || shouldReportSimPresent();
     }
 
@@ -660,6 +665,14 @@ public class ConfigManager {
             return true;
         }
         return explicit.equals("1") || explicit.equalsIgnoreCase("true");
+    }
+
+    public static boolean isBlockLocalSocketEnabled() {
+        return isSpoofEnabled(FIELD_BLOCK_LOCAL_SOCKET);
+    }
+
+    public static boolean isTelephonySpoofEnabled() {
+        return isSpoofEnabled(FIELD_TELEPHONY);
     }
 
     public static String getToggleFieldForSystemProperty(String key) {

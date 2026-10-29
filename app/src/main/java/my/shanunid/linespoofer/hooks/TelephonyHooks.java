@@ -489,6 +489,8 @@ public class TelephonyHooks {
             hookSubscriptionInfo(subscriptionInfo);
         }
 
+        hookNetworkState(telephonyManager);
+
         try {
             XposedHelpers.findAndHookMethod(telephonyManager, "isSmsCapable",
                     new XC_MethodHook() {
@@ -1000,6 +1002,92 @@ public class TelephonyHooks {
             return numeric.substring(3);
         }
         return "260";
+    }
+
+    private static void hookNetworkState(Class<?> telephonyManager) {
+        // Hook getNetworkType() -> NETWORK_TYPE_LTE (13)
+        try {
+            XposedHelpers.findAndHookMethod(telephonyManager, "getNetworkType",
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        if (ConfigManager.shouldExposeTelephony()) {
+                            param.setResult(13); // NETWORK_TYPE_LTE
+                        }
+                    }
+                });
+        } catch (Throwable ignored) {
+        }
+
+        // Hook getDataNetworkType() -> NETWORK_TYPE_LTE (13)
+        try {
+            XposedHelpers.findAndHookMethod(telephonyManager, "getDataNetworkType",
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        if (ConfigManager.shouldExposeTelephony()) {
+                            param.setResult(13);
+                        }
+                    }
+                });
+        } catch (Throwable ignored) {
+        }
+
+        // Hook getVoiceNetworkType() -> NETWORK_TYPE_LTE (13)
+        try {
+            XposedHelpers.findAndHookMethod(telephonyManager, "getVoiceNetworkType",
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        if (ConfigManager.shouldExposeTelephony()) {
+                            param.setResult(13);
+                        }
+                    }
+                });
+        } catch (Throwable ignored) {
+        }
+
+        // Hook getDataState() -> DATA_CONNECTED (2)
+        try {
+            XposedHelpers.findAndHookMethod(telephonyManager, "getDataState",
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        if (ConfigManager.shouldExposeTelephony()) {
+                            param.setResult(2); // DATA_CONNECTED
+                        }
+                    }
+                });
+        } catch (Throwable ignored) {
+        }
+
+        // Hook isNetworkRoaming() -> false
+        try {
+            XposedHelpers.findAndHookMethod(telephonyManager, "isNetworkRoaming",
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        if (ConfigManager.shouldExposeTelephony()) {
+                            param.setResult(false);
+                        }
+                    }
+                });
+        } catch (Throwable ignored) {
+        }
+
+        // Hook isDataEnabled() -> true
+        try {
+            XposedHelpers.findAndHookMethod(telephonyManager, "isDataEnabled",
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        if (ConfigManager.shouldExposeTelephony()) {
+                            param.setResult(true);
+                        }
+                    }
+                });
+        } catch (Throwable ignored) {
+        }
     }
 
     private interface ValueProvider {
