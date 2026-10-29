@@ -31,6 +31,11 @@ All notable changes to this project will be documented in this file.
 - **Milestone 5 (Profile System & Logger UI)**: Hardened `DevicePresetCatalog.java` with offline-first loading and bundled realistic presets (Pixel 7 Pro, Galaxy S23 Ultra, POCO F6 / malachite, Xiaomi 13), eliminating mandatory GitHub API dependencies.
 - **Milestone 5 (Profile System & Logger UI)**: Added offline JSON profile export and import methods in `ConfigFileManager.java`.
 - **Milestone 5 (Profile System & Logger UI)**: Added `FileProvider` in `AndroidManifest.xml` and complete localization strings across English, Japanese, Korean, and Simplified Chinese.
+- **Milestone 6 (Sensors & Fingerprint Hooks)**: Created `SensorHooks.java` masking emulator/generic sensors to tier-1 vendors (Bosch Sensortec, STMicroelectronics) and injecting natural micro-jitter to Accelerometer, Gyroscope, and Magnetometer streams to defeat bot flat-surface detection.
+- **Milestone 6 (Sensors & Fingerprint Hooks)**: Enhanced `WebViewHooks.java` to inject unforgeable WebGL parameters (GL_VENDOR, GL_RENDERER, UNMASKED_VENDOR_WEBGL, UNMASKED_RENDERER_WEBGL) dynamically aligned with the spoofed SoC profile (Adreno / Mali) and subtle micro-variance on canvas data reads.
+- **Milestone 6 (Sensors & Fingerprint Hooks)**: Added user toggles with Material 3 Switches in `DeviceSettingsScreen.kt` and `ConfigManager.java` for `Simulate Natural Sensor Jitter` and `Spoof WebView & WebGL Fingerprint`.
+- **Milestone 6 (Sensors & Fingerprint Hooks)**: Registered `SensorHooks.hook(lpparam)` in `MainHook.java` with centralized `AppLogger` tracking.
+- **Milestone 6 (Sensors & Fingerprint Hooks)**: Added localization strings for sensor and fingerprint controls across English, Japanese, Korean, and Simplified Chinese.
 
 ### Planned
 - **M1 (Foundation)**: Refactor package name and unified authorities, establish offline preset catalog and build configuration.

@@ -80,6 +80,8 @@ public class ConfigManager {
     public static final String FIELD_APP_SET_ID = "app_set_id";
     public static final String FIELD_BLOCK_LOCAL_SOCKET = "block_local_socket";
     public static final String FIELD_TELEPHONY = "telephony";
+    public static final String FIELD_SENSORS = "sensors";
+    public static final String FIELD_WEBGL = "webgl";
 
     private static final long RETRY_INTERVAL_MS = 1500L;
 
@@ -674,6 +676,55 @@ public class ConfigManager {
 
     public static boolean isTelephonySpoofEnabled() {
         return isSpoofEnabled(FIELD_TELEPHONY);
+    }
+
+    public static boolean isSensorsSpoofEnabled() {
+        return isSpoofEnabled(FIELD_SENSORS);
+    }
+
+    public static boolean isWebGlSpoofEnabled() {
+        return isSpoofEnabled(FIELD_WEBGL);
+    }
+
+    public static String getWebGlVendor() {
+        if (!isWebGlSpoofEnabled()) {
+            return "Qualcomm";
+        }
+        String socMfg = getOptionalConfigValue("ro.soc.manufacturer");
+        if (socMfg == null || socMfg.isEmpty()) {
+            socMfg = getOptionalConfigValue("ro.product.manufacturer");
+        }
+        if (socMfg != null) {
+            String lower = socMfg.toLowerCase(Locale.US);
+            if (lower.contains("samsung")) return "Samsung";
+            if (lower.contains("google")) return "ARM";
+            if (lower.contains("mediatek")) return "ARM";
+        }
+        return "Qualcomm";
+    }
+
+    public static String getWebGlRenderer() {
+        if (!isWebGlSpoofEnabled()) {
+            return "Adreno (TM) 740";
+        }
+        String soc = getOptionalConfigValue("ro.soc.model");
+        if (soc == null || soc.isEmpty()) {
+            soc = getOptionalConfigValue("ro.board.platform");
+        }
+        if (soc != null) {
+            String lower = soc.toLowerCase(Locale.US);
+            if (lower.contains("tensor g3") || lower.contains("tensor g4")) return "Mali-G715-MC10";
+            if (lower.contains("tensor g2")) return "Mali-G710";
+            if (lower.contains("tensor")) return "Mali-G78";
+            if (lower.contains("dimensity 9300") || lower.contains("dimensity 9200")) return "Immortalis-G720 MC12";
+            if (lower.contains("dimensity") || lower.contains("mt68")) return "Mali-G715-MC11";
+            if (lower.contains("exynos 2400") || lower.contains("exynos 2200")) return "Samsung Xclipse 940";
+            if (lower.contains("8 gen 3") || lower.contains("8s gen 3")) return "Adreno (TM) 750";
+            if (lower.contains("8 gen 2") || lower.contains("kalama")) return "Adreno (TM) 740";
+            if (lower.contains("8 gen 1") || lower.contains("taro")) return "Adreno (TM) 730";
+            if (lower.contains("888") || lower.contains("lahaina")) return "Adreno (TM) 660";
+        }
+        return "Adreno (TM) 740";
     }
 
     public static String getToggleFieldForSystemProperty(String key) {

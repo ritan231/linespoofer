@@ -220,6 +220,8 @@
 
     <string name="settings_field_block_local_socket">Block Local Socket / LAN Scan</string>
     <string name="settings_field_telephony">Spoof SIM and Telephony</string>
+    <string name="settings_field_sensors">Simulate Natural Sensor Jitter</string>
+    <string name="settings_field_webgl">Spoof WebView &amp; WebGL Fingerprint</string>
 
     <string name="diagnostics_logs_title">Diagnostics Log</string>
     <string name="log_export_button">Export Log</string>

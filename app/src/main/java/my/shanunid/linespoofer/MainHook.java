@@ -19,6 +19,7 @@ import my.shanunid.linespoofer.hooks.LocaleHooks;
 import my.shanunid.linespoofer.hooks.MediaDrmHooks;
 import my.shanunid.linespoofer.hooks.NetworkSecurityHooks;
 import my.shanunid.linespoofer.hooks.PackageManagerHooks;
+import my.shanunid.linespoofer.hooks.SensorHooks;
 import my.shanunid.linespoofer.hooks.SettingsHooks;
 import my.shanunid.linespoofer.hooks.SocketSecurityHooks;
 import my.shanunid.linespoofer.hooks.SystemPropertiesHooks;
@@ -214,6 +215,13 @@ public class MainHook implements IXposedHookLoadPackage {
             AppLogger.debug(TAG, "WebViewHooks loaded");
         } catch (Exception exception) {
             AppLogger.logError(TAG, "WebViewHooks failed: " + exception.getMessage(), exception);
+        }
+
+        try {
+            SensorHooks.hook(lpparam);
+            AppLogger.debug(TAG, "SensorHooks loaded");
+        } catch (Exception exception) {
+            AppLogger.logError(TAG, "SensorHooks failed: " + exception.getMessage(), exception);
         }
 
         try {

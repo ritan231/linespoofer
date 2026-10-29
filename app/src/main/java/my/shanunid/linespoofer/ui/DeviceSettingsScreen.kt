@@ -53,6 +53,7 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedListItem
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
@@ -88,6 +89,7 @@ private data class EditorField(
     val labelRes: Int,
     val numeric: Boolean = false,
     val multiline: Boolean = false,
+    val isToggle: Boolean = false,
 )
 
 private val identityFields = listOf(
@@ -115,13 +117,15 @@ private val buildFields = listOf(
 )
 
 private val networkFields = listOf(
-    EditorField(ConfigManager.FIELD_TELEPHONY, R.string.settings_field_telephony),
+    EditorField(ConfigManager.FIELD_TELEPHONY, R.string.settings_field_telephony, isToggle = true),
     EditorField(ConfigManager.FIELD_OPERATOR_ALPHA, R.string.settings_field_operator_name),
     EditorField(ConfigManager.FIELD_OPERATOR_NUMERIC, R.string.settings_field_operator_numeric, numeric = true),
     EditorField(ConfigManager.FIELD_SIM_COUNTRY, R.string.settings_field_sim_country_iso),
     EditorField(ConfigManager.FIELD_TIMEZONE, R.string.settings_field_timezone),
     EditorField(ConfigManager.FIELD_LOCALE, R.string.settings_field_locale),
-    EditorField(ConfigManager.FIELD_BLOCK_LOCAL_SOCKET, R.string.settings_field_block_local_socket),
+    EditorField(ConfigManager.FIELD_BLOCK_LOCAL_SOCKET, R.string.settings_field_block_local_socket, isToggle = true),
+    EditorField(ConfigManager.FIELD_SENSORS, R.string.settings_field_sensors, isToggle = true),
+    EditorField(ConfigManager.FIELD_WEBGL, R.string.settings_field_webgl, isToggle = true),
 )
 
 private val advancedFields = listOf(
@@ -649,26 +653,47 @@ private fun DeviceSettingsSection(
 @Composable
 private fun ProfileEditorField(field: EditorField, editor: ProfileEditorState) {
     val spoofEnabled = editor.enabledFields[field.fieldId] != false
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 5.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Checkbox(
-            checked = spoofEnabled,
-            onCheckedChange = { editor.enabledFields[field.fieldId] = it },
-        )
-        Spacer(Modifier.width(8.dp))
-        OutlinedTextField(
-            value = editor.values[field.fieldId].orEmpty(),
-            onValueChange = { editor.values[field.fieldId] = it },
-            label = { Text(stringResource(field.labelRes)) },
-            enabled = spoofEnabled && editor.customMode,
-            minLines = if (field.multiline) 2 else 1,
-            keyboardOptions = KeyboardOptions(keyboardType = if (field.numeric) KeyboardType.Number else KeyboardType.Text),
-            modifier = Modifier.weight(1f),
-        )
+    if (field.isToggle) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(field.labelRes),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f),
+            )
+            Switch(
+                checked = spoofEnabled,
+                onCheckedChange = { editor.enabledFields[field.fieldId] = it },
+            )
+        }
+    } else {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 5.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Checkbox(
+                checked = spoofEnabled,
+                onCheckedChange = { editor.enabledFields[field.fieldId] = it },
+            )
+            Spacer(Modifier.width(8.dp))
+            OutlinedTextField(
+                value = editor.values[field.fieldId].orEmpty(),
+                onValueChange = { editor.values[field.fieldId] = it },
+                label = { Text(stringResource(field.labelRes)) },
+                enabled = spoofEnabled && editor.customMode,
+                minLines = if (field.multiline) 2 else 1,
+                keyboardOptions = KeyboardOptions(keyboardType = if (field.numeric) KeyboardType.Number else KeyboardType.Text),
+                modifier = Modifier.weight(1f),
+            )
+        }
     }
 }
 

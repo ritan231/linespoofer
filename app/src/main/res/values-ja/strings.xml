@@ -218,6 +218,8 @@
     <string name="safe_mode_more_options">その他のオプション</string>
     <string name="settings_field_block_local_socket">ローカルソケット/LANスキャン遮断</string>
     <string name="settings_field_telephony">SIM・テレフォニー偽装</string>
+    <string name="settings_field_sensors">自然なセンサージッターのシミュレーション</string>
+    <string name="settings_field_webgl">WebViewおよびWebGL指紋の偽装</string>
 
     <string name="diagnostics_logs_title">診断ログ</string>
     <string name="log_export_button">ログをエクスポート</string>

@@ -218,6 +218,8 @@
     <string name="safe_mode_more_options">더보기</string>
     <string name="settings_field_block_local_socket">로컬 소켓/LAN 스캔 차단</string>
     <string name="settings_field_telephony">SIM 및 텔레포니 위조</string>
+    <string name="settings_field_sensors">자연스러운 센서 지터 시뮬레이션</string>
+    <string name="settings_field_webgl">WebView 및 WebGL 핑거프린트 위조</string>
 
     <string name="diagnostics_logs_title">진단 로그</string>
     <string name="log_export_button">로그 내보내기</string>
