@@ -47,6 +47,7 @@ public class PackageManagerHooks {
             if (appPackageManagerClass != null) {
                 hookHasSystemFeature(appPackageManagerClass);
                 hookGetSystemAvailableFeatures(appPackageManagerClass);
+                hookInstallerPackage(appPackageManagerClass, lpparam);
             }
         } catch (Throwable throwable) {
             XposedBridge.log(TAG + ": Failed to hook PackageManager: " + throwable.getMessage());
@@ -156,5 +157,42 @@ public class PackageManagerHooks {
         }
 
         return null;
+    }
+
+    private static void hookInstallerPackage(Class<?> pmClass, XC_LoadPackage.LoadPackageParam lpparam) {
+        // 1. Hook getInstallerPackageName(String)
+        try {
+            XposedHelpers.findAndHookMethod(pmClass, "getInstallerPackageName", String.class,
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        param.setResult("com.android.vending");
+                    }
+                });
+        } catch (Throwable ignored) {
+        }
+
+        // 2. Hook InstallSourceInfo on Android 11+ (API 30+)
+        try {
+            Class<?> installSourceInfoClass = XposedHelpers.findClassIfExists(
+                "android.content.pm.InstallSourceInfo", lpparam.classLoader);
+            if (installSourceInfoClass != null) {
+                XposedHelpers.findAndHookMethod(installSourceInfoClass, "getInstallingPackageName",
+                    new XC_MethodHook() {
+                        @Override
+                        protected void afterHookedMethod(MethodHookParam param) {
+                            param.setResult("com.android.vending");
+                        }
+                    });
+                XposedHelpers.findAndHookMethod(installSourceInfoClass, "getInitiatingPackageName",
+                    new XC_MethodHook() {
+                        @Override
+                        protected void afterHookedMethod(MethodHookParam param) {
+                            param.setResult("com.android.vending");
+                        }
+                    });
+            }
+        } catch (Throwable ignored) {
+        }
     }
 }

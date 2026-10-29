@@ -19,6 +19,9 @@ All notable changes to this project will be documented in this file.
 - **Milestone 2 (Core Spoofing & Bug Fixes)**: Connected RAM capacity (`getTotalRamBytes()`) and CPU cores (`getCpuCoreCount()`) dynamically to `ConfigManager` instead of hardcoded Pixel 7 Pro specs.
 - **Milestone 2 (Core Spoofing & Bug Fixes)**: Implemented full procfs `/proc/cpuinfo` and `/proc/meminfo` interception across Java readers (`BufferedReader`, `FileReader`, `RandomAccessFile`) and shell commands (`ProcessBuilder`, `Runtime.exec`) to prevent real SoC and memory leakage.
 - **Milestone 2 (Core Spoofing & Bug Fixes)**: Hardened ABI parsing and fallback in `BuildHooks.java` with safe 64-bit defaults.
+- **Milestone 3 (Security & Network Hooks)**: Implemented Developer Options & ADB anti-detection in `SettingsHooks.java` (mocking `adb_enabled` and `development_settings_enabled` to 0).
+- **Milestone 3 (Security & Network Hooks)**: Created `NetworkSecurityHooks.java` hiding VPN transports (`TRANSPORT_VPN`), asserting `NET_CAPABILITY_NOT_VPN`, masking proxy settings, and hiding tun/tap virtual interfaces.
+- **Milestone 3 (Security & Network Hooks)**: Implemented Play Store installer spoofing in `PackageManagerHooks.java` (`getInstallerPackageName` and Android 11+ `InstallSourceInfo` set to `com.android.vending`).
 
 ### Planned
 - **M1 (Foundation)**: Refactor package name and unified authorities, establish offline preset catalog and build configuration.

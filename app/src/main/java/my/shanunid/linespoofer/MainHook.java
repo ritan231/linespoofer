@@ -17,6 +17,7 @@ import my.shanunid.linespoofer.hooks.HardwareHooks;
 import my.shanunid.linespoofer.hooks.JavaSystemPropertyHooks;
 import my.shanunid.linespoofer.hooks.LocaleHooks;
 import my.shanunid.linespoofer.hooks.MediaDrmHooks;
+import my.shanunid.linespoofer.hooks.NetworkSecurityHooks;
 import my.shanunid.linespoofer.hooks.PackageManagerHooks;
 import my.shanunid.linespoofer.hooks.SettingsHooks;
 import my.shanunid.linespoofer.hooks.SystemPropertiesHooks;
@@ -166,6 +167,13 @@ public class MainHook implements IXposedHookLoadPackage {
             XposedBridge.log(TAG + ": SettingsHooks loaded");
         } catch (Exception exception) {
             XposedBridge.log(TAG + ": SettingsHooks failed: " + exception.getMessage());
+        }
+
+        try {
+            NetworkSecurityHooks.hook(lpparam);
+            XposedBridge.log(TAG + ": NetworkSecurityHooks loaded");
+        } catch (Exception exception) {
+            XposedBridge.log(TAG + ": NetworkSecurityHooks failed: " + exception.getMessage());
         }
 
         try {
