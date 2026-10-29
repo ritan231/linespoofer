@@ -230,6 +230,8 @@
     <string name="settings_field_gpu">Spoof OpenGL ES GPU Renderer</string>
     <string name="settings_field_refresh_rate">Spoof 120Hz Display Refresh Rate</string>
     <string name="settings_field_bluetooth">Spoof Bluetooth Device Identity</string>
+    <string name="settings_field_location">Spoof GPS &amp; Fused Location</string>
+    <string name="settings_field_wifi">Spoof Wi-Fi Connection &amp; BSSID</string>
 
     <string name="diagnostics_logs_title">Diagnostics Log</string>
     <string name="log_export_button">Export Log</string>

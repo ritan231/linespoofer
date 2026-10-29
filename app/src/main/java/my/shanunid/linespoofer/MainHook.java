@@ -20,6 +20,7 @@ import my.shanunid.linespoofer.hooks.GpuHooks;
 import my.shanunid.linespoofer.hooks.HardwareHooks;
 import my.shanunid.linespoofer.hooks.JavaSystemPropertyHooks;
 import my.shanunid.linespoofer.hooks.LocaleHooks;
+import my.shanunid.linespoofer.hooks.LocationHooks;
 import my.shanunid.linespoofer.hooks.MediaDrmHooks;
 import my.shanunid.linespoofer.hooks.NetworkSecurityHooks;
 import my.shanunid.linespoofer.hooks.PackageManagerHooks;
@@ -32,6 +33,7 @@ import my.shanunid.linespoofer.hooks.TelephonyHooks;
 import my.shanunid.linespoofer.hooks.TimeHooks;
 import my.shanunid.linespoofer.hooks.VendorSystemPropertiesHooks;
 import my.shanunid.linespoofer.hooks.WebViewHooks;
+import my.shanunid.linespoofer.hooks.WifiHooks;
 import my.shanunid.linespoofer.utils.AppLogger;
 import my.shanunid.linespoofer.utils.ConfigManager;
 
@@ -277,6 +279,20 @@ public class MainHook implements IXposedHookLoadPackage {
             AppLogger.debug(TAG, "BluetoothHooks loaded");
         } catch (Exception exception) {
             AppLogger.logError(TAG, "BluetoothHooks failed: " + exception.getMessage(), exception);
+        }
+
+        try {
+            LocationHooks.hook(lpparam);
+            AppLogger.debug(TAG, "LocationHooks loaded");
+        } catch (Exception exception) {
+            AppLogger.logError(TAG, "LocationHooks failed: " + exception.getMessage(), exception);
+        }
+
+        try {
+            WifiHooks.hook(lpparam);
+            AppLogger.debug(TAG, "WifiHooks loaded");
+        } catch (Exception exception) {
+            AppLogger.logError(TAG, "WifiHooks failed: " + exception.getMessage(), exception);
         }
 
         AppLogger.info(TAG, "All hooks initialized for " + lpparam.packageName);

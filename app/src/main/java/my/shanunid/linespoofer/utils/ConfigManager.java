@@ -92,6 +92,8 @@ public class ConfigManager {
     public static final String FIELD_GPU_RENDERER = "gpu_renderer";
     public static final String FIELD_REFRESH_RATE = "refresh_rate";
     public static final String FIELD_BLUETOOTH = "bluetooth";
+    public static final String FIELD_LOCATION = "location";
+    public static final String FIELD_WIFI = "wifi";
 
     private static final long RETRY_INTERVAL_MS = 1500L;
 
@@ -768,6 +770,34 @@ public class ConfigManager {
 
     public static boolean isBluetoothSpoofEnabled() {
         return isSpoofEnabled(FIELD_BLUETOOTH);
+    }
+
+    public static boolean isLocationSpoofEnabled() {
+        return isSpoofEnabled(FIELD_LOCATION);
+    }
+
+    public static double getSpoofedLatitude() {
+        String val = getConfigValue("device.location.latitude");
+        if (val != null) {
+            try {
+                return Double.parseDouble(val.trim());
+            } catch (Exception ignored) {}
+        }
+        return -6.2088;
+    }
+
+    public static double getSpoofedLongitude() {
+        String val = getConfigValue("device.location.longitude");
+        if (val != null) {
+            try {
+                return Double.parseDouble(val.trim());
+            } catch (Exception ignored) {}
+        }
+        return 106.8456;
+    }
+
+    public static boolean isWifiSpoofEnabled() {
+        return isSpoofEnabled(FIELD_WIFI);
     }
 
     public static String getWebGlVendor() {

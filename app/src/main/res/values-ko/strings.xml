@@ -228,6 +228,8 @@
     <string name="settings_field_gpu">OpenGL ES GPU 렌더러 위조</string>
     <string name="settings_field_refresh_rate">120Hz 디스플레이 새로고침 빈도 위조</string>
     <string name="settings_field_bluetooth">블루투스 기기 식별 위조</string>
+    <string name="settings_field_location">GPS 및 Fused 위치 위조</string>
+    <string name="settings_field_wifi">Wi-Fi 연결 및 BSSID 위조</string>
 
     <string name="diagnostics_logs_title">진단 로그</string>
     <string name="log_export_button">로그 내보내기</string>

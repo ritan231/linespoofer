@@ -228,6 +228,8 @@
     <string name="settings_field_gpu">OpenGL ES GPUレンダラーの偽装</string>
     <string name="settings_field_refresh_rate">120Hzディスプレイリフレッシュレートの偽装</string>
     <string name="settings_field_bluetooth">Bluetoothデバイス識別の偽装</string>
+    <string name="settings_field_location">GPSおよびFused位置情報の偽装</string>
+    <string name="settings_field_wifi">Wi-Fi接続とBSSIDの偽装</string>
 
     <string name="diagnostics_logs_title">診断ログ</string>
     <string name="log_export_button">ログをエクスポート</string>

@@ -228,6 +228,8 @@
     <string name="settings_field_gpu">伪装 OpenGL ES GPU 渲染器</string>
     <string name="settings_field_refresh_rate">伪装 120Hz 屏幕刷新率</string>
     <string name="settings_field_bluetooth">伪装蓝牙设备标识</string>
+    <string name="settings_field_location">伪装 GPS 与 Fused 地理位置</string>
+    <string name="settings_field_wifi">伪装 Wi-Fi 连接与 BSSID</string>
 
     <string name="diagnostics_logs_title">诊断日志</string>
     <string name="log_export_button">导出日志</string>

@@ -136,6 +136,8 @@ private val systemFields = listOf(
     EditorField(ConfigManager.FIELD_GPU, R.string.settings_field_gpu, isToggle = true),
     EditorField(ConfigManager.FIELD_REFRESH_RATE, R.string.settings_field_refresh_rate, isToggle = true),
     EditorField(ConfigManager.FIELD_BLUETOOTH, R.string.settings_field_bluetooth, isToggle = true),
+    EditorField(ConfigManager.FIELD_LOCATION, R.string.settings_field_location, isToggle = true),
+    EditorField(ConfigManager.FIELD_WIFI, R.string.settings_field_wifi, isToggle = true),
 )
 
 private val advancedFields = listOf(
