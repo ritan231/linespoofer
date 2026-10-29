@@ -672,12 +672,16 @@ public class ConfigManager {
     }
 
     public static boolean isSpoofEnabled(String fieldId) {
+        return isSpoofEnabled(fieldId, true);
+    }
+
+    public static boolean isSpoofEnabled(String fieldId, boolean defaultVal) {
         if (fieldId == null || fieldId.trim().isEmpty()) {
-            return true;
+            return defaultVal;
         }
         String explicit = getOptionalConfigValue(getTogglePropertyKey(fieldId));
         if (explicit == null) {
-            return true;
+            return defaultVal;
         }
         return explicit.equals("1") || explicit.equalsIgnoreCase("true");
     }
@@ -737,7 +741,7 @@ public class ConfigManager {
     }
 
     public static boolean isGpuSpoofEnabled() {
-        return isSpoofEnabled(FIELD_GPU);
+        return isSpoofEnabled(FIELD_GPU, false);
     }
 
     public static String getGpuRenderer() {
@@ -773,7 +777,7 @@ public class ConfigManager {
     }
 
     public static boolean isLocationSpoofEnabled() {
-        return isSpoofEnabled(FIELD_LOCATION);
+        return isSpoofEnabled(FIELD_LOCATION, false);
     }
 
     public static double getSpoofedLatitude() {

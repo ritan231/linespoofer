@@ -584,7 +584,12 @@ class ProfileEditorState {
         }
         allFields.forEach { fieldId ->
             val value = config.extraProperties[ConfigManager.getTogglePropertyKey(fieldId)]
-            enabledFields[fieldId] = value == null || value == "1" || value.equals("true", true)
+            val isRiskGated = fieldId == ConfigManager.FIELD_GPU || fieldId == ConfigManager.FIELD_LOCATION
+            enabledFields[fieldId] = if (value == null) {
+                !isRiskGated
+            } else {
+                value == "1" || value.equals("true", true)
+            }
         }
     }
 
@@ -643,7 +648,13 @@ class ProfileEditorState {
         }
         allFields.forEach { fieldId ->
             val key = ConfigManager.getTogglePropertyKey(fieldId)
-            if (enabledFields[fieldId] == false) result[key] = "false" else result.remove(key)
+            val isRiskGated = fieldId == ConfigManager.FIELD_GPU || fieldId == ConfigManager.FIELD_LOCATION
+            val isEnabled = enabledFields[fieldId] ?: (!isRiskGated)
+            if (isRiskGated) {
+                if (isEnabled) result[key] = "true" else result.remove(key)
+            } else {
+                if (!isEnabled) result[key] = "false" else result.remove(key)
+            }
         }
         return result
     }
@@ -739,7 +750,22 @@ class ProfileEditorState {
             ConfigManager.FIELD_MEDIA_DRM_ID,
             ConfigManager.FIELD_APP_SET_ID,
         )
-        val allFields = profileFields + advancedFields
+        val toggleFields = listOf(
+            ConfigManager.FIELD_TELEPHONY,
+            ConfigManager.FIELD_BLOCK_LOCAL_SOCKET,
+            ConfigManager.FIELD_SENSORS,
+            ConfigManager.FIELD_WEBGL,
+            ConfigManager.FIELD_BATTERY,
+            ConfigManager.FIELD_UPTIME,
+            ConfigManager.FIELD_STORAGE,
+            ConfigManager.FIELD_AUDIO,
+            ConfigManager.FIELD_GPU,
+            ConfigManager.FIELD_REFRESH_RATE,
+            ConfigManager.FIELD_BLUETOOTH,
+            ConfigManager.FIELD_LOCATION,
+            ConfigManager.FIELD_WIFI,
+        )
+        val allFields = profileFields + advancedFields + toggleFields
         val advancedPropertyKeys = mapOf(
             ConfigManager.FIELD_IMEI to ConfigManager.KEY_SPOOF_IMEI,
             ConfigManager.FIELD_MEID to ConfigManager.KEY_SPOOF_MEID,

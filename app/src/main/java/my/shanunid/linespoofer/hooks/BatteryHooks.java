@@ -72,30 +72,44 @@ public final class BatteryHooks {
         }
 
         try {
+            XC_MethodHook receiverHook = new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    try {
+                        if (!ConfigManager.isBatterySpoofEnabled()) {
+                            return;
+                        }
+                        if (param.args != null && param.args.length > 1 && param.args[1] instanceof IntentFilter) {
+                            IntentFilter filter = (IntentFilter) param.args[1];
+                            if (filter.hasAction(Intent.ACTION_BATTERY_CHANGED)) {
+                                Intent intent = (Intent) param.getResult();
+                                if (intent != null) {
+                                    applyBatteryIntentExtras(intent);
+                                }
+                            }
+                        }
+                    } catch (Throwable ignored) {
+                    }
+                }
+            };
+
             XposedHelpers.findAndHookMethod(
                 "android.content.ContextWrapper",
                 lpparam.classLoader,
                 "registerReceiver",
                 BroadcastReceiver.class,
                 IntentFilter.class,
-                new XC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) {
-                        try {
-                            if (!ConfigManager.isBatterySpoofEnabled()) {
-                                return;
-                            }
-                            IntentFilter filter = (IntentFilter) param.args[1];
-                            if (filter != null && filter.hasAction(Intent.ACTION_BATTERY_CHANGED)) {
-                                Intent intent = (Intent) param.getResult();
-                                if (intent != null) {
-                                    applyBatteryIntentExtras(intent);
-                                }
-                            }
-                        } catch (Throwable ignored) {
-                        }
-                    }
-                }
+                receiverHook
+            );
+
+            XposedHelpers.findAndHookMethod(
+                "android.content.ContextWrapper",
+                lpparam.classLoader,
+                "registerReceiver",
+                BroadcastReceiver.class,
+                IntentFilter.class,
+                int.class,
+                receiverHook
             );
 
             XposedHelpers.findAndHookMethod(
@@ -106,26 +120,21 @@ public final class BatteryHooks {
                 IntentFilter.class,
                 String.class,
                 android.os.Handler.class,
-                new XC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) {
-                        try {
-                            if (!ConfigManager.isBatterySpoofEnabled()) {
-                                return;
-                            }
-                            IntentFilter filter = (IntentFilter) param.args[1];
-                            if (filter != null && filter.hasAction(Intent.ACTION_BATTERY_CHANGED)) {
-                                Intent intent = (Intent) param.getResult();
-                                if (intent != null) {
-                                    applyBatteryIntentExtras(intent);
-                                }
-                            }
-                        } catch (Throwable ignored) {
-                        }
-                    }
-                }
+                receiverHook
             );
-            AppLogger.debug(TAG, "ContextWrapper.registerReceiver (battery) hooked");
+
+            XposedHelpers.findAndHookMethod(
+                "android.content.ContextWrapper",
+                lpparam.classLoader,
+                "registerReceiver",
+                BroadcastReceiver.class,
+                IntentFilter.class,
+                String.class,
+                android.os.Handler.class,
+                int.class,
+                receiverHook
+            );
+            AppLogger.debug(TAG, "ContextWrapper.registerReceiver (battery) hooked across all overloads");
         } catch (Throwable throwable) {
             AppLogger.logError(TAG, "Failed to hook ContextWrapper.registerReceiver: " + throwable.getMessage(), throwable);
         }
@@ -144,3 +153,4 @@ public final class BatteryHooks {
         intent.putExtra(BatteryManager.EXTRA_PRESENT, true);
     }
 }
+

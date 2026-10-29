@@ -11,9 +11,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Lightweight local embedded HTTP server for on-device LineSpoofer dashboard.
@@ -27,6 +30,7 @@ public final class WebUiServer {
     private static volatile boolean isRunning = false;
     private static ServerSocket serverSocket;
     private static Thread serverThread;
+    private static ExecutorService workerPool;
 
     private WebUiServer() {
     }
@@ -38,10 +42,13 @@ public final class WebUiServer {
 
         final Context appContext = context.getApplicationContext();
         isRunning = true;
+        workerPool = Executors.newFixedThreadPool(2);
 
         serverThread = new Thread(() -> {
             try {
-                serverSocket = new ServerSocket(DEFAULT_PORT, 10, InetAddress.getByName("127.0.0.1"));
+                serverSocket = new ServerSocket();
+                serverSocket.setReuseAddress(true);
+                serverSocket.bind(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), DEFAULT_PORT), 10);
                 AppLogger.info(TAG, "WebUI server listening on http://127.0.0.1:" + DEFAULT_PORT);
 
                 while (isRunning && !serverSocket.isClosed()) {
@@ -70,6 +77,13 @@ public final class WebUiServer {
             }
             serverSocket = null;
         }
+        if (workerPool != null) {
+            try {
+                workerPool.shutdownNow();
+            } catch (Exception ignored) {
+            }
+            workerPool = null;
+        }
     }
 
     public static boolean isRunning() {
@@ -77,7 +91,16 @@ public final class WebUiServer {
     }
 
     private static void handleClientAsync(Context context, Socket client) {
-        new Thread(() -> {
+        ExecutorService pool = workerPool;
+        if (pool == null || pool.isShutdown()) {
+            try {
+                client.close();
+            } catch (Exception ignored) {
+            }
+            return;
+        }
+
+        pool.execute(() -> {
             try (Socket socket = client;
                  BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
                  OutputStream output = socket.getOutputStream()) {
@@ -103,7 +126,7 @@ public final class WebUiServer {
                 }
             } catch (Exception ignored) {
             }
-        }, "linespoofer-webui-worker").start();
+        });
     }
 
     private static void serveIndexHtml(Context context, OutputStream output) throws Exception {
