@@ -23,9 +23,12 @@ public class AdvertisingIdHooks {
                         new XC_MethodHook() {
                             @Override
                             protected void afterHookedMethod(MethodHookParam param) {
-                                String spoofedValue = ConfigManager.getGAID();
-                                if (spoofedValue != null) {
-                                    param.setResult(spoofedValue);
+                                try {
+                                    String spoofedValue = ConfigManager.getGAID();
+                                    if (spoofedValue != null) {
+                                        param.setResult(spoofedValue);
+                                    }
+                                } catch (Throwable ignored) {
                                 }
                             }
                         });
@@ -44,9 +47,12 @@ public class AdvertisingIdHooks {
                         new XC_MethodHook() {
                             @Override
                             protected void afterHookedMethod(MethodHookParam param) {
-                                String spoofedValue = ConfigManager.getGAID();
-                                if (spoofedValue != null) {
-                                    param.setResult(spoofedValue);
+                                try {
+                                    String spoofedValue = ConfigManager.getGAID();
+                                    if (spoofedValue != null) {
+                                        param.setResult(spoofedValue);
+                                    }
+                                } catch (Throwable ignored) {
                                 }
                             }
                         });
@@ -67,10 +73,13 @@ public class AdvertisingIdHooks {
                         new XC_MethodHook() {
                             @Override
                             protected void afterHookedMethod(MethodHookParam param) {
-                                Object info = param.getResult();
-                                if (info != null) {
-                                    // The getId() hook above will handle returning our GAID
-                                    // when the app calls info.getId()
+                                try {
+                                    Object info = param.getResult();
+                                    if (info != null) {
+                                        // The getId() hook above will handle returning our GAID
+                                        // when the app calls info.getId()
+                                    }
+                                } catch (Throwable ignored) {
                                 }
                             }
                         });

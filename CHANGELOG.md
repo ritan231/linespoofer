@@ -36,6 +36,12 @@ All notable changes to this project will be documented in this file.
 - **Milestone 6 (Sensors & Fingerprint Hooks)**: Added user toggles with Material 3 Switches in `DeviceSettingsScreen.kt` and `ConfigManager.java` for `Simulate Natural Sensor Jitter` and `Spoof WebView & WebGL Fingerprint`.
 - **Milestone 6 (Sensors & Fingerprint Hooks)**: Registered `SensorHooks.hook(lpparam)` in `MainHook.java` with centralized `AppLogger` tracking.
 - **Milestone 6 (Sensors & Fingerprint Hooks)**: Added localization strings for sensor and fingerprint controls across English, Japanese, Korean, and Simplified Chinese.
+- **Post-Audit Hardening (Fixes)**:
+  - Hardened callback exception handling in `AdvertisingIdHooks.java` and `MediaDrmHooks.java` with defensive try-catches to protect target app stability.
+  - Converted `DiagnosticsScreen.kt` log reading to asynchronous background coroutines (`Dispatchers.IO`) with `LaunchedEffect` to prevent UI thread frame drops.
+  - Added keep rule for `my.shanunid.linespoofer.data.**` in `app/proguard-rules.pro`.
+  - Removed obsolete dead code `BuildSerialHooks.java` (superseded by `BuildHooks.java`).
+  - Updated project reference URL in `RealInfoActivity.kt`.
 
 ### Planned
 - **M1 (Foundation)**: Refactor package name and unified authorities, establish offline preset catalog and build configuration.

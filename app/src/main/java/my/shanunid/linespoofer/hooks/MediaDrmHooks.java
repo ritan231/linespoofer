@@ -30,13 +30,19 @@ public class MediaDrmHooks {
                     new XC_MethodHook() {
                         @Override
                         protected void afterHookedMethod(MethodHookParam param) {
-                            String propertyName = (String) param.args[0];
-
-                            if (DEVICE_UNIQUE_ID.equals(propertyName)) {
-                                byte[] spoofedValue = ConfigManager.getMediaDrmId();
-                                if (spoofedValue != null) {
-                                    param.setResult(spoofedValue);
+                            try {
+                                if (param.args == null || param.args.length == 0 || !(param.args[0] instanceof String)) {
+                                    return;
                                 }
+                                String propertyName = (String) param.args[0];
+
+                                if (DEVICE_UNIQUE_ID.equals(propertyName)) {
+                                    byte[] spoofedValue = ConfigManager.getMediaDrmId();
+                                    if (spoofedValue != null) {
+                                        param.setResult(spoofedValue);
+                                    }
+                                }
+                            } catch (Throwable ignored) {
                             }
                         }
                     });

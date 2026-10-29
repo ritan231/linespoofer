@@ -34,9 +34,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,6 +50,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import my.shanunid.linespoofer.R
 import my.shanunid.linespoofer.utils.AppLogger
 import java.util.TimeZone
@@ -56,9 +61,19 @@ import java.util.TimeZone
 @Composable
 fun DiagnosticsScreen(appState: SpoofAppState, onBack: () -> Unit) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val configuration = LocalConfiguration.current
-    var logText by remember { mutableStateOf(AppLogger.getLogContent(context)) }
+    var logText by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            val content = AppLogger.getLogContent(context)
+            withContext(Dispatchers.Main) {
+                logText = content
+            }
+        }
+    }
 
     Scaffold(
         modifier = Modifier
@@ -129,36 +144,49 @@ fun DiagnosticsScreen(appState: SpoofAppState, onBack: () -> Unit) {
         )
 
         val onExportLog = {
-            val currentLog = AppLogger.getLogContent(context)
-            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.log_export_title))
-                putExtra(Intent.EXTRA_TEXT, currentLog.ifBlank { "LineSpoofer Diagnostics Log: (empty)" })
-                try {
-                    val logFile = AppLogger.getLogFile(context)
-                    if (logFile != null && logFile.exists() && logFile.length() > 0) {
-                        val fileUri = FileProvider.getUriForFile(
-                            context,
-                            "${context.packageName}.fileprovider",
-                            logFile
-                        )
-                        putExtra(Intent.EXTRA_STREAM, fileUri)
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            coroutineScope.launch(Dispatchers.IO) {
+                val currentLog = AppLogger.getLogContent(context)
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.log_export_title))
+                    putExtra(Intent.EXTRA_TEXT, currentLog.ifBlank { "LineSpoofer Diagnostics Log: (empty)" })
+                    try {
+                        val logFile = AppLogger.getLogFile(context)
+                        if (logFile != null && logFile.exists() && logFile.length() > 0) {
+                            val fileUri = FileProvider.getUriForFile(
+                                context,
+                                "${context.packageName}.fileprovider",
+                                logFile
+                            )
+                            putExtra(Intent.EXTRA_STREAM, fileUri)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                    } catch (_: Throwable) {
                     }
-                } catch (_: Throwable) {
+                }
+                withContext(Dispatchers.Main) {
+                    context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.log_export_title)))
                 }
             }
-            context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.log_export_title)))
         }
 
         val onClearLog = {
-            AppLogger.clearLog(context)
-            logText = ""
-            Toast.makeText(context, context.getString(R.string.log_cleared_toast), Toast.LENGTH_SHORT).show()
+            coroutineScope.launch(Dispatchers.IO) {
+                AppLogger.clearLog(context)
+                withContext(Dispatchers.Main) {
+                    logText = ""
+                    Toast.makeText(context, context.getString(R.string.log_cleared_toast), Toast.LENGTH_SHORT).show()
+                }
+            }
         }
 
         val onRefreshLog = {
-            logText = AppLogger.getLogContent(context)
+            coroutineScope.launch(Dispatchers.IO) {
+                val content = AppLogger.getLogContent(context)
+                withContext(Dispatchers.Main) {
+                    logText = content
+                }
+            }
         }
 
         LazyColumn(
@@ -191,7 +219,7 @@ fun DiagnosticsScreen(appState: SpoofAppState, onBack: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     FilledTonalButton(
-                        onClick = onExportLog,
+                        onClick = { onExportLog() },
                         modifier = Modifier.weight(1f)
                     ) {
                         Icon(Icons.Outlined.Share, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -199,14 +227,14 @@ fun DiagnosticsScreen(appState: SpoofAppState, onBack: () -> Unit) {
                         Text(stringResource(R.string.log_export_button))
                     }
                     OutlinedButton(
-                        onClick = onClearLog,
+                        onClick = { onClearLog() },
                         modifier = Modifier.weight(1f)
                     ) {
                         Icon(Icons.Outlined.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.size(6.dp))
                         Text(stringResource(R.string.log_clear_button))
                     }
-                    IconButton(onClick = onRefreshLog) {
+                    IconButton(onClick = { onRefreshLog() }) {
                         Icon(Icons.Outlined.Refresh, contentDescription = stringResource(R.string.log_refresh_button))
                     }
                 }

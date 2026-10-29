@@ -156,4 +156,4 @@ private fun AppInfoScreen(activity: RealInfoActivity) {
     }
 }
 
-private const val GITHUB_URL = "https://github.com/BuSung-dev/SpoofMyDevice"
+private const val GITHUB_URL = "https://github.com/shanunid/LineSpoofer"

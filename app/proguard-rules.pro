@@ -10,3 +10,6 @@
 
 # Keep utility classes
 -keep class my.shanunid.linespoofer.utils.** { *; }
+
+# Keep data models and serialization classes
+-keep class my.shanunid.linespoofer.data.** { *; }
