@@ -170,18 +170,35 @@ fun LineSpooferApp(appState: SpoofAppState) {
                 },
                 bottomBar = {
                     if (navigationType == NavigationType.Bar) {
-                        NavigationBar {
+                        androidx.compose.material3.NavigationBar(
+                            containerColor = MiuiXColors.DarkCard,
+                            tonalElevation = 0.dp,
+                        ) {
                             AppDestination.entries.forEach { item ->
-                                NavigationBarItem(
-                                    selected = item == destination,
+                                val selected = item == destination
+                                androidx.compose.material3.NavigationBarItem(
+                                    selected = selected,
                                     onClick = { destinationName = item.name },
                                     icon = {
                                         Icon(
-                                            imageVector = if (item == destination) item.selectedIcon else item.unselectedIcon,
+                                            imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
                                             contentDescription = null,
                                         )
                                     },
-                                    label = { Text(stringResource(item.labelRes)) },
+                                    label = {
+                                        Text(
+                                            text = stringResource(item.labelRes),
+                                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                            fontSize = 11.5.sp,
+                                        )
+                                    },
+                                    colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                                        selectedIconColor = androidx.compose.ui.graphics.Color.White,
+                                        selectedTextColor = MiuiXColors.Blue,
+                                        indicatorColor = MiuiXColors.Blue,
+                                        unselectedIconColor = MiuiXColors.TextSecondary,
+                                        unselectedTextColor = MiuiXColors.TextSecondary,
+                                    ),
                                 )
                             }
                         }

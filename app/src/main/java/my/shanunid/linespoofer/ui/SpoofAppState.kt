@@ -672,6 +672,25 @@ class ProfileEditorState {
     var locationLatitude by mutableStateOf("-6.2088")
     var locationLongitude by mutableStateOf("106.8456")
 
+    // Dynamic Spoof Extended Controls (MAC, Uptime, Wi-Fi, Bluetooth, Battery, FPS)
+    var macMode by mutableStateOf("random")
+    var macAddress by mutableStateOf("")
+    var uptimeMode by mutableStateOf("random")
+    var uptimeSeconds by mutableStateOf("27720")
+    var wifiMode by mutableStateOf("random")
+    var wifiSsid by mutableStateOf("\"Home-WiFi-5G\"")
+    var wifiBssid by mutableStateOf("")
+    var wifiRssi by mutableStateOf("-55")
+    var bluetoothMode by mutableStateOf("random")
+    var bluetoothName by mutableStateOf("")
+    var bluetoothMac by mutableStateOf("")
+    var batteryMode by mutableStateOf("random")
+    var batteryLevel by mutableStateOf(82f)
+    var batteryTemp by mutableStateOf(31.2f)
+    var batteryStatus by mutableStateOf("discharging")
+    var fpsMode by mutableStateOf("custom")
+    var targetFps by mutableStateOf(120f)
+
     fun reset(config: ConfigFileManager.LoadedConfig) {
         selectedPresetId = config.selectedPresetId
         customMode = config.isCustomMode
@@ -682,6 +701,25 @@ class ProfileEditorState {
         }
         locationLatitude = config.extraProperties["device.location.latitude"] ?: "-6.2088"
         locationLongitude = config.extraProperties["device.location.longitude"] ?: "106.8456"
+
+        macMode = config.extraProperties["device.mac.mode"] ?: "random"
+        macAddress = config.extraProperties["device.mac.address"].orEmpty()
+        uptimeMode = config.extraProperties["device.uptime.mode"] ?: "random"
+        uptimeSeconds = config.extraProperties["device.uptime.seconds"] ?: "27720"
+        wifiMode = config.extraProperties["device.wifi.mode"] ?: "random"
+        wifiSsid = config.extraProperties["device.wifi.ssid"] ?: "\"Home-WiFi-5G\""
+        wifiBssid = config.extraProperties["device.wifi.bssid"].orEmpty()
+        wifiRssi = config.extraProperties["device.wifi.rssi"] ?: "-55"
+        bluetoothMode = config.extraProperties["device.bluetooth.mode"] ?: "random"
+        bluetoothName = config.extraProperties["device.bluetooth.name"].orEmpty()
+        bluetoothMac = config.extraProperties["device.bluetooth.mac"].orEmpty()
+        batteryMode = config.extraProperties["device.battery.mode"] ?: "random"
+        batteryLevel = config.extraProperties["device.battery.level"]?.toFloatOrNull() ?: 82f
+        batteryTemp = (config.extraProperties["device.battery.temp"]?.toFloatOrNull() ?: 312f) / 10f
+        batteryStatus = config.extraProperties["device.battery.status"] ?: "discharging"
+        fpsMode = config.extraProperties["device.fps.mode"] ?: "custom"
+        targetFps = config.extraProperties["device.display.refresh_rate"]?.toFloatOrNull() ?: 120f
+
         allFields.forEach { fieldId ->
             val value = config.extraProperties[ConfigManager.getTogglePropertyKey(fieldId)]
             val isRiskGated = fieldId == ConfigManager.FIELD_GPU || fieldId == ConfigManager.FIELD_LOCATION
@@ -758,6 +796,25 @@ class ProfileEditorState {
         }
         result["device.location.latitude"] = locationLatitude.trim()
         result["device.location.longitude"] = locationLongitude.trim()
+
+        result["device.mac.mode"] = macMode
+        if (macAddress.isNotBlank()) result["device.mac.address"] = macAddress.trim()
+        result["device.uptime.mode"] = uptimeMode
+        result["device.uptime.seconds"] = uptimeSeconds.trim()
+        result["device.wifi.mode"] = wifiMode
+        result["device.wifi.ssid"] = wifiSsid.trim()
+        if (wifiBssid.isNotBlank()) result["device.wifi.bssid"] = wifiBssid.trim()
+        result["device.wifi.rssi"] = wifiRssi.trim()
+        result["device.bluetooth.mode"] = bluetoothMode
+        if (bluetoothName.isNotBlank()) result["device.bluetooth.name"] = bluetoothName.trim()
+        if (bluetoothMac.isNotBlank()) result["device.bluetooth.mac"] = bluetoothMac.trim()
+        result["device.battery.mode"] = batteryMode
+        result["device.battery.level"] = batteryLevel.toInt().toString()
+        result["device.battery.temp"] = (batteryTemp * 10).toInt().toString()
+        result["device.battery.status"] = batteryStatus
+        result["device.fps.mode"] = fpsMode
+        result["device.display.refresh_rate"] = targetFps.toInt().toString()
+
         return result
     }
 

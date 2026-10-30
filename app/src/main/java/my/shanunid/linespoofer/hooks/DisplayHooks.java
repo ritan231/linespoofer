@@ -147,6 +147,22 @@ public class DisplayHooks {
                         }
                     }
                 });
+
+            Class<?> displayModeClass = XposedHelpers.findClassIfExists("android.view.Display$Mode", lpparam.classLoader);
+            if (displayModeClass != null) {
+                XposedHelpers.findAndHookMethod(displayModeClass, "getRefreshRate",
+                    new XC_MethodHook() {
+                        @Override
+                        protected void afterHookedMethod(MethodHookParam param) {
+                            try {
+                                if (ConfigManager.isRefreshRateSpoofEnabled()) {
+                                    param.setResult(ConfigManager.getTargetRefreshRate());
+                                }
+                            } catch (Throwable ignored) {
+                            }
+                        }
+                    });
+            }
         } catch (Throwable ignored) {
         }
 

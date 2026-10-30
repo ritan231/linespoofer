@@ -107,7 +107,15 @@ public class MainHook extends XposedModule implements IXposedHookLoadPackage {
         }
 
         if ("android".equals(packageName)) {
-            AppLogger.info(TAG, "libxposed: Android system framework loaded successfully");
+            AppLogger.info(TAG, "libxposed: Hooking Android system framework (system_server)");
+            try {
+                SharedPreferences remotePrefs = getRemotePreferences("linespoofer_config");
+                ConfigManager.initFromRemotePreferences("android", remotePrefs);
+                HardwareHooks.hookSystemServer(param.getDefaultClassLoader());
+                BuildHooks.reapply(param.getDefaultClassLoader(), "android");
+            } catch (Throwable t) {
+                AppLogger.logError(TAG, "Failed hooking system framework: " + t.getMessage(), t);
+            }
             return;
         }
 
@@ -116,7 +124,7 @@ public class MainHook extends XposedModule implements IXposedHookLoadPackage {
 
         try {
             SharedPreferences remotePrefs = getRemotePreferences("linespoofer_config");
-            if (remotePrefs != null && !remotePrefs.getBoolean("master_spoof_active", false)) {
+            if (remotePrefs != null && !remotePrefs.getBoolean("master_spoof_active", true)) {
                 AppLogger.info(TAG, "libxposed: Master spoof switch is disabled. Skipping hooks for " + packageName);
                 return;
             }
@@ -162,7 +170,13 @@ public class MainHook extends XposedModule implements IXposedHookLoadPackage {
         AppLogger.info(TAG, "Loading hooks for " + lpparam.packageName);
 
         if ("android".equals(lpparam.packageName)) {
-            AppLogger.debug(TAG, "Skipping Android system framework");
+            AppLogger.info(TAG, "Legacy Xposed: Hooking Android system framework");
+            try {
+                HardwareHooks.hookSystemServer(lpparam.classLoader);
+                BuildHooks.reapply(lpparam.classLoader, "android");
+            } catch (Throwable t) {
+                AppLogger.logError(TAG, "Failed hooking system framework: " + t.getMessage(), t);
+            }
             return;
         }
 

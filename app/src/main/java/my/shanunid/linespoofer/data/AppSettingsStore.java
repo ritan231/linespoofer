@@ -70,7 +70,7 @@ public final class AppSettingsStore {
     }
 
     public static boolean isMasterSpoofActive(Context context) {
-        return preferences(context).getBoolean(KEY_MASTER_SPOOF_ACTIVE, false);
+        return preferences(context).getBoolean(KEY_MASTER_SPOOF_ACTIVE, true);
     }
 
     public static void setMasterSpoofActive(Context context, boolean active) {

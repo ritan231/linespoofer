@@ -2,6 +2,8 @@ package my.shanunid.linespoofer.hooks;
 
 import android.net.wifi.WifiInfo;
 
+import java.net.NetworkInterface;
+
 import my.shanunid.linespoofer.utils.AppLogger;
 import my.shanunid.linespoofer.utils.ConfigManager;
 
@@ -10,8 +12,8 @@ import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
- * Spoofs Wi-Fi connection metadata (SSID, BSSID, RSSI, Frequency, MAC).
- * Neutralizes Wi-Fi geolocation tracking and network environment fingerprinting.
+ * Spoofs Wi-Fi connection metadata (SSID, BSSID, RSSI, Frequency, MAC)
+ * and hooks NetworkInterface.getHardwareAddress() across all network interfaces.
  */
 public final class WifiHooks {
 
@@ -21,10 +23,40 @@ public final class WifiHooks {
     }
 
     public static void hook(XC_LoadPackage.LoadPackageParam lpparam) {
-        if (!ConfigManager.isWifiSpoofEnabled()) {
-            return;
+        // 1. Hook NetworkInterface.getHardwareAddress() (Primary MAC API on modern Android)
+        try {
+            XposedHelpers.findAndHookMethod(
+                NetworkInterface.class.getName(),
+                lpparam.classLoader,
+                "getHardwareAddress",
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        try {
+                            if (!ConfigManager.isMacSpoofEnabled()) {
+                                return;
+                            }
+                            NetworkInterface ni = (NetworkInterface) param.thisObject;
+                            if (ni != null) {
+                                String name = ni.getName();
+                                if (name != null && (name.startsWith("wlan") || name.startsWith("eth") || name.startsWith("p2p"))) {
+                                    byte[] macBytes = ConfigManager.getSpoofedMacBytes();
+                                    if (macBytes != null && macBytes.length == 6) {
+                                        param.setResult(macBytes);
+                                    }
+                                }
+                            }
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                }
+            );
+            AppLogger.debug(TAG, "NetworkInterface.getHardwareAddress hooked");
+        } catch (Throwable throwable) {
+            AppLogger.logError(TAG, "Failed to hook NetworkInterface.getHardwareAddress: " + throwable.getMessage(), throwable);
         }
 
+        // 2. Hook WifiInfo APIs
         try {
             XposedHelpers.findAndHookMethod(
                 WifiInfo.class,
@@ -34,7 +66,7 @@ public final class WifiHooks {
                     protected void afterHookedMethod(MethodHookParam param) {
                         try {
                             if (ConfigManager.isWifiSpoofEnabled()) {
-                                param.setResult("\"Home-WiFi-5G\"");
+                                param.setResult(ConfigManager.getSpoofedWifiSsid());
                             }
                         } catch (Throwable ignored) {
                         }
@@ -50,7 +82,7 @@ public final class WifiHooks {
                     protected void afterHookedMethod(MethodHookParam param) {
                         try {
                             if (ConfigManager.isWifiSpoofEnabled()) {
-                                param.setResult("02:00:00:00:00:00");
+                                param.setResult(ConfigManager.getSpoofedWifiBssid());
                             }
                         } catch (Throwable ignored) {
                         }
@@ -66,7 +98,7 @@ public final class WifiHooks {
                     protected void afterHookedMethod(MethodHookParam param) {
                         try {
                             if (ConfigManager.isWifiSpoofEnabled()) {
-                                param.setResult(-55);
+                                param.setResult(ConfigManager.getSpoofedWifiRssi());
                             }
                         } catch (Throwable ignored) {
                         }
@@ -97,8 +129,8 @@ public final class WifiHooks {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) {
                         try {
-                            if (ConfigManager.isWifiSpoofEnabled()) {
-                                param.setResult("02:00:00:00:00:00");
+                            if (ConfigManager.isMacSpoofEnabled() || ConfigManager.isWifiSpoofEnabled()) {
+                                param.setResult(ConfigManager.getSpoofedMacAddress());
                             }
                         } catch (Throwable ignored) {
                         }
@@ -106,10 +138,9 @@ public final class WifiHooks {
                 }
             );
 
-            AppLogger.debug(TAG, "WifiHooks loaded");
+            AppLogger.debug(TAG, "WifiHooks loaded successfully");
         } catch (Throwable throwable) {
             AppLogger.logError(TAG, "Failed to hook WifiInfo: " + throwable.getMessage(), throwable);
         }
     }
 }
-

@@ -299,6 +299,11 @@ public class HardwareHooks {
         if (path.equals("/proc/meminfo")) {
             return createCachedVirtualFile("fake_meminfo", generateMemInfo(), packageName);
         }
+        if (path.equals("/proc/uptime")) {
+            long uptime = ConfigManager.getSpoofedUptimeSeconds();
+            String content = uptime + ".45 " + (uptime * 4) + ".12\n";
+            return createCachedVirtualFile("fake_uptime", content, packageName);
+        }
         if (path.startsWith("/sys/devices/system/cpu/present")
             || path.startsWith("/sys/devices/system/cpu/possible")
             || path.startsWith("/sys/devices/system/cpu/online")) {
@@ -334,6 +339,11 @@ public class HardwareHooks {
             VIRTUAL_FILE_OFFSETS.put(readerObj, 0);
         } else if (path.equals("/proc/meminfo")) {
             String[] lines = generateMemInfo().split("\n");
+            VIRTUAL_FILE_LINES.put(readerObj, lines);
+            VIRTUAL_FILE_OFFSETS.put(readerObj, 0);
+        } else if (path.equals("/proc/uptime")) {
+            long uptime = ConfigManager.getSpoofedUptimeSeconds();
+            String[] lines = new String[] { uptime + ".45 " + (uptime * 4) + ".12" };
             VIRTUAL_FILE_LINES.put(readerObj, lines);
             VIRTUAL_FILE_OFFSETS.put(readerObj, 0);
         }
@@ -385,5 +395,34 @@ public class HardwareHooks {
         sb.append("Active:          3200000 kB\n");
         sb.append("Inactive:        1200000 kB\n");
         return sb.toString();
+    }
+
+    /**
+     * Intercepts ActivityManagerService in system_server (Android system framework)
+     * so all apps on the device receive the spoofed RAM specifications without needing individual scopes.
+     */
+    public static void hookSystemServer(ClassLoader classLoader) {
+        try {
+            Class<?> amsClass = XposedHelpers.findClassIfExists("com.android.server.am.ActivityManagerService", classLoader);
+            if (amsClass != null) {
+                XposedHelpers.findAndHookMethod(amsClass, "getMemoryInfo", ActivityManager.MemoryInfo.class, new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        ActivityManager.MemoryInfo memInfo = (ActivityManager.MemoryInfo) param.args[0];
+                        if (memInfo != null) {
+                            long targetTotal = ConfigManager.getTotalRamBytes();
+                            if (targetTotal > 0) {
+                                memInfo.totalMem = targetTotal;
+                                memInfo.availMem = (long) (targetTotal * 0.48);
+                                memInfo.lowMemory = false;
+                            }
+                        }
+                    }
+                });
+                XposedBridge.log(TAG + ": Successfully hooked ActivityManagerService.getMemoryInfo in system_server");
+            }
+        } catch (Throwable t) {
+            XposedBridge.log(TAG + ": Failed to hook system_server AMS: " + t.getMessage());
+        }
     }
 }

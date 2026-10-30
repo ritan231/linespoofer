@@ -125,6 +125,21 @@ public final class AppProfileStore {
             SharedPreferences.Editor editor = prefs.edit();
             editor.clear();
             editor.putBoolean("master_spoof_active", AppSettingsStore.isMasterSpoofActive(context));
+
+            // Write active default profile fallback so ANY scoped package gets spoofed immediately
+            if (!state.getProfiles().isEmpty()) {
+                Profile defaultProfile = state.getProfiles().get(0);
+                StringBuilder defaultContent = new StringBuilder(defaultProfile.getContent().trim());
+                if (!state.getGlobalProperties().isEmpty()) {
+                    defaultContent.append("\n\n# Global runtime options\n");
+                    for (Map.Entry<String, String> globalEntry : state.getGlobalProperties().entrySet()) {
+                        defaultContent.append(globalEntry.getKey()).append('=').append(globalEntry.getValue()).append('\n');
+                    }
+                }
+                String defaultResolved = defaultContent.toString();
+                editor.putString("default_profile", defaultResolved);
+            }
+
             for (Map.Entry<String, String> entry : state.getAssignments().entrySet()) {
                 String pkg = entry.getKey();
                 String profileId = entry.getValue();

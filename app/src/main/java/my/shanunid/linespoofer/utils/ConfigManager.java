@@ -118,6 +118,9 @@ public class ConfigManager {
             if (profileContent == null) {
                 profileContent = remotePrefs.getString(packageName, null);
             }
+            if (profileContent == null || profileContent.trim().isEmpty()) {
+                profileContent = remotePrefs.getString("default_profile", null);
+            }
             if (profileContent != null && !profileContent.trim().isEmpty()) {
                 Map<String, String> parsed = parseConfigContent(profileContent);
                 if (!parsed.isEmpty()) {
@@ -176,7 +179,7 @@ public class ConfigManager {
         LoadedProperties loadedProperties = readConfig(context);
         allProperties = loadedProperties.properties;
         usingEmbeddedDefaults = loadedProperties.fromEmbeddedDefaults;
-        assignedProfile = !usingEmbeddedDefaults && !allProperties.isEmpty();
+        assignedProfile = !allProperties.isEmpty();
         resetGeneratedCaches();
         AppLogger.info("ConfigManager", "Config loaded for " + targetPackageName + ": " + allProperties.size() + " properties (embedded=" + usingEmbeddedDefaults + ", assigned=" + assignedProfile + ")");
     }
@@ -736,11 +739,75 @@ public class ConfigManager {
         return isSpoofEnabled(FIELD_WEBGL);
     }
 
+    private static volatile String cachedRandomMac = null;
+    private static volatile Long cachedRandomUptimeSec = null;
+
+    public static boolean isMacSpoofEnabled() {
+        String mode = getConfigValue("device.mac.mode");
+        if ("off".equalsIgnoreCase(mode)) {
+            return false;
+        }
+        return isSpoofEnabled("mac", true);
+    }
+
+    public static String getSpoofedMacAddress() {
+        String mode = getConfigValue("device.mac.mode");
+        if ("custom".equalsIgnoreCase(mode)) {
+            String custom = getConfigValue("device.mac.address");
+            if (custom != null && custom.trim().length() >= 11) {
+                return custom.trim().toUpperCase(Locale.US);
+            }
+        }
+        if (cachedRandomMac == null) {
+            cachedRandomMac = generateRandomMac();
+        }
+        return cachedRandomMac;
+    }
+
+    public static byte[] getSpoofedMacBytes() {
+        String mac = getSpoofedMacAddress();
+        String clean = mac.replace(":", "").replace("-", "");
+        if (clean.length() != 12) {
+            return new byte[] { (byte) 0x02, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 };
+        }
+        byte[] bytes = new byte[6];
+        try {
+            for (int i = 0; i < 6; i++) {
+                bytes[i] = (byte) Integer.parseInt(clean.substring(i * 2, i * 2 + 2), 16);
+            }
+        } catch (Exception e) {
+            return new byte[] { (byte) 0x02, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 };
+        }
+        return bytes;
+    }
+
+    public static String generateRandomMac() {
+        java.util.Random rnd = new java.util.Random();
+        byte[] bytes = new byte[6];
+        rnd.nextBytes(bytes);
+        // Locally administered unicast
+        bytes[0] = (byte) ((bytes[0] & 0xFC) | 0x02);
+        StringBuilder sb = new StringBuilder(17);
+        for (int i = 0; i < 6; i++) {
+            if (i > 0) sb.append(':');
+            sb.append(String.format(Locale.US, "%02X", bytes[i] & 0xFF));
+        }
+        return sb.toString();
+    }
+
     public static boolean isBatterySpoofEnabled() {
+        String mode = getConfigValue("device.battery.mode");
+        if ("off".equalsIgnoreCase(mode)) {
+            return false;
+        }
         return isSpoofEnabled(FIELD_BATTERY);
     }
 
     public static int getBatteryLevel() {
+        String mode = getConfigValue("device.battery.mode");
+        if ("random".equalsIgnoreCase(mode)) {
+            return 65 + (int) (Math.random() * 25);
+        }
         String val = getConfigValue("device.battery.level");
         if (val != null) {
             try {
@@ -751,8 +818,92 @@ public class ConfigManager {
         return 78;
     }
 
+    public static int getBatteryTemperature() {
+        String val = getConfigValue("device.battery.temp");
+        if (val != null) {
+            try {
+                int temp = Integer.parseInt(val.trim());
+                if (temp > 100 && temp < 600) return temp;
+            } catch (Exception ignored) {}
+        }
+        return 312; // 31.2 °C
+    }
+
+    public static int getBatteryStatus() {
+        String val = getConfigValue("device.battery.status");
+        if ("charging".equalsIgnoreCase(val)) {
+            return android.os.BatteryManager.BATTERY_STATUS_CHARGING;
+        }
+        if ("full".equalsIgnoreCase(val)) {
+            return android.os.BatteryManager.BATTERY_STATUS_FULL;
+        }
+        return android.os.BatteryManager.BATTERY_STATUS_DISCHARGING;
+    }
+
     public static boolean isUptimeSpoofEnabled() {
+        String mode = getConfigValue("device.uptime.mode");
+        if ("off".equalsIgnoreCase(mode)) {
+            return false;
+        }
         return isSpoofEnabled(FIELD_UPTIME);
+    }
+
+    public static long getSpoofedUptimeSeconds() {
+        String mode = getConfigValue("device.uptime.mode");
+        if ("custom".equalsIgnoreCase(mode)) {
+            String secStr = getConfigValue("device.uptime.seconds");
+            if (secStr != null) {
+                try {
+                    long sec = Long.parseLong(secStr.trim());
+                    if (sec > 0) return sec;
+                } catch (Exception ignored) {}
+            }
+        }
+        if (cachedRandomUptimeSec == null) {
+            cachedRandomUptimeSec = 14400L + (long) (Math.random() * 115200L);
+        }
+        return cachedRandomUptimeSec;
+    }
+
+    public static long getSpoofedUptimeMs() {
+        return getSpoofedUptimeSeconds() * 1000L;
+    }
+
+    public static String getSpoofedWifiSsid() {
+        String custom = getConfigValue("device.wifi.ssid");
+        return (custom != null && !custom.trim().isEmpty()) ? custom.trim() : "\"Home-WiFi-5G\"";
+    }
+
+    public static String getSpoofedWifiBssid() {
+        String custom = getConfigValue("device.wifi.bssid");
+        return (custom != null && !custom.trim().isEmpty()) ? custom.trim() : getSpoofedMacAddress();
+    }
+
+    public static int getSpoofedWifiRssi() {
+        String custom = getConfigValue("device.wifi.rssi");
+        if (custom != null) {
+            try {
+                return Integer.parseInt(custom.trim());
+            } catch (Exception ignored) {}
+        }
+        return -55;
+    }
+
+    public static String getSpoofedBluetoothName() {
+        String custom = getConfigValue("device.bluetooth.name");
+        if (custom != null && !custom.trim().isEmpty()) {
+            return custom.trim();
+        }
+        String model = getBuildModel();
+        return (model != null && !model.isEmpty()) ? model : "Bluetooth Device";
+    }
+
+    public static String getSpoofedBluetoothMac() {
+        String custom = getConfigValue("device.bluetooth.mac");
+        if (custom != null && custom.trim().length() >= 11) {
+            return custom.trim().toUpperCase(Locale.US);
+        }
+        return generateRandomMac();
     }
 
     public static boolean isStorageSpoofEnabled() {

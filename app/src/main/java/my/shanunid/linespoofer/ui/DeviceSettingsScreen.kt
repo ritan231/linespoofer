@@ -546,6 +546,9 @@ fun ProfileEditorForm(
             )
         }
         item {
+            DynamicEnvironmentSpoofSection(editor)
+        }
+        item {
             DeviceSettingsSection(stringResource(R.string.settings_section_advanced)) {
                 Text(
                     text = stringResource(R.string.settings_advanced_summary),
@@ -895,6 +898,267 @@ private fun AdvancedEditorField(field: EditorField, editor: ProfileEditorState) 
             enabled = spoofEnabled,
         ) {
             Icon(Icons.Filled.Casino, stringResource(R.string.settings_generate_random))
+        }
+    }
+}
+
+@Composable
+private fun DynamicEnvironmentSpoofSection(editor: ProfileEditorState) {
+    MiuiSectionHeader(title = "DYNAMIC HARDWARE & ENVIRONMENT")
+    MiuiCard {
+        // 1. Custom FPS
+        MiuiSwitchRow(
+            icon = androidx.compose.material.icons.Icons.Outlined.Speed,
+            title = "Custom Display FPS",
+            subtitle = "Kustomisasi refresh rate render aplikasi (${editor.targetFps.toInt()} FPS)",
+            checked = editor.fpsMode != "off",
+            onCheckedChange = { editor.fpsMode = if (it) "custom" else "off" },
+        )
+        AnimatedVisibility(editor.fpsMode != "off") {
+            Column(modifier = Modifier.padding(top = 4.dp, bottom = 10.dp)) {
+                MiuiSliderRow(
+                    title = "Target Refresh Rate",
+                    value = editor.targetFps,
+                    valueRange = 30f..144f,
+                    steps = 3,
+                    valueText = "${editor.targetFps.toInt()} FPS",
+                    onValueChange = { editor.targetFps = it },
+                )
+            }
+        }
+
+        Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(MiuiXColors.DarkDivider))
+
+        // 2. Spoof MAC Address (Random atau Custom)
+        val macModes = listOf("Off", "Random", "Custom")
+        val currentMacIndex = when (editor.macMode.lowercase()) {
+            "random" -> 1
+            "custom" -> 2
+            else -> 0
+        }
+        Column(modifier = Modifier.padding(vertical = 10.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Spoof Hardware MAC Address",
+                    color = MiuiXColors.TextPrimary,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+                if (editor.macMode == "custom") {
+                    IconButton(
+                        onClick = { editor.macAddress = my.shanunid.linespoofer.utils.ConfigManager.generateRandomMac() },
+                        modifier = Modifier.size(28.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Casino,
+                            contentDescription = "Acak",
+                            tint = MiuiXColors.Blue,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Intersepsi NetworkInterface & WifiInfo untuk wlan0 / eth0",
+                color = MiuiXColors.TextSecondary,
+                fontSize = 12.5.sp,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            MiuiSegmentedPill(
+                options = macModes,
+                selectedIndex = currentMacIndex,
+                onSelect = { idx ->
+                    editor.macMode = when (idx) {
+                        1 -> "random"
+                        2 -> "custom"
+                        else -> "off"
+                    }
+                    if (editor.macMode == "custom" && editor.macAddress.isBlank()) {
+                        editor.macAddress = my.shanunid.linespoofer.utils.ConfigManager.generateRandomMac()
+                    }
+                }
+            )
+            AnimatedVisibility(editor.macMode == "custom") {
+                Column(modifier = Modifier.padding(top = 10.dp)) {
+                    OutlinedTextField(
+                        value = editor.macAddress,
+                        onValueChange = { editor.macAddress = it },
+                        label = { Text("Custom MAC (XX:XX:XX:XX:XX:XX)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                    )
+                }
+            }
+        }
+
+        Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(MiuiXColors.DarkDivider))
+
+        // 3. Boot Time / Uptime Spoofing
+        val uptimeModes = listOf("Off", "Random", "Custom")
+        val currentUptimeIndex = when (editor.uptimeMode.lowercase()) {
+            "random" -> 1
+            "custom" -> 2
+            else -> 0
+        }
+        Column(modifier = Modifier.padding(vertical = 10.dp)) {
+            Text(
+                text = "Spoof Boot Time & Uptime",
+                color = MiuiXColors.TextPrimary,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Palsukan durasi menyala perangkat di SystemClock dan /proc/uptime",
+                color = MiuiXColors.TextSecondary,
+                fontSize = 12.5.sp,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            MiuiSegmentedPill(
+                options = uptimeModes,
+                selectedIndex = currentUptimeIndex,
+                onSelect = { idx ->
+                    editor.uptimeMode = when (idx) {
+                        1 -> "random"
+                        2 -> "custom"
+                        else -> "off"
+                    }
+                }
+            )
+            AnimatedVisibility(editor.uptimeMode == "custom") {
+                val currentHours = (editor.uptimeSeconds.toLongOrNull() ?: 27720L) / 3600f
+                Column(modifier = Modifier.padding(top = 8.dp)) {
+                    MiuiSliderRow(
+                        title = "Durasi Uptime",
+                        value = currentHours.coerceIn(1f, 72f),
+                        valueRange = 1f..72f,
+                        steps = 70,
+                        valueText = "${currentHours.toInt()} Jam",
+                        onValueChange = {
+                            val sec = (it * 3600).toLong()
+                            editor.uptimeSeconds = sec.toString()
+                        }
+                    )
+                }
+            }
+        }
+
+        Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(MiuiXColors.DarkDivider))
+
+        // 4. Wi-Fi & Bluetooth Spoofing
+        val wifiModes = listOf("Off", "Random", "Custom")
+        val currentWifiIndex = when (editor.wifiMode.lowercase()) {
+            "random" -> 1
+            "custom" -> 2
+            else -> 0
+        }
+        Column(modifier = Modifier.padding(vertical = 10.dp)) {
+            Text(
+                text = "Spoof Wi-Fi & Bluetooth",
+                color = MiuiXColors.TextPrimary,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Samarkan SSID, BSSID, RSSI, dan nama adapter Bluetooth",
+                color = MiuiXColors.TextSecondary,
+                fontSize = 12.5.sp,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            MiuiSegmentedPill(
+                options = wifiModes,
+                selectedIndex = currentWifiIndex,
+                onSelect = { idx ->
+                    val mode = when (idx) {
+                        1 -> "random"
+                        2 -> "custom"
+                        else -> "off"
+                    }
+                    editor.wifiMode = mode
+                    editor.bluetoothMode = mode
+                }
+            )
+            AnimatedVisibility(editor.wifiMode == "custom") {
+                Column(modifier = Modifier.padding(top = 10.dp)) {
+                    OutlinedTextField(
+                        value = editor.wifiSsid,
+                        onValueChange = { editor.wifiSsid = it },
+                        label = { Text("Wi-Fi SSID") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = editor.bluetoothName,
+                        onValueChange = { editor.bluetoothName = it },
+                        label = { Text("Bluetooth Adapter Name") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                    )
+                }
+            }
+        }
+
+        Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(MiuiXColors.DarkDivider))
+
+        // 5. Battery Telemetry Spoofing
+        val batteryModes = listOf("Off", "Random", "Custom")
+        val currentBatteryIndex = when (editor.batteryMode.lowercase()) {
+            "random" -> 1
+            "custom" -> 2
+            else -> 0
+        }
+        Column(modifier = Modifier.padding(vertical = 10.dp)) {
+            Text(
+                text = "Spoof Status & Kapasitas Baterai",
+                color = MiuiXColors.TextPrimary,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Cegah fingerprint status daya dan emulator static battery detection",
+                color = MiuiXColors.TextSecondary,
+                fontSize = 12.5.sp,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            MiuiSegmentedPill(
+                options = batteryModes,
+                selectedIndex = currentBatteryIndex,
+                onSelect = { idx ->
+                    editor.batteryMode = when (idx) {
+                        1 -> "random"
+                        2 -> "custom"
+                        else -> "off"
+                    }
+                }
+            )
+            AnimatedVisibility(editor.batteryMode == "custom") {
+                Column(modifier = Modifier.padding(top = 8.dp)) {
+                    MiuiSliderRow(
+                        title = "Persentase Baterai",
+                        value = editor.batteryLevel,
+                        valueRange = 1f..100f,
+                        steps = 98,
+                        valueText = "${editor.batteryLevel.toInt()}%",
+                        onValueChange = { editor.batteryLevel = it }
+                    )
+                    MiuiSliderRow(
+                        title = "Suhu Baterai (°C)",
+                        value = editor.batteryTemp,
+                        valueRange = 25f..45f,
+                        steps = 40,
+                        valueText = String.format(java.util.Locale.US, "%.1f°C", editor.batteryTemp),
+                        onValueChange = { editor.batteryTemp = it }
+                    )
+                }
+            }
         }
     }
 }

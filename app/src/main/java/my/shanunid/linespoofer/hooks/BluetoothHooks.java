@@ -36,10 +36,7 @@ public final class BluetoothHooks {
                             if (!ConfigManager.isBluetoothSpoofEnabled()) {
                                 return;
                             }
-                            String model = ConfigManager.getBuildModel();
-                            if (model != null && !model.isEmpty()) {
-                                param.setResult(model);
-                            }
+                            param.setResult(ConfigManager.getSpoofedBluetoothName());
                         } catch (Throwable ignored) {
                         }
                     }
@@ -56,18 +53,16 @@ public final class BluetoothHooks {
                             if (!ConfigManager.isBluetoothSpoofEnabled()) {
                                 return;
                             }
-                            // Default privacy placeholder address
-                            param.setResult("02:00:00:00:00:00");
+                            param.setResult(ConfigManager.getSpoofedBluetoothMac());
                         } catch (Throwable ignored) {
                         }
                     }
                 }
             );
 
-            AppLogger.debug(TAG, "BluetoothHooks loaded");
+            AppLogger.debug(TAG, "BluetoothHooks loaded successfully");
         } catch (Throwable throwable) {
             AppLogger.logError(TAG, "Failed to hook BluetoothAdapter: " + throwable.getMessage(), throwable);
         }
     }
 }
-

@@ -11,13 +11,11 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
  * Spoofs system uptime and boot timestamp via SystemClock.
- * Mitigates zero-uptime or excessively long uptime detection used by device intelligence SDKs.
+ * Supports custom and randomized operational uptime.
  */
 public final class TimeHooks {
 
     private static final String TAG = "LineSpoofer-Time";
-    // Simulated normal operational uptime: ~7 hours 42 minutes (27,720,000 ms)
-    private static final long PLAUSIBLE_MIN_UPTIME_MS = 27_720_000L;
 
     private TimeHooks() {
     }
@@ -39,9 +37,8 @@ public final class TimeHooks {
                                 return;
                             }
                             long realElapsed = (long) param.getResult();
-                            if (realElapsed < 3_600_000L) {
-                                param.setResult(realElapsed + PLAUSIBLE_MIN_UPTIME_MS);
-                            }
+                            long fakeBaseMs = ConfigManager.getSpoofedUptimeMs();
+                            param.setResult(fakeBaseMs + (realElapsed % 3600000L));
                         } catch (Throwable ignored) {
                         }
                     }
@@ -59,18 +56,36 @@ public final class TimeHooks {
                                 return;
                             }
                             long realUptime = (long) param.getResult();
-                            if (realUptime < 3_600_000L) {
-                                param.setResult(realUptime + PLAUSIBLE_MIN_UPTIME_MS);
-                            }
+                            long fakeBaseMs = ConfigManager.getSpoofedUptimeMs();
+                            param.setResult(fakeBaseMs + (realUptime % 3600000L));
                         } catch (Throwable ignored) {
                         }
                     }
                 }
             );
-            AppLogger.debug(TAG, "SystemClock uptime hooks loaded");
+
+            XposedHelpers.findAndHookMethod(
+                SystemClock.class,
+                "elapsedRealtimeNanos",
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        try {
+                            if (!ConfigManager.isUptimeSpoofEnabled()) {
+                                return;
+                            }
+                            long realNanos = (long) param.getResult();
+                            long fakeBaseNanos = ConfigManager.getSpoofedUptimeMs() * 1_000_000L;
+                            param.setResult(fakeBaseNanos + (realNanos % 3_600_000_000_000L));
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                }
+            );
+
+            AppLogger.debug(TAG, "SystemClock uptime hooks loaded successfully");
         } catch (Throwable throwable) {
             AppLogger.logError(TAG, "Failed to hook SystemClock: " + throwable.getMessage(), throwable);
         }
     }
 }
-

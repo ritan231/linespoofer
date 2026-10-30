@@ -56,7 +56,7 @@ public final class BatteryHooks {
                                     param.setResult(-200000);
                                     break;
                                 case BatteryManager.BATTERY_PROPERTY_STATUS:
-                                    param.setResult(BatteryManager.BATTERY_STATUS_DISCHARGING);
+                                    param.setResult(ConfigManager.getBatteryStatus());
                                     break;
                                 default:
                                     break;
@@ -144,11 +144,11 @@ public final class BatteryHooks {
         int level = ConfigManager.getBatteryLevel();
         intent.putExtra(BatteryManager.EXTRA_LEVEL, level);
         intent.putExtra(BatteryManager.EXTRA_SCALE, 100);
-        intent.putExtra(BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_DISCHARGING);
+        intent.putExtra(BatteryManager.EXTRA_STATUS, ConfigManager.getBatteryStatus());
         intent.putExtra(BatteryManager.EXTRA_HEALTH, BatteryManager.BATTERY_HEALTH_GOOD);
         intent.putExtra(BatteryManager.EXTRA_PLUGGED, 0);
         intent.putExtra(BatteryManager.EXTRA_VOLTAGE, 4120); // 4.12V
-        intent.putExtra(BatteryManager.EXTRA_TEMPERATURE, 315); // 31.5 C
+        intent.putExtra(BatteryManager.EXTRA_TEMPERATURE, ConfigManager.getBatteryTemperature());
         intent.putExtra(BatteryManager.EXTRA_TECHNOLOGY, "Li-poly");
         intent.putExtra(BatteryManager.EXTRA_PRESENT, true);
     }
