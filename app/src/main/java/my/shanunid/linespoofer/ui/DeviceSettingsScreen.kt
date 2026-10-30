@@ -34,11 +34,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.filled.Casino
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AccountBox
-import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.AspectRatio
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteSweep
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
@@ -911,7 +912,7 @@ private fun DynamicEnvironmentSpoofSection(editor: ProfileEditorState) {
     MiuiCard {
         // 1. Custom FPS
         MiuiSwitchRow(
-            icon = androidx.compose.material.icons.Icons.Outlined.AspectRatio,
+            icon = Icons.Outlined.AspectRatio,
             title = "Custom Display FPS",
             subtitle = "Kustomisasi refresh rate render aplikasi (${editor.targetFps.toInt()} FPS)",
             checked = editor.fpsMode != "off",
