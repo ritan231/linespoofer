@@ -78,6 +78,8 @@ class SpoofAppState(val activity: AppCompatActivity) {
         private set
     var colorStyle by mutableStateOf(AppSettingsStore.getColorStyle(activity))
         private set
+    var isMasterSpoofActive by mutableStateOf(AppSettingsStore.isMasterSpoofActive(activity))
+        private set
 
     val editor = ProfileEditorState()
 
@@ -486,6 +488,39 @@ class SpoofAppState(val activity: AppCompatActivity) {
         return result
     }
 
+    fun forceStopApp(packageName: String) {
+        val cleanPkg = packageName.substringBefore("#")
+        try {
+            Runtime.getRuntime().exec(arrayOf("su", "-c", "am force-stop $cleanPkg"))
+        } catch (ignored: Throwable) {
+        }
+    }
+
+    fun setMasterSpoofActive(active: Boolean) {
+        AppSettingsStore.setMasterSpoofActive(activity, active)
+        isMasterSpoofActive = active
+        try {
+            val prefs = activity.getSharedPreferences("linespoofer_config", Context.MODE_PRIVATE)
+            prefs.edit().putBoolean("master_spoof_active", active).apply()
+        } catch (ignored: Throwable) {
+        }
+
+        if (active) {
+            val targets = profileState?.assignments?.keys.orEmpty()
+            targets.forEach { pkg ->
+                forceStopApp(pkg)
+            }
+            val count = targets.size
+            message = if (count > 0) {
+                activity.getString(R.string.target_app_force_stopped, "$count target aplikasi")
+            } else {
+                "Spoofing aktif (tambahkan aplikasi ke profil untuk menerapkan)"
+            }
+        } else {
+            message = "Spoofing dinonaktifkan"
+        }
+    }
+
     suspend fun populateAdvancedDefaults() {
         val currentValues = withContext(Dispatchers.IO) {
             mapOf(
@@ -731,6 +766,7 @@ class ProfileEditorState {
         advancedValues[fieldId] = when (fieldId) {
             ConfigManager.FIELD_ANDROID_ID -> RandomGenerator.generateAndroidId()
             ConfigManager.FIELD_IMEI -> RandomGenerator.generateIMEI()
+            ConfigManager.FIELD_IMEI_2 -> RandomGenerator.generateIMEI()
             ConfigManager.FIELD_MEID -> RandomGenerator.generateMEID()
             ConfigManager.FIELD_IMSI -> RandomGenerator.generateIMSI()
             ConfigManager.FIELD_ICCID -> RandomGenerator.generateICCID()
@@ -836,6 +872,7 @@ class ProfileEditorState {
         val allFields = profileFields + advancedFields + toggleFields
         val advancedPropertyKeys = mapOf(
             ConfigManager.FIELD_IMEI to ConfigManager.KEY_SPOOF_IMEI,
+            ConfigManager.FIELD_IMEI_2 to ConfigManager.KEY_SPOOF_IMEI_2,
             ConfigManager.FIELD_MEID to ConfigManager.KEY_SPOOF_MEID,
             ConfigManager.FIELD_IMSI to ConfigManager.KEY_SPOOF_IMSI,
             ConfigManager.FIELD_ICCID to ConfigManager.KEY_SPOOF_ICCID,

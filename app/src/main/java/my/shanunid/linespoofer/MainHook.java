@@ -85,6 +85,10 @@ public class MainHook extends XposedModule implements IXposedHookLoadPackage {
 
         try {
             SharedPreferences remotePrefs = getRemotePreferences("linespoofer_config");
+            if (remotePrefs != null && !remotePrefs.getBoolean("master_spoof_active", false)) {
+                AppLogger.info(TAG, "libxposed: Master spoof switch is disabled. Skipping hooks for " + packageName);
+                return;
+            }
             ConfigManager.initFromRemotePreferences(targetKey, remotePrefs);
             if (!ConfigManager.hasAssignedProfile() && userId > 0) {
                 ConfigManager.initFromRemotePreferences(packageName, remotePrefs);

@@ -7,7 +7,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.progressSemantics
+import androidx.compose.material3.TextButton
+import java.util.TimeZone
+import java.util.Locale
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -143,6 +147,7 @@ private val systemFields = listOf(
 private val advancedFields = listOf(
     EditorField(ConfigManager.FIELD_ANDROID_ID, R.string.settings_field_device_id),
     EditorField(ConfigManager.FIELD_IMEI, R.string.settings_field_imei, numeric = true),
+    EditorField(ConfigManager.FIELD_IMEI_2, R.string.settings_field_imei_2, numeric = true),
     EditorField(ConfigManager.FIELD_MEID, R.string.settings_field_meid),
     EditorField(ConfigManager.FIELD_IMSI, R.string.settings_field_imsi, numeric = true),
     EditorField(ConfigManager.FIELD_ICCID, R.string.settings_field_iccid, numeric = true),
@@ -737,6 +742,40 @@ private fun ProfileEditorField(field: EditorField, editor: ProfileEditorState) {
             }
         }
     } else {
+        var showPicker by remember { mutableStateOf(false) }
+        val isTimezone = field.fieldId == ConfigManager.FIELD_TIMEZONE
+        val isLocale = field.fieldId == ConfigManager.FIELD_LOCALE
+
+        if (showPicker && isTimezone) {
+            val tzList = remember {
+                TimeZone.getAvailableIDs().sorted().map { it to it }
+            }
+            SearchableListDialog(
+                title = stringResource(R.string.dialog_select_timezone),
+                searchHint = stringResource(R.string.search_timezone),
+                items = tzList,
+                onSelect = { editor.values[field.fieldId] = it },
+                onDismiss = { showPicker = false }
+            )
+        }
+
+        if (showPicker && isLocale) {
+            val localeList = remember {
+                Locale.getAvailableLocales()
+                    .filter { it.language.isNotEmpty() }
+                    .distinctBy { it.toLanguageTag() }
+                    .sortedBy { it.displayName }
+                    .map { it.toLanguageTag() to "${it.displayName} (${it.toLanguageTag()})" }
+            }
+            SearchableListDialog(
+                title = stringResource(R.string.dialog_select_locale),
+                searchHint = stringResource(R.string.search_locale),
+                items = localeList,
+                onSelect = { editor.values[field.fieldId] = it },
+                onDismiss = { showPicker = false }
+            )
+        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -754,11 +793,78 @@ private fun ProfileEditorField(field: EditorField, editor: ProfileEditorState) {
                 label = { Text(stringResource(field.labelRes)) },
                 enabled = spoofEnabled && editor.customMode,
                 minLines = if (field.multiline) 2 else 1,
+                trailingIcon = if ((isTimezone || isLocale) && editor.customMode) {
+                    {
+                        IconButton(onClick = { showPicker = true }) {
+                            Icon(Icons.Outlined.Search, contentDescription = null)
+                        }
+                    }
+                } else null,
                 keyboardOptions = KeyboardOptions(keyboardType = if (field.numeric) KeyboardType.Number else KeyboardType.Text),
                 modifier = Modifier.weight(1f),
             )
         }
     }
+}
+
+@Composable
+fun SearchableListDialog(
+    title: String,
+    searchHint: String,
+    items: List<Pair<String, String>>,
+    onSelect: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var query by remember { mutableStateOf("") }
+    val filtered = remember(query, items) {
+        val q = query.trim()
+        if (q.isEmpty()) items else items.filter {
+            it.first.contains(q, ignoreCase = true) || it.second.contains(q, ignoreCase = true)
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth().height(360.dp)) {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    placeholder = { Text(searchHint) },
+                    leadingIcon = { Icon(Icons.Outlined.Search, null) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                )
+                Spacer(Modifier.height(8.dp))
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    itemsIndexed(filtered) { _, item ->
+                        androidx.compose.material3.ListItem(
+                            headlineContent = {
+                                Text(
+                                    item.second,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                )
+                            },
+                            supportingContent = { Text(item.first, maxLines = 1) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onSelect(item.first)
+                                    onDismiss()
+                                }
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.back))
+            }
+        }
+    )
 }
 
 @Composable

@@ -32,6 +32,7 @@ public final class AppSettingsStore {
     private static final String KEY_COLOR_STYLE = "color_style";
     private static final String KEY_PRESET_SOURCE_URL = "preset_source_url";
     private static final String KEY_SAFE_MODE_EXPLANATION_DISMISSED = "safe_mode_explanation_dismissed";
+    private static final String KEY_MASTER_SPOOF_ACTIVE = "master_spoof_active";
 
     private AppSettingsStore() {
     }
@@ -66,6 +67,14 @@ public final class AppSettingsStore {
 
     public static void setSystemColorEnabled(Context context, boolean enabled) {
         preferences(context).edit().putBoolean(KEY_USE_SYSTEM_COLORS, enabled).apply();
+    }
+
+    public static boolean isMasterSpoofActive(Context context) {
+        return preferences(context).getBoolean(KEY_MASTER_SPOOF_ACTIVE, false);
+    }
+
+    public static void setMasterSpoofActive(Context context, boolean active) {
+        preferences(context).edit().putBoolean(KEY_MASTER_SPOOF_ACTIVE, active).apply();
     }
 
     public static String getColorStyle(Context context) {

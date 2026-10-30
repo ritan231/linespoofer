@@ -73,7 +73,11 @@ public class TelephonyHooks {
                                 param.setResult(null);
                                 return;
                             }
-                            String spoofedValue = ConfigManager.getIMEI();
+                            int slot = (int) param.args[0];
+                            String spoofedValue = (slot == 1) ? ConfigManager.getIMEI2() : ConfigManager.getIMEI();
+                            if (spoofedValue == null && slot == 1) {
+                                spoofedValue = ConfigManager.getIMEI();
+                            }
                             if (spoofedValue != null) {
                                 param.setResult(spoofedValue);
                             }
@@ -109,7 +113,11 @@ public class TelephonyHooks {
                                 param.setResult(null);
                                 return;
                             }
-                            String spoofedValue = ConfigManager.getIMEI();
+                            int slot = (int) param.args[0];
+                            String spoofedValue = (slot == 1) ? ConfigManager.getIMEI2() : ConfigManager.getIMEI();
+                            if (spoofedValue == null && slot == 1) {
+                                spoofedValue = ConfigManager.getIMEI();
+                            }
                             if (spoofedValue != null) {
                                 param.setResult(spoofedValue);
                             }

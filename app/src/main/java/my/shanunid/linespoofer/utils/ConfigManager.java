@@ -35,6 +35,7 @@ public class ConfigManager {
     public static final String ACTION_CONFIG_CHANGED = "my.shanunid.linespoofer.action.CONFIG_CHANGED";
     public static final String KEY_APPLY_SCREEN_METRICS = "device.apply_screen_metrics";
     public static final String KEY_SPOOF_IMEI = "device.imei";
+    public static final String KEY_SPOOF_IMEI_2 = "device.imei2";
     public static final String KEY_SPOOF_MEID = "device.meid";
     public static final String KEY_SPOOF_IMSI = "device.imsi";
     public static final String KEY_SPOOF_ICCID = "device.iccid";
@@ -71,6 +72,7 @@ public class ConfigManager {
     public static final String FIELD_LOCALE = "locale";
     public static final String FIELD_ANDROID_ID = "android_id";
     public static final String FIELD_IMEI = "imei";
+    public static final String FIELD_IMEI_2 = "imei2";
     public static final String FIELD_MEID = "meid";
     public static final String FIELD_IMSI = "imsi";
     public static final String FIELD_ICCID = "iccid";
@@ -574,6 +576,7 @@ public class ConfigManager {
         }
         if (key.equals(KEY_APPLY_SCREEN_METRICS)
             || key.equals(KEY_SPOOF_IMEI)
+            || key.equals(KEY_SPOOF_IMEI_2)
             || key.equals(KEY_SPOOF_MEID)
             || key.equals(KEY_SPOOF_IMSI)
             || key.equals(KEY_SPOOF_ICCID)
@@ -985,6 +988,13 @@ public class ConfigManager {
             return null;
         }
         return getOptionalConfigValue(KEY_SPOOF_IMEI);
+    }
+
+    public static String getIMEI2() {
+        if (!isSpoofEnabled(FIELD_IMEI)) {
+            return null;
+        }
+        return getOptionalConfigValue(KEY_SPOOF_IMEI_2);
     }
 
     public static String getMEID() {

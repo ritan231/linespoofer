@@ -29,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -159,6 +160,71 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
                             color = statusSupportingColor,
                         )
                     }
+                }
+            }
+        }
+        item { Spacer(Modifier.height(MdSpacing.xs)) }
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.extraLarge,
+                colors = CardDefaults.cardColors(
+                    containerColor = if (appState.isMasterSpoofActive) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainer
+                    }
+                ),
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = MdSpacing.sm, vertical = MdSpacing.md),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = if (appState.isMasterSpoofActive) Icons.Filled.CheckCircle else Icons.Outlined.Info,
+                        contentDescription = null,
+                        modifier = Modifier.size(36.dp),
+                        tint = if (appState.isMasterSpoofActive) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    )
+                    Spacer(Modifier.width(MdSpacing.sm))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.master_spoof_switch),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (appState.isMasterSpoofActive) {
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
+                        )
+                        val assignedCount = appState.profileState?.assignments?.size ?: 0
+                        Text(
+                            text = if (appState.isMasterSpoofActive) {
+                                if (assignedCount > 0) "$assignedCount target aplikasi aktif terspoof" else "Aktif (belum ada target di profil)"
+                            } else {
+                                stringResource(R.string.master_spoof_switch_summary)
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (appState.isMasterSpoofActive) {
+                                MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                        )
+                    }
+                    Switch(
+                        checked = appState.isMasterSpoofActive,
+                        onCheckedChange = { checked ->
+                            appState.setMasterSpoofActive(checked)
+                        }
+                    )
                 }
             }
         }

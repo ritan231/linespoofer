@@ -124,6 +124,7 @@ public final class AppProfileStore {
             SharedPreferences prefs = context.getSharedPreferences("linespoofer_config", Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = prefs.edit();
             editor.clear();
+            editor.putBoolean("master_spoof_active", AppSettingsStore.isMasterSpoofActive(context));
             for (Map.Entry<String, String> entry : state.getAssignments().entrySet()) {
                 String pkg = entry.getKey();
                 String profileId = entry.getValue();
