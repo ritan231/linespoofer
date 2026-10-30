@@ -36,7 +36,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -296,9 +299,22 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 0.5.sp,
                             )
-                            val sec = ConfigManager.getSpoofedUptimeSeconds()
-                            val hrs = sec / 3600
-                            val mins = (sec % 3600) / 60
+                            val isSpoofEnabled = appState.editor.uptimeMode != "off"
+                            var liveUptimeSec by remember(isSpoofEnabled, appState.editor.uptimeSeconds) {
+                                mutableStateOf(
+                                    (if (isSpoofEnabled) ConfigManager.getSpoofedUptimeSeconds() else 0L) +
+                                        (android.os.SystemClock.elapsedRealtime() / 1000L)
+                                )
+                            }
+                            LaunchedEffect(isSpoofEnabled, appState.editor.uptimeSeconds) {
+                                while (true) {
+                                    val base = if (isSpoofEnabled) ConfigManager.getSpoofedUptimeSeconds() else 0L
+                                    liveUptimeSec = base + (android.os.SystemClock.elapsedRealtime() / 1000L)
+                                    kotlinx.coroutines.delay(10000L)
+                                }
+                            }
+                            val hrs = liveUptimeSec / 3600
+                            val mins = (liveUptimeSec % 3600) / 60
                             Text(
                                 text = "${hrs}h ${mins}m",
                                 color = colors.textPrimary,

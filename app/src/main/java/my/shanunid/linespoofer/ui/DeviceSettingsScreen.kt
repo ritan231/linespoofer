@@ -1153,6 +1153,11 @@ private fun DynamicEnvironmentSpoofSection(editor: ProfileEditorState) {
                         2 -> "custom"
                         else -> "off"
                     }
+                    if (idx == 1) {
+                        val randomHours = java.util.concurrent.ThreadLocalRandom.current().nextLong(4, 36)
+                        val randomMins = java.util.concurrent.ThreadLocalRandom.current().nextLong(1, 59)
+                        editor.uptimeSeconds = (randomHours * 3600L + randomMins * 60L).toString()
+                    }
                 }
             )
             AnimatedVisibility(editor.uptimeMode == "custom") {

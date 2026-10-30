@@ -853,15 +853,19 @@ public class ConfigManager {
         if ("off".equalsIgnoreCase(mode)) {
             return 0L;
         }
-        String secStr = getConfigValue("device.uptime.seconds");
-        if (secStr != null && !secStr.trim().isEmpty()) {
-            try {
-                long sec = Long.parseLong(secStr.trim());
-                if (sec > 0) return sec;
-            } catch (Exception ignored) {}
+        if ("custom".equalsIgnoreCase(mode)) {
+            String secStr = getConfigValue("device.uptime.seconds");
+            if (secStr != null && !secStr.trim().isEmpty()) {
+                try {
+                    long sec = Long.parseLong(secStr.trim());
+                    if (sec > 0) return sec;
+                } catch (Exception ignored) {}
+            }
         }
         if (cachedRandomUptimeSec == null) {
-            cachedRandomUptimeSec = 21600L; // deterministic 6h
+            long minSec = 4L * 3600L;
+            long maxSec = 36L * 3600L;
+            cachedRandomUptimeSec = minSec + (long) (Math.random() * (maxSec - minSec));
         }
         return cachedRandomUptimeSec;
     }

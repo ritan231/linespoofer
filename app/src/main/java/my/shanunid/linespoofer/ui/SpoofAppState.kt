@@ -201,6 +201,13 @@ class SpoofAppState(val activity: AppCompatActivity) {
             profileState = result.first
             loadedConfig = result.second
             editor.reset(result.second)
+            try {
+                my.shanunid.linespoofer.utils.RootScopeManager.syncInBackground(
+                    activity,
+                    result.first.assignments.keys
+                )
+            } catch (_: Throwable) {
+            }
             val profileName = result.first.findProfile(profileId)?.name.orEmpty()
             message = localizedContext().getString(R.string.profile_saved, profileName)
             return profileId

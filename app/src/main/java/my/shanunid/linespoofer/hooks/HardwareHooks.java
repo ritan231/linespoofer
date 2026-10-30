@@ -300,7 +300,9 @@ public class HardwareHooks {
             return createCachedVirtualFile("fake_meminfo", generateMemInfo(), packageName);
         }
         if (path.equals("/proc/uptime")) {
-            long uptime = ConfigManager.getSpoofedUptimeSeconds() + (android.os.SystemClock.elapsedRealtime() / 1000L);
+            long baseSec = ConfigManager.isUptimeSpoofEnabled() ? ConfigManager.getSpoofedUptimeSeconds() : 0L;
+            long realElapsedSec = android.os.SystemClock.elapsedRealtime() / 1000L;
+            long uptime = (realElapsedSec >= baseSec && baseSec > 0) ? realElapsedSec : (baseSec + realElapsedSec);
             long idle = uptime * 4;
             String content = uptime + ".50 " + idle + ".20\n";
             return createCachedVirtualFile("fake_uptime", content, packageName);
@@ -343,7 +345,9 @@ public class HardwareHooks {
             VIRTUAL_FILE_LINES.put(readerObj, lines);
             VIRTUAL_FILE_OFFSETS.put(readerObj, 0);
         } else if (path.equals("/proc/uptime")) {
-            long uptime = ConfigManager.getSpoofedUptimeSeconds() + (android.os.SystemClock.elapsedRealtime() / 1000L);
+            long baseSec = ConfigManager.isUptimeSpoofEnabled() ? ConfigManager.getSpoofedUptimeSeconds() : 0L;
+            long realElapsedSec = android.os.SystemClock.elapsedRealtime() / 1000L;
+            long uptime = (realElapsedSec >= baseSec && baseSec > 0) ? realElapsedSec : (baseSec + realElapsedSec);
             long idle = uptime * 4;
             String[] lines = new String[] { uptime + ".50 " + idle + ".20" };
             VIRTUAL_FILE_LINES.put(readerObj, lines);

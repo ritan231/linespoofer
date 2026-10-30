@@ -28,8 +28,11 @@ public final class RootScopeManager {
     private static final int USER_ID = 0;
 
     private static final String[] CANDIDATE_DBS = new String[]{
+        "/data/adb/lspd/config/modules_config.db",
         "/data/adb/lspd/modules_config.db",
+        "/data/adb/modules/zygisk_vector/config/modules_config.db",
         "/data/adb/modules/zygisk_vector/modules_config.db",
+        "/data/adb/modules/zygisk_lsposed/config/modules_config.db",
         "/data/adb/modules/zygisk_lsposed/modules_config.db"
     };
 
@@ -103,6 +106,11 @@ public final class RootScopeManager {
                 return cachedDbPath;
             }
         }
+        ShellResult fallback = runRoot("find /data/adb -name 'modules_config.db' 2>/dev/null | head -n 1");
+        if (fallback.ok() && !fallback.output.trim().isEmpty() && fallback.output.contains("modules_config.db")) {
+            cachedDbPath = fallback.output.trim();
+            return cachedDbPath;
+        }
         return null;
     }
 
@@ -174,7 +182,8 @@ public final class RootScopeManager {
                         }
                     }
                 } else {
-                    sql.execSQL("UPDATE modules SET enabled=1 WHERE mid=?", new Object[]{mid});
+                    String apkPath = context.getPackageResourcePath();
+                    sql.execSQL("UPDATE modules SET enabled=1, apk_path=? WHERE mid=?", new Object[]{apkPath, mid});
                 }
 
                 if (mid > 0) {
@@ -193,6 +202,14 @@ public final class RootScopeManager {
                             new Object[]{MODULE_PKG, pkg, USER_ID});
                 }
                 edited = true;
+            }
+
+            // Flush WAL checkpoint to main DB file before copying back
+            try (Cursor c = sql.rawQuery("PRAGMA wal_checkpoint(TRUNCATE)", null)) {
+                if (c != null && c.moveToFirst()) {
+                    AppLogger.debug(TAG, "WAL checkpoint completed");
+                }
+            } catch (Throwable ignored) {
             }
         } catch (Throwable t) {
             AppLogger.logError(TAG, "Failed editing sqlite db: " + t.getMessage(), t);
@@ -219,6 +236,7 @@ public final class RootScopeManager {
             "chown root:root '" + dbPath + "' 2>/dev/null\n" +
             "restorecon -F '" + dbPath + "' 2>/dev/null\n" +
             "touch '" + dbPath + "'\n" +
+            "pkill -HUP -f lspd 2>/dev/null || true\n" +
             "echo PUSH_OK";
         ShellResult pushRes = runRoot(pushScript);
         runRoot("rm -rf '" + stageDir.getAbsolutePath() + "'");
