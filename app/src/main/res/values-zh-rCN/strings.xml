@@ -239,6 +239,4 @@
     <string name="log_empty_hint">日志当前为空。</string>
     <string name="log_preview_title">最近日志输出</string>
     <string name="log_refresh_button">刷新</string>
-
-    <string-array name="xposed_scope" />
 </resources>

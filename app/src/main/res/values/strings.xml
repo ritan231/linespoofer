@@ -250,9 +250,4 @@
     <string name="log_empty_hint">Log is currently empty.</string>
     <string name="log_preview_title">Recent Log Output</string>
     <string name="log_refresh_button">Refresh</string>
-
-    <!-- Recommended default scope -->
-    <string-array name="xposed_scope">
-        <item>android</item>
-    </string-array>
 </resources>
