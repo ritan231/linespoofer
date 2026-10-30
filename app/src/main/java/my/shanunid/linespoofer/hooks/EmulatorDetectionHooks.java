@@ -42,6 +42,19 @@ public class EmulatorDetectionHooks {
         "qemu"
     };
 
+    private static final String[] ROOT_FILES = {
+        "/system/bin/su",
+        "/system/xbin/su",
+        "/sbin/su",
+        "/data/local/su",
+        "/data/adb/su",
+        "/data/adb/magisk",
+        "/data/adb/ksu",
+        "/data/adb/ap",
+        "/data/adb/modules",
+        "/data/adb/lspd"
+    };
+
     public static void hook(XC_LoadPackage.LoadPackageParam lpparam) {
         try {
             hookFileExists();
@@ -75,6 +88,14 @@ public class EmulatorDetectionHooks {
                         String lowerPath = path.toLowerCase();
                         for (String keyword : EMULATOR_KEYWORDS) {
                             if (lowerPath.contains(keyword)) {
+                                param.setResult(false);
+                                return;
+                            }
+                        }
+
+                        // Check for root files
+                        for (String rootFile : ROOT_FILES) {
+                            if (path.equals(rootFile) || path.endsWith("/" + rootFile)) {
                                 param.setResult(false);
                                 return;
                             }
@@ -165,6 +186,16 @@ public class EmulatorDetectionHooks {
             if (!isEmulatorFile) {
                 for (String emuFile : EMULATOR_FILES) {
                     if (path.equals(emuFile.toLowerCase()) || path.contains(emuFile.toLowerCase())) {
+                        isEmulatorFile = true;
+                        break;
+                    }
+                }
+            }
+
+            // Check for root files
+            if (!isEmulatorFile) {
+                for (String rootFile : ROOT_FILES) {
+                    if (path.equals(rootFile.toLowerCase()) || path.endsWith("/" + rootFile.toLowerCase())) {
                         isEmulatorFile = true;
                         break;
                     }

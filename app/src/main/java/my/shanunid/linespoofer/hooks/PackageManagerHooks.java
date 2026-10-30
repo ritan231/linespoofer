@@ -5,6 +5,7 @@ import my.shanunid.linespoofer.utils.ConfigManager;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -37,6 +38,18 @@ public class PackageManagerHooks {
         "android.hardware.telephony.mbms"
     ));
 
+    private static final Set<String> HIDDEN_PACKAGES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+        "my.shanunid.linespoofer",
+        "org.lsposed.manager",
+        "org.lsposed.lspd",
+        "com.topjohnwu.magisk",
+        "io.github.vvb2060.magisk",
+        "me.bmax.apatch",
+        "io.github.a13e300.ksu",
+        "com.sukernel",
+        "de.robv.android.xposed.installer"
+    )));
+
     public static void hook(XC_LoadPackage.LoadPackageParam lpparam) {
         try {
             Class<?> appPackageManagerClass = XposedHelpers.findClassIfExists(
@@ -48,9 +61,86 @@ public class PackageManagerHooks {
                 hookHasSystemFeature(appPackageManagerClass);
                 hookGetSystemAvailableFeatures(appPackageManagerClass);
                 hookInstallerPackage(appPackageManagerClass, lpparam);
+                hookPackageHiding(appPackageManagerClass);
             }
         } catch (Throwable throwable) {
             XposedBridge.log(TAG + ": Failed to hook PackageManager: " + throwable.getMessage());
+        }
+    }
+
+    private static void hookPackageHiding(Class<?> pmClass) {
+        try {
+            // Hook getPackageInfo(String, ...)
+            XposedBridge.hookAllMethods(pmClass, "getPackageInfo", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                    if (param.args != null && param.args.length > 0 && param.args[0] instanceof String) {
+                        String pkg = (String) param.args[0];
+                        if (HIDDEN_PACKAGES.contains(pkg)) {
+                            param.setThrowable(new android.content.pm.PackageManager.NameNotFoundException("Package not found: " + pkg));
+                        }
+                    }
+                }
+            });
+
+            // Hook getApplicationInfo(String, ...)
+            XposedBridge.hookAllMethods(pmClass, "getApplicationInfo", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                    if (param.args != null && param.args.length > 0 && param.args[0] instanceof String) {
+                        String pkg = (String) param.args[0];
+                        if (HIDDEN_PACKAGES.contains(pkg)) {
+                            param.setThrowable(new android.content.pm.PackageManager.NameNotFoundException("Package not found: " + pkg));
+                        }
+                    }
+                }
+            });
+
+            // Hook getInstalledPackages(...)
+            XposedBridge.hookAllMethods(pmClass, "getInstalledPackages", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                    Object result = param.getResult();
+                    if (result instanceof List) {
+                        List<?> list = (List<?>) result;
+                        List<Object> filtered = new ArrayList<>();
+                        for (Object item : list) {
+                            if (item instanceof android.content.pm.PackageInfo) {
+                                if (!HIDDEN_PACKAGES.contains(((android.content.pm.PackageInfo) item).packageName)) {
+                                    filtered.add(item);
+                                }
+                            } else {
+                                filtered.add(item);
+                            }
+                        }
+                        param.setResult(filtered);
+                    }
+                }
+            });
+
+            // Hook getInstalledApplications(...)
+            XposedBridge.hookAllMethods(pmClass, "getInstalledApplications", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                    Object result = param.getResult();
+                    if (result instanceof List) {
+                        List<?> list = (List<?>) result;
+                        List<Object> filtered = new ArrayList<>();
+                        for (Object item : list) {
+                            if (item instanceof android.content.pm.ApplicationInfo) {
+                                if (!HIDDEN_PACKAGES.contains(((android.content.pm.ApplicationInfo) item).packageName)) {
+                                    filtered.add(item);
+                                }
+                            } else {
+                                filtered.add(item);
+                            }
+                        }
+                        param.setResult(filtered);
+                    }
+                }
+            });
+        } catch (Throwable throwable) {
+            XposedBridge.log(TAG + ": Failed to hook package hiding: " + throwable.getMessage());
         }
     }
 

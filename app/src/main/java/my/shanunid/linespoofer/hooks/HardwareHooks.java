@@ -8,9 +8,11 @@ import my.shanunid.linespoofer.utils.ConfigManager;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.RandomAccessFile;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -38,6 +40,7 @@ public class HardwareHooks {
             hookActivityManagerMemory(lpparam);
             hookDebugMemory();
             hookFileReads();
+            hookFileInputStream(lpparam);
             XposedBridge.log(TAG + ": Successfully hooked hardware specs");
         } catch (Throwable e) {
             XposedBridge.log(TAG + ": Failed to hook hardware: " + e.getMessage());
@@ -254,6 +257,70 @@ public class HardwareHooks {
                     }
                 });
         } catch (Throwable ignored) {
+        }
+    }
+
+    private static void hookFileInputStream(XC_LoadPackage.LoadPackageParam lpparam) {
+        try {
+            XposedHelpers.findAndHookConstructor(FileInputStream.class, String.class, new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                    String path = (String) param.args[0];
+                    File fake = getFakeFileForPath(path, lpparam.packageName);
+                    if (fake != null) {
+                        param.args[0] = fake.getAbsolutePath();
+                    }
+                }
+            });
+
+            XposedHelpers.findAndHookConstructor(FileInputStream.class, File.class, new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                    File file = (File) param.args[0];
+                    if (file != null) {
+                        File fake = getFakeFileForPath(file.getAbsolutePath(), lpparam.packageName);
+                        if (fake != null) {
+                            param.args[0] = fake;
+                        }
+                    }
+                }
+            });
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static File getFakeFileForPath(String path, String packageName) {
+        if (path == null) {
+            return null;
+        }
+        if (path.equals("/proc/cpuinfo")) {
+            return createCachedVirtualFile("fake_cpuinfo", generateCpuInfo(), packageName);
+        }
+        if (path.equals("/proc/meminfo")) {
+            return createCachedVirtualFile("fake_meminfo", generateMemInfo(), packageName);
+        }
+        if (path.startsWith("/sys/devices/system/cpu/present")
+            || path.startsWith("/sys/devices/system/cpu/possible")
+            || path.startsWith("/sys/devices/system/cpu/online")) {
+            int cores = Math.max(1, ConfigManager.getCpuCoreCount());
+            return createCachedVirtualFile("fake_cpu_range", "0-" + (cores - 1) + "\n", packageName);
+        }
+        return null;
+    }
+
+    private static File createCachedVirtualFile(String prefix, String content, String packageName) {
+        try {
+            File cacheDir = new File("/data/data/" + packageName + "/cache");
+            if (!cacheDir.exists()) {
+                cacheDir.mkdirs();
+            }
+            File target = new File(cacheDir, "." + prefix);
+            try (FileOutputStream fos = new FileOutputStream(target, false)) {
+                fos.write(content.getBytes(StandardCharsets.UTF_8));
+            }
+            return target;
+        } catch (Throwable t) {
+            return null;
         }
     }
 
