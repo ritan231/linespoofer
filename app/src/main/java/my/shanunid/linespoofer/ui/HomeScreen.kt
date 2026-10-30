@@ -300,17 +300,18 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
                                 letterSpacing = 0.5.sp,
                             )
                             val isSpoofEnabled = appState.editor.uptimeMode != "off"
-                            var liveUptimeSec by remember(isSpoofEnabled, appState.editor.uptimeSeconds) {
-                                mutableStateOf(
-                                    (if (isSpoofEnabled) ConfigManager.getSpoofedUptimeSeconds() else 0L) +
-                                        (android.os.SystemClock.elapsedRealtime() / 1000L)
-                                )
+                            val baseSec = remember(isSpoofEnabled, appState.editor.uptimeSeconds) {
+                                if (isSpoofEnabled) {
+                                    (appState.editor.uptimeSeconds.toLongOrNull() ?: ConfigManager.getSpoofedUptimeSeconds())
+                                } else 0L
                             }
-                            LaunchedEffect(isSpoofEnabled, appState.editor.uptimeSeconds) {
+                            var liveUptimeSec by remember(baseSec) {
+                                mutableStateOf(baseSec + (android.os.SystemClock.elapsedRealtime() / 1000L))
+                            }
+                            LaunchedEffect(baseSec) {
                                 while (true) {
-                                    val base = if (isSpoofEnabled) ConfigManager.getSpoofedUptimeSeconds() else 0L
-                                    liveUptimeSec = base + (android.os.SystemClock.elapsedRealtime() / 1000L)
-                                    kotlinx.coroutines.delay(10000L)
+                                    liveUptimeSec = baseSec + (android.os.SystemClock.elapsedRealtime() / 1000L)
+                                    kotlinx.coroutines.delay(1000L)
                                 }
                             }
                             val hrs = liveUptimeSec / 3600

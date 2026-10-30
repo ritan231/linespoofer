@@ -853,19 +853,23 @@ public class ConfigManager {
         if ("off".equalsIgnoreCase(mode)) {
             return 0L;
         }
-        if ("custom".equalsIgnoreCase(mode)) {
-            String secStr = getConfigValue("device.uptime.seconds");
-            if (secStr != null && !secStr.trim().isEmpty()) {
-                try {
-                    long sec = Long.parseLong(secStr.trim());
-                    if (sec > 0) return sec;
-                } catch (Exception ignored) {}
-            }
+        // 1. Read persistent configured uptime (shared across all processes)
+        String secStr = getConfigValue("device.uptime.seconds");
+        if (secStr != null && !secStr.trim().isEmpty()) {
+            try {
+                long sec = Long.parseLong(secStr.trim());
+                if (sec > 0) return sec;
+            } catch (Exception ignored) {}
         }
+        // 2. Deterministic stable fallback per device profile (stable across all processes, never fluctuating)
         if (cachedRandomUptimeSec == null) {
-            long minSec = 4L * 3600L;
+            String seedStr = getConfigValue("ro.serialno");
+            if (seedStr == null || seedStr.isEmpty()) seedStr = getConfigValue("device.android_id");
+            if (seedStr == null || seedStr.isEmpty()) seedStr = getBuildFingerprint();
+            long hash = (seedStr != null) ? Math.abs((long) seedStr.hashCode()) : 1234567L;
+            long minSec = 8L * 3600L;
             long maxSec = 36L * 3600L;
-            cachedRandomUptimeSec = minSec + (long) (Math.random() * (maxSec - minSec));
+            cachedRandomUptimeSec = minSec + (hash % (maxSec - minSec));
         }
         return cachedRandomUptimeSec;
     }

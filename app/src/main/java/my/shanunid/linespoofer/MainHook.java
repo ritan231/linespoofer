@@ -72,6 +72,55 @@ public class MainHook extends XposedModule implements IXposedHookLoadPackage {
         super();
     }
 
+    private static XC_LoadPackage.LoadPackageParam createLoadPackageParam(
+            @NonNull PackageLoadedParam param,
+            @NonNull String packageName
+    ) {
+        XC_LoadPackage.LoadPackageParam lpparam = null;
+        try {
+            java.lang.reflect.Field f = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
+            f.setAccessible(true);
+            sun.misc.Unsafe unsafe = (sun.misc.Unsafe) f.get(null);
+            lpparam = (XC_LoadPackage.LoadPackageParam) unsafe.allocateInstance(XC_LoadPackage.LoadPackageParam.class);
+        } catch (Throwable ignored) {
+        }
+
+        if (lpparam == null) {
+            try {
+                for (java.lang.reflect.Constructor<?> ctor : XC_LoadPackage.LoadPackageParam.class.getDeclaredConstructors()) {
+                    ctor.setAccessible(true);
+                    Class<?>[] types = ctor.getParameterTypes();
+                    if (types.length == 0) {
+                        lpparam = (XC_LoadPackage.LoadPackageParam) ctor.newInstance();
+                        break;
+                    } else if (types.length == 1) {
+                        try {
+                            java.lang.reflect.Constructor<?> paramCtor = types[0].getDeclaredConstructor();
+                            paramCtor.setAccessible(true);
+                            Object arg = paramCtor.newInstance();
+                            lpparam = (XC_LoadPackage.LoadPackageParam) ctor.newInstance(arg);
+                            break;
+                        } catch (Throwable t) {
+                            lpparam = (XC_LoadPackage.LoadPackageParam) ctor.newInstance(new Object[]{null});
+                            break;
+                        }
+                    }
+                }
+            } catch (Throwable t) {
+                AppLogger.logError(TAG, "Failed to instantiate LoadPackageParam: " + t.getMessage(), t);
+            }
+        }
+
+        if (lpparam != null) {
+            lpparam.packageName = packageName;
+            lpparam.processName = packageName;
+            lpparam.classLoader = param.getDefaultClassLoader();
+            lpparam.appInfo = param.getApplicationInfo();
+            lpparam.isFirstApplication = param.isFirstPackage();
+        }
+        return lpparam;
+    }
+
     @Override
     public void onPackageLoaded(@NonNull PackageLoadedParam param) {
         super.onPackageLoaded(param);
@@ -91,17 +140,9 @@ public class MainHook extends XposedModule implements IXposedHookLoadPackage {
                 AppLogger.info(TAG, "libxposed: Failed to set isHookActivated: " + t.getMessage());
             }
 
-            try {
-                java.lang.reflect.Constructor<?> ctor = XC_LoadPackage.LoadPackageParam.class.getDeclaredConstructors()[0];
-                ctor.setAccessible(true);
-                XC_LoadPackage.LoadPackageParam lpparam = (XC_LoadPackage.LoadPackageParam) ctor.newInstance(new Object[]{null});
-                lpparam.packageName = packageName;
-                lpparam.processName = packageName;
-                lpparam.classLoader = param.getDefaultClassLoader();
-                lpparam.appInfo = param.getApplicationInfo();
-                lpparam.isFirstApplication = param.isFirstPackage();
+            XC_LoadPackage.LoadPackageParam lpparam = createLoadPackageParam(param, packageName);
+            if (lpparam != null) {
                 hookActivationCheck(lpparam);
-            } catch (Throwable ignored) {
             }
             return;
         }
@@ -140,22 +181,11 @@ public class MainHook extends XposedModule implements IXposedHookLoadPackage {
             }
         }
 
-        XC_LoadPackage.LoadPackageParam lpparam = null;
-        try {
-            java.lang.reflect.Constructor<?> ctor = XC_LoadPackage.LoadPackageParam.class.getDeclaredConstructors()[0];
-            ctor.setAccessible(true);
-            lpparam = (XC_LoadPackage.LoadPackageParam) ctor.newInstance(new Object[]{null});
-        } catch (Throwable t) {
-            AppLogger.info(TAG, "Failed to instantiate LoadPackageParam: " + t.getMessage());
-        }
+        XC_LoadPackage.LoadPackageParam lpparam = createLoadPackageParam(param, packageName);
         if (lpparam == null) {
+            AppLogger.info(TAG, "Fatal: failed to instantiate LoadPackageParam for " + packageName);
             return;
         }
-        lpparam.packageName = packageName;
-        lpparam.processName = packageName;
-        lpparam.classLoader = param.getDefaultClassLoader();
-        lpparam.appInfo = param.getApplicationInfo();
-        lpparam.isFirstApplication = param.isFirstPackage();
 
         hookApplicationAttachForInitialization(lpparam);
 
