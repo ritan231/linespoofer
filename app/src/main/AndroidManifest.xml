@@ -94,7 +94,7 @@
 
         <meta-data
             android:name="xposedapi"
-            android:value="102" />
+            android:value="101" />
 
         <meta-data
             android:name="xposedminversion"

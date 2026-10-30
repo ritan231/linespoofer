@@ -46,7 +46,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
@@ -60,7 +59,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  * This module hooks Android APIs to spoof device identifiers and properties
  * that some apps read directly from Java APIs or SystemProperties.
  */
-public class MainHook extends XposedModule implements IXposedHookLoadPackage {
+public class MainHook extends XposedModule {
 
     private static final String TAG = "LineSpoofer";
     private static final String MODULE_PACKAGE = "my.shanunid.linespoofer";
@@ -77,6 +76,7 @@ public class MainHook extends XposedModule implements IXposedHookLoadPackage {
             @NonNull String packageName
     ) {
         XC_LoadPackage.LoadPackageParam lpparam = null;
+        boolean fromUnsafe = false;
         try {
             Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
             java.lang.reflect.Field f = unsafeClass.getDeclaredField("theUnsafe");
@@ -84,7 +84,11 @@ public class MainHook extends XposedModule implements IXposedHookLoadPackage {
             Object unsafe = f.get(null);
             java.lang.reflect.Method allocateInstanceMethod = unsafeClass.getMethod("allocateInstance", Class.class);
             lpparam = (XC_LoadPackage.LoadPackageParam) allocateInstanceMethod.invoke(unsafe, XC_LoadPackage.LoadPackageParam.class);
-        } catch (Throwable ignored) {
+            if (lpparam != null) {
+                fromUnsafe = true;
+            }
+        } catch (Throwable t) {
+            AppLogger.info(TAG, "Unsafe allocateInstance failed: " + t.getMessage());
         }
 
         if (lpparam == null) {
@@ -119,6 +123,7 @@ public class MainHook extends XposedModule implements IXposedHookLoadPackage {
             lpparam.classLoader = param.getDefaultClassLoader();
             lpparam.appInfo = param.getApplicationInfo();
             lpparam.isFirstApplication = param.isFirstPackage();
+            AppLogger.info(TAG, "Instantiated LoadPackageParam for " + packageName + " (source=" + (fromUnsafe ? "Unsafe" : "Reflection") + ")");
         }
         return lpparam;
     }
@@ -199,7 +204,6 @@ public class MainHook extends XposedModule implements IXposedHookLoadPackage {
         initializeHooks(lpparam);
     }
 
-    @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
         AppLogger.info(TAG, "Loading hooks for " + lpparam.packageName);
 
