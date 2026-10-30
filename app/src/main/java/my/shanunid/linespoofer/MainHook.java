@@ -78,10 +78,12 @@ public class MainHook extends XposedModule implements IXposedHookLoadPackage {
     ) {
         XC_LoadPackage.LoadPackageParam lpparam = null;
         try {
-            java.lang.reflect.Field f = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
+            Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
+            java.lang.reflect.Field f = unsafeClass.getDeclaredField("theUnsafe");
             f.setAccessible(true);
-            sun.misc.Unsafe unsafe = (sun.misc.Unsafe) f.get(null);
-            lpparam = (XC_LoadPackage.LoadPackageParam) unsafe.allocateInstance(XC_LoadPackage.LoadPackageParam.class);
+            Object unsafe = f.get(null);
+            java.lang.reflect.Method allocateInstanceMethod = unsafeClass.getMethod("allocateInstance", Class.class);
+            lpparam = (XC_LoadPackage.LoadPackageParam) allocateInstanceMethod.invoke(unsafe, XC_LoadPackage.LoadPackageParam.class);
         } catch (Throwable ignored) {
         }
 
