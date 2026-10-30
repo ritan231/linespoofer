@@ -261,9 +261,8 @@ private fun AppSelectionList(
                     Modifier
                 },
                 leadingContent = {
-                    Image(
-                        bitmap = app.icon.asImageBitmap(),
-                        contentDescription = null,
+                    AppIcon(
+                        packageName = app.packageName,
                         modifier = Modifier
                             .size(40.dp)
                             .clip(MaterialTheme.shapes.medium),

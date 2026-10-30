@@ -410,6 +410,7 @@ class SpoofAppState(val activity: AppCompatActivity) {
                 packageManager.getInstalledPackages(0)
             }
             val result = ArrayList<SafeAppEntry>()
+            val placeholderIcon = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
             packages.forEach { packageInfo ->
                 val applicationInfo = packageInfo.applicationInfo ?: return@forEach
                 val packageName = packageInfo.packageName
@@ -422,7 +423,7 @@ class SpoofAppState(val activity: AppCompatActivity) {
                         packageName = packageName,
                         versionName = packageInfo.versionName.orEmpty(),
                         systemApp = applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM != 0,
-                        icon = applicationInfo.loadIcon(packageManager).toBitmap(96, 96),
+                        icon = placeholderIcon,
                     )
                 )
             }

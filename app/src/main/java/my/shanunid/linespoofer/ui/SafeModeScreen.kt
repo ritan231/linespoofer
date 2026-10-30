@@ -208,9 +208,8 @@ fun SafeModeScreen(
                             Modifier
                         },
                         leadingContent = {
-                            Image(
-                                bitmap = app.icon.asImageBitmap(),
-                                contentDescription = null,
+                            AppIcon(
+                                packageName = app.packageName,
                                 modifier = Modifier.size(44.dp),
                             )
                         },

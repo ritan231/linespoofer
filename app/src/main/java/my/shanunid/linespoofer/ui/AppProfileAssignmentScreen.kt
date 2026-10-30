@@ -96,9 +96,9 @@ fun AppProfileAssignmentScreen(
                 ListItem(
                     supportingContent = { Text(packageName) },
                     leadingContent = {
-                        Image(
-                            bitmap = icon.asImageBitmap(),
-                            contentDescription = null,
+                        AppIcon(
+                            packageName = packageName,
+                            fallbackBitmap = icon,
                             modifier = Modifier
                                 .size(48.dp)
                                 .clip(MaterialTheme.shapes.medium),
