@@ -112,6 +112,7 @@ fun LineSpooferApp(appState: SpoofAppState) {
         val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
         val packageInfo = remember { appState.activity.packageManager.getPackageInfo(appState.activity.packageName, 0) }
         val page: @Composable () -> Unit = {
+            val colors = MiuiTheme.colors
             Scaffold(
                 modifier = Modifier
                     .fillMaxSize()
@@ -127,18 +128,27 @@ fun LineSpooferApp(appState: SpoofAppState) {
                                         destination.labelRes
                                     },
                                 ),
+                                fontWeight = FontWeight.Bold,
                             )
                         },
                         subtitle = if (destination == AppDestination.Settings) {
                             {
                                 Text(
                                     "${packageInfo.versionName.orEmpty()} " +
-                                        "(${PackageInfoCompat.getLongVersionCode(packageInfo)})"
+                                        "(${PackageInfoCompat.getLongVersionCode(packageInfo)})",
+                                    color = colors.textSecondary,
                                 )
                             }
                         } else {
                             null
                         },
+                        colors = TopAppBarDefaults.largeFlexibleTopAppBarColors(
+                            containerColor = colors.background,
+                            scrolledContainerColor = colors.background,
+                            titleContentColor = colors.textPrimary,
+                            navigationIconContentColor = colors.textPrimary,
+                            actionIconContentColor = colors.textPrimary,
+                        ),
                         actions = {
                             if (destination == AppDestination.Apps) {
                                 Box {
@@ -181,10 +191,10 @@ fun LineSpooferApp(appState: SpoofAppState) {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(0.6.dp)
-                                    .background(MiuiXColors.DarkBorder)
+                                    .background(colors.navBarBorder)
                             )
                             NavigationBar(
-                                containerColor = androidx.compose.ui.graphics.Color(0xFF111318),
+                                containerColor = colors.navBarBg,
                                 tonalElevation = 0.dp,
                             ) {
                                 AppDestination.entries.forEach { item ->
@@ -209,8 +219,8 @@ fun LineSpooferApp(appState: SpoofAppState) {
                                             selectedIconColor = MiuiXColors.Blue,
                                             selectedTextColor = MiuiXColors.Blue,
                                             indicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-                                            unselectedIconColor = MiuiXColors.TextSecondary,
-                                            unselectedTextColor = MiuiXColors.TextSecondary,
+                                            unselectedIconColor = colors.textSecondary,
+                                            unselectedTextColor = colors.textSecondary,
                                         ),
                                     )
                                 }
@@ -219,9 +229,9 @@ fun LineSpooferApp(appState: SpoofAppState) {
                     }
                 },
                 snackbarHost = { SnackbarHost(snackbarHostState) },
-                containerColor = MaterialTheme.colorScheme.surface,
+                containerColor = colors.background,
             ) { contentPadding ->
-                Box(modifier = Modifier.fillMaxSize()) {
+                Box(modifier = Modifier.fillMaxSize().background(colors.background)) {
                     if (appState.initialized) {
                         when (destination) {
                             AppDestination.Home -> HomeScreen(appState, contentPadding)

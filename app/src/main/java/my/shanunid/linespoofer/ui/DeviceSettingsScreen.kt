@@ -61,7 +61,6 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -239,6 +238,7 @@ private fun AppSelectionList(
         }
     }
 
+    val colors = MiuiTheme.colors
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -256,15 +256,15 @@ private fun AppSelectionList(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MiuiXColors.DarkCard,
-                    unfocusedContainerColor = MiuiXColors.DarkCard,
+                    focusedContainerColor = colors.card,
+                    unfocusedContainerColor = colors.card,
                     focusedBorderColor = MiuiXColors.Blue,
-                    unfocusedBorderColor = MiuiXColors.DarkBorder,
-                    focusedTextColor = MiuiXColors.TextPrimary,
-                    unfocusedTextColor = MiuiXColors.TextPrimary,
+                    unfocusedBorderColor = colors.border,
+                    focusedTextColor = colors.textPrimary,
+                    unfocusedTextColor = colors.textPrimary,
                 ),
                 placeholder = {
-                    Text(stringResource(R.string.app_profile_search), color = MiuiXColors.TextSecondary)
+                    Text(stringResource(R.string.app_profile_search), color = colors.textSecondary)
                 },
                 leadingIcon = {
                     Icon(Icons.Outlined.Search, contentDescription = null, tint = MiuiXColors.Blue)
@@ -302,12 +302,13 @@ private fun MiuiAppRow(
     assignedProfile: String?,
     onClick: () -> Unit,
 ) {
+    val colors = MiuiTheme.colors
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(MiuiXColors.DarkCard)
-            .border(0.8.dp, MiuiXColors.DarkBorder, RoundedCornerShape(16.dp))
+            .background(colors.card)
+            .border(0.8.dp, colors.border, RoundedCornerShape(16.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 11.dp),
     ) {
@@ -325,7 +326,7 @@ private fun MiuiAppRow(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = app.label,
-                    color = MiuiXColors.TextPrimary,
+                    color = colors.textPrimary,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
@@ -334,7 +335,7 @@ private fun MiuiAppRow(
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = app.packageName,
-                    color = MiuiXColors.TextSecondary,
+                    color = colors.textSecondary,
                     fontSize = 12.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -345,13 +346,13 @@ private fun MiuiAppRow(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .background(
-                        if (assignedProfile != null) MiuiXColors.BlueContainer else androidx.compose.ui.graphics.Color(0xFF222630)
+                        if (assignedProfile != null) MiuiXColors.BlueContainer else colors.iconBadgeBg
                     )
                     .padding(horizontal = 8.dp, vertical = 4.dp),
             ) {
                 Text(
                     text = assignedProfile ?: stringResource(R.string.app_profile_unassigned),
-                    color = if (assignedProfile != null) MiuiXColors.Blue else MiuiXColors.TextSecondary,
+                    color = if (assignedProfile != null) MiuiXColors.Blue else colors.textSecondary,
                     fontSize = 11.5.sp,
                     fontWeight = if (assignedProfile != null) FontWeight.SemiBold else FontWeight.Normal,
                     maxLines = 1,
@@ -369,6 +370,7 @@ fun ProfileManagementScreen(
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val colors = MiuiTheme.colors
     val profiles = appState.profileState?.profiles.orEmpty()
     var profileIdPendingDeletion by remember { mutableStateOf<String?>(null) }
     val editorLauncher = rememberLauncherForActivityResult(
@@ -416,14 +418,14 @@ fun ProfileManagementScreen(
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(if (isActive) MiuiXColors.BlueContainer else androidx.compose.ui.graphics.Color(0xFF222631)),
+                                .clip(RoundedCornerShape(10.dp) )
+                                .background(if (isActive) MiuiXColors.BlueContainer else colors.iconBadgeBg),
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.AccountBox,
                                 contentDescription = null,
-                                tint = if (isActive) MiuiXColors.Blue else MiuiXColors.TextSecondary,
+                                tint = if (isActive) MiuiXColors.Blue else colors.textSecondary,
                                 modifier = Modifier.size(22.dp),
                             )
                         }
@@ -432,7 +434,7 @@ fun ProfileManagementScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                     text = profile.name,
-                                    color = MiuiXColors.TextPrimary,
+                                    color = colors.textPrimary,
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.SemiBold,
                                 )
@@ -445,7 +447,7 @@ fun ProfileManagementScreen(
                                             .padding(horizontal = 6.dp, vertical = 2.dp),
                                     ) {
                                         Text(
-                                            text = "ACTIVE",
+                                            text = stringResource(R.string.module_status_active).uppercase(),
                                             color = MiuiXColors.Blue,
                                             fontSize = 10.sp,
                                             fontWeight = FontWeight.Bold,
@@ -456,7 +458,7 @@ fun ProfileManagementScreen(
                             Spacer(Modifier.height(3.dp))
                             Text(
                                 text = stringResource(R.string.app_profile_assignment_count, assignmentCount),
-                                color = MiuiXColors.TextSecondary,
+                                color = colors.textSecondary,
                                 fontSize = 12.5.sp,
                             )
                         }
@@ -995,33 +997,66 @@ private fun AdvancedEditorField(field: EditorField, editor: ProfileEditorState) 
 
 @Composable
 private fun DynamicEnvironmentSpoofSection(editor: ProfileEditorState) {
-    MiuiSectionHeader(title = "DYNAMIC HARDWARE & ENVIRONMENT")
+    val colors = MiuiTheme.colors
+    MiuiSectionHeader(title = stringResource(R.string.settings_section_dynamic_hardware))
     MiuiCard {
-        // 1. Custom FPS
+        // 1. Custom FPS (Strictly 30, 60, 90, 120, 144 FPS)
+        val fpsOptions = listOf(30, 60, 90, 120, 144)
+        val currentFps = when (editor.targetFps.toInt()) {
+            30 -> 30
+            60 -> 60
+            90 -> 90
+            144 -> 144
+            else -> 120
+        }
+        val currentFpsIndex = fpsOptions.indexOf(currentFps).coerceAtLeast(0)
+
         MiuiSwitchRow(
             icon = Icons.Outlined.AspectRatio,
-            title = "Custom Display FPS",
-            subtitle = "Kustomisasi refresh rate render aplikasi (${editor.targetFps.toInt()} FPS)",
+            title = stringResource(R.string.settings_custom_fps_title),
+            subtitle = stringResource(R.string.settings_custom_fps_subtitle, currentFps),
             checked = editor.fpsMode != "off",
             onCheckedChange = { editor.fpsMode = if (it) "custom" else "off" },
         )
         AnimatedVisibility(editor.fpsMode != "off") {
             Column(modifier = Modifier.padding(top = 4.dp, bottom = 10.dp)) {
-                MiuiSliderRow(
-                    title = "Target Refresh Rate",
-                    value = editor.targetFps,
-                    valueRange = 30f..144f,
-                    steps = 3,
-                    valueText = "${editor.targetFps.toInt()} FPS",
-                    onValueChange = { editor.targetFps = it },
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(R.string.settings_target_fps_title),
+                        color = colors.textPrimary,
+                        fontSize = 14.5.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    Text(
+                        text = "$currentFps FPS",
+                        color = MiuiXColors.Blue,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                MiuiSegmentedPill(
+                    options = fpsOptions.map { "$it" },
+                    selectedIndex = currentFpsIndex,
+                    onSelect = { idx ->
+                        editor.targetFps = fpsOptions[idx].toFloat()
+                    }
                 )
             }
         }
 
-        Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(MiuiXColors.DarkDivider))
+        Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(colors.divider))
 
         // 2. Spoof MAC Address (Random atau Custom)
-        val macModes = listOf("Off", "Random", "Custom")
+        val modeOptions = listOf(
+            stringResource(R.string.mode_off),
+            stringResource(R.string.mode_random),
+            stringResource(R.string.mode_custom),
+        )
         val currentMacIndex = when (editor.macMode.lowercase()) {
             "random" -> 1
             "custom" -> 2
@@ -1034,8 +1069,8 @@ private fun DynamicEnvironmentSpoofSection(editor: ProfileEditorState) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Spoof Hardware MAC Address",
-                    color = MiuiXColors.TextPrimary,
+                    text = stringResource(R.string.settings_mac_title),
+                    color = colors.textPrimary,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                 )
@@ -1046,7 +1081,7 @@ private fun DynamicEnvironmentSpoofSection(editor: ProfileEditorState) {
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Casino,
-                            contentDescription = "Acak",
+                            contentDescription = stringResource(R.string.settings_generate_random),
                             tint = MiuiXColors.Blue,
                             modifier = Modifier.size(18.dp),
                         )
@@ -1055,13 +1090,13 @@ private fun DynamicEnvironmentSpoofSection(editor: ProfileEditorState) {
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Intersepsi NetworkInterface & WifiInfo untuk wlan0 / eth0",
-                color = MiuiXColors.TextSecondary,
+                text = stringResource(R.string.settings_mac_subtitle),
+                color = colors.textSecondary,
                 fontSize = 12.5.sp,
             )
             Spacer(modifier = Modifier.height(8.dp))
             MiuiSegmentedPill(
-                options = macModes,
+                options = modeOptions,
                 selectedIndex = currentMacIndex,
                 onSelect = { idx ->
                     editor.macMode = when (idx) {
@@ -1087,10 +1122,9 @@ private fun DynamicEnvironmentSpoofSection(editor: ProfileEditorState) {
             }
         }
 
-        Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(MiuiXColors.DarkDivider))
+        Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(colors.divider))
 
         // 3. Boot Time / Uptime Spoofing
-        val uptimeModes = listOf("Off", "Random", "Custom")
         val currentUptimeIndex = when (editor.uptimeMode.lowercase()) {
             "random" -> 1
             "custom" -> 2
@@ -1098,20 +1132,20 @@ private fun DynamicEnvironmentSpoofSection(editor: ProfileEditorState) {
         }
         Column(modifier = Modifier.padding(vertical = 10.dp)) {
             Text(
-                text = "Spoof Boot Time & Uptime",
-                color = MiuiXColors.TextPrimary,
+                text = stringResource(R.string.settings_uptime_title),
+                color = colors.textPrimary,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Palsukan durasi menyala perangkat di SystemClock dan /proc/uptime",
-                color = MiuiXColors.TextSecondary,
+                text = stringResource(R.string.settings_uptime_subtitle),
+                color = colors.textSecondary,
                 fontSize = 12.5.sp,
             )
             Spacer(modifier = Modifier.height(8.dp))
             MiuiSegmentedPill(
-                options = uptimeModes,
+                options = modeOptions,
                 selectedIndex = currentUptimeIndex,
                 onSelect = { idx ->
                     editor.uptimeMode = when (idx) {
@@ -1125,11 +1159,11 @@ private fun DynamicEnvironmentSpoofSection(editor: ProfileEditorState) {
                 val currentHours = (editor.uptimeSeconds.toLongOrNull() ?: 27720L) / 3600f
                 Column(modifier = Modifier.padding(top = 8.dp)) {
                     MiuiSliderRow(
-                        title = "Durasi Uptime",
+                        title = stringResource(R.string.settings_uptime_duration),
                         value = currentHours.coerceIn(1f, 72f),
                         valueRange = 1f..72f,
                         steps = 70,
-                        valueText = "${currentHours.toInt()} Jam",
+                        valueText = stringResource(R.string.settings_uptime_hours_format, currentHours.toInt()),
                         onValueChange = {
                             val sec = (it * 3600).toLong()
                             editor.uptimeSeconds = sec.toString()
@@ -1139,10 +1173,9 @@ private fun DynamicEnvironmentSpoofSection(editor: ProfileEditorState) {
             }
         }
 
-        Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(MiuiXColors.DarkDivider))
+        Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(colors.divider))
 
         // 4. Wi-Fi & Bluetooth Spoofing
-        val wifiModes = listOf("Off", "Random", "Custom")
         val currentWifiIndex = when (editor.wifiMode.lowercase()) {
             "random" -> 1
             "custom" -> 2
@@ -1150,20 +1183,20 @@ private fun DynamicEnvironmentSpoofSection(editor: ProfileEditorState) {
         }
         Column(modifier = Modifier.padding(vertical = 10.dp)) {
             Text(
-                text = "Spoof Wi-Fi & Bluetooth",
-                color = MiuiXColors.TextPrimary,
+                text = stringResource(R.string.settings_wifi_bt_title),
+                color = colors.textPrimary,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Samarkan SSID, BSSID, RSSI, dan nama adapter Bluetooth",
-                color = MiuiXColors.TextSecondary,
+                text = stringResource(R.string.settings_wifi_bt_subtitle),
+                color = colors.textSecondary,
                 fontSize = 12.5.sp,
             )
             Spacer(modifier = Modifier.height(8.dp))
             MiuiSegmentedPill(
-                options = wifiModes,
+                options = modeOptions,
                 selectedIndex = currentWifiIndex,
                 onSelect = { idx ->
                     val mode = when (idx) {
@@ -1196,10 +1229,9 @@ private fun DynamicEnvironmentSpoofSection(editor: ProfileEditorState) {
             }
         }
 
-        Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(MiuiXColors.DarkDivider))
+        Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(colors.divider))
 
         // 5. Battery Telemetry Spoofing
-        val batteryModes = listOf("Off", "Random", "Custom")
         val currentBatteryIndex = when (editor.batteryMode.lowercase()) {
             "random" -> 1
             "custom" -> 2
@@ -1207,20 +1239,20 @@ private fun DynamicEnvironmentSpoofSection(editor: ProfileEditorState) {
         }
         Column(modifier = Modifier.padding(vertical = 10.dp)) {
             Text(
-                text = "Spoof Status & Kapasitas Baterai",
-                color = MiuiXColors.TextPrimary,
+                text = stringResource(R.string.settings_battery_title),
+                color = colors.textPrimary,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Cegah fingerprint status daya dan emulator static battery detection",
-                color = MiuiXColors.TextSecondary,
+                text = stringResource(R.string.settings_battery_subtitle),
+                color = colors.textSecondary,
                 fontSize = 12.5.sp,
             )
             Spacer(modifier = Modifier.height(8.dp))
             MiuiSegmentedPill(
-                options = batteryModes,
+                options = modeOptions,
                 selectedIndex = currentBatteryIndex,
                 onSelect = { idx ->
                     editor.batteryMode = when (idx) {
@@ -1233,7 +1265,7 @@ private fun DynamicEnvironmentSpoofSection(editor: ProfileEditorState) {
             AnimatedVisibility(editor.batteryMode == "custom") {
                 Column(modifier = Modifier.padding(top = 8.dp)) {
                     MiuiSliderRow(
-                        title = "Persentase Baterai",
+                        title = stringResource(R.string.settings_battery_percentage),
                         value = editor.batteryLevel,
                         valueRange = 1f..100f,
                         steps = 98,
@@ -1241,7 +1273,7 @@ private fun DynamicEnvironmentSpoofSection(editor: ProfileEditorState) {
                         onValueChange = { editor.batteryLevel = it }
                     )
                     MiuiSliderRow(
-                        title = "Suhu Baterai (°C)",
+                        title = stringResource(R.string.settings_battery_temp),
                         value = editor.batteryTemp,
                         valueRange = 25f..45f,
                         steps = 40,

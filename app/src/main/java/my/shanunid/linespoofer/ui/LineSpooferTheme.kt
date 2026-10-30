@@ -110,10 +110,13 @@ fun LineSpooferTheme(
         }
     }
 
+    val miuiColors = if (isDark) MiuiDarkColors else MiuiLightColors
+
     CompositionLocalProvider(
         LocalContext provides localizedContext,
         LocalConfiguration provides localizedConfiguration,
         LocalResources provides localizedContext.resources,
+        LocalMiuiColors provides miuiColors,
     ) {
         MaterialExpressiveTheme(
             colorScheme = colorScheme,

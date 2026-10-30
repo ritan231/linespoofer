@@ -42,12 +42,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * HyperOS Grouped Container Card with 20dp corner radius and obsidian border.
+ * HyperOS Grouped Container Card with 20dp corner radius and theme-adaptive surface/border.
  */
 @Composable
 fun MiuiCard(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = MiuiXColors.DarkCard,
+    backgroundColor: Color = MiuiTheme.colors.card,
+    borderColor: Color = MiuiTheme.colors.border,
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -56,7 +57,7 @@ fun MiuiCard(
         .fillMaxWidth()
         .clip(shape)
         .background(backgroundColor)
-        .border(0.8.dp, MiuiXColors.DarkBorder, shape)
+        .border(0.8.dp, borderColor, shape)
         .let {
             if (onClick != null) {
                 it.clickable(onClick = onClick)
@@ -80,13 +81,14 @@ fun MiuiSwitch(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
+    val colors = MiuiTheme.colors
     val trackColor by animateColorAsState(
-        targetValue = if (checked) MiuiXColors.Blue else Color(0xFF232732),
+        targetValue = if (checked) MiuiXColors.Blue else colors.switchInactiveTrack,
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "miuiSwitchTrack",
     )
     val borderColor by animateColorAsState(
-        targetValue = if (checked) MiuiXColors.Blue else Color(0xFF383E4E),
+        targetValue = if (checked) MiuiXColors.Blue else colors.switchInactiveBorder,
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "miuiSwitchBorder",
     )
@@ -141,6 +143,7 @@ fun MiuiSwitchRow(
     iconTint: Color = MiuiXColors.Blue,
     enabled: Boolean = true,
 ) {
+    val colors = MiuiTheme.colors
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -174,7 +177,7 @@ fun MiuiSwitchRow(
             Column {
                 Text(
                     text = title,
-                    color = if (enabled) MiuiXColors.TextPrimary else MiuiXColors.TextSecondary.copy(alpha = 0.6f),
+                    color = if (enabled) colors.textPrimary else colors.textSecondary.copy(alpha = 0.6f),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                 )
@@ -182,7 +185,7 @@ fun MiuiSwitchRow(
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = subtitle,
-                        color = MiuiXColors.TextSecondary,
+                        color = colors.textSecondary,
                         fontSize = 12.5.sp,
                     )
                 }
@@ -191,7 +194,7 @@ fun MiuiSwitchRow(
         Spacer(modifier = Modifier.width(12.dp))
         MiuiSwitch(
             checked = checked,
-            onCheckedChange = null, // Row handles the click without double-firing
+            onCheckedChange = null,
             enabled = enabled,
         )
     }
@@ -210,6 +213,7 @@ fun MiuiNavigationRow(
     icon: ImageVector? = null,
     iconTint: Color = MiuiXColors.Blue,
 ) {
+    val colors = MiuiTheme.colors
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -242,7 +246,7 @@ fun MiuiNavigationRow(
             Column {
                 Text(
                     text = title,
-                    color = MiuiXColors.TextPrimary,
+                    color = colors.textPrimary,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                 )
@@ -250,7 +254,7 @@ fun MiuiNavigationRow(
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = subtitle,
-                        color = MiuiXColors.TextSecondary,
+                        color = colors.textSecondary,
                         fontSize = 12.5.sp,
                     )
                 }
@@ -260,7 +264,7 @@ fun MiuiNavigationRow(
             if (!valueText.isNullOrBlank()) {
                 Text(
                     text = valueText,
-                    color = MiuiXColors.TextSecondary,
+                    color = colors.textSecondary,
                     fontSize = 13.5.sp,
                 )
                 Spacer(modifier = Modifier.width(4.dp))
@@ -268,7 +272,7 @@ fun MiuiNavigationRow(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
-                tint = MiuiXColors.TextTertiary,
+                tint = colors.textTertiary,
                 modifier = Modifier.size(18.dp),
             )
         }
@@ -283,13 +287,14 @@ fun MiuiSliderRow(
     title: String,
     value: Float,
     valueRange: ClosedFloatingPointRange<Float>,
-    steps: Int,
-    valueText: String,
     onValueChange: (Float) -> Unit,
     modifier: Modifier = Modifier,
+    valueText: String = "${value.toInt()}",
+    steps: Int = 0,
     icon: ImageVector? = null,
     iconTint: Color = MiuiXColors.Blue,
 ) {
+    val colors = MiuiTheme.colors
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -302,26 +307,18 @@ fun MiuiSliderRow(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (icon != null) {
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(iconTint.copy(alpha = 0.12f)),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            tint = iconTint,
-                            modifier = Modifier.size(20.dp),
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(14.dp))
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = iconTint,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
                 Text(
                     text = title,
-                    color = MiuiXColors.TextPrimary,
-                    fontSize = 15.sp,
+                    color = colors.textPrimary,
+                    fontSize = 14.5.sp,
                     fontWeight = FontWeight.Medium,
                 )
             }
@@ -348,7 +345,7 @@ fun MiuiSliderRow(
             colors = SliderDefaults.colors(
                 thumbColor = Color.White,
                 activeTrackColor = MiuiXColors.Blue,
-                inactiveTrackColor = Color(0xFF2A2E3B),
+                inactiveTrackColor = colors.sliderInactiveTrack,
             ),
             modifier = Modifier.fillMaxWidth(),
         )
@@ -383,11 +380,12 @@ fun MiuiSegmentedPill(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val colors = MiuiTheme.colors
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(Color(0xFF1E212B))
+            .background(colors.pillBackground)
             .padding(4.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
@@ -404,7 +402,7 @@ fun MiuiSegmentedPill(
             ) {
                 Text(
                     text = text,
-                    color = if (isSelected) Color.White else MiuiXColors.TextSecondary,
+                    color = if (isSelected) Color.White else colors.textSecondary,
                     fontSize = 13.sp,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                 )
@@ -412,4 +410,3 @@ fun MiuiSegmentedPill(
         }
     }
 }
-

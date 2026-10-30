@@ -92,6 +92,18 @@ class SpoofAppState(val activity: AppCompatActivity) {
         AppSettingsStore.setLanguageMode(activity, value)
         languageMode = AppSettingsStore.getLanguageMode(activity)
         presets = presetCatalog.localizeCurrentDevicePreset(localizedContext(), presets)
+        try {
+            if (value == AppSettingsStore.LANGUAGE_DEFAULT) {
+                androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(
+                    androidx.core.os.LocaleListCompat.getEmptyLocaleList()
+                )
+            } else {
+                androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(
+                    androidx.core.os.LocaleListCompat.forLanguageTags(value)
+                )
+            }
+        } catch (_: Throwable) {
+        }
     }
 
     fun updateSystemColors(enabled: Boolean) {
@@ -719,7 +731,14 @@ class ProfileEditorState {
         batteryTemp = (config.extraProperties["device.battery.temp"]?.toFloatOrNull() ?: 312f) / 10f
         batteryStatus = config.extraProperties["device.battery.status"] ?: "discharging"
         fpsMode = config.extraProperties["device.fps.mode"] ?: "custom"
-        targetFps = config.extraProperties["device.display.refresh_rate"]?.toFloatOrNull() ?: 120f
+        val rawFps = config.extraProperties["device.display.refresh_rate"]?.toFloatOrNull() ?: 120f
+        targetFps = when (rawFps.toInt()) {
+            30 -> 30f
+            60 -> 60f
+            90 -> 90f
+            144 -> 144f
+            else -> 120f
+        }
 
         allFields.forEach { fieldId ->
             val value = config.extraProperties[ConfigManager.getTogglePropertyKey(fieldId)]

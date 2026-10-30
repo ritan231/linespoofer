@@ -55,6 +55,8 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
     val config = appState.loadedConfig ?: return
     val profile = config.profile
     val moduleActivated = appState.isModuleActivated()
+    val colors = MiuiTheme.colors
+    val isDark = colors.isDark
     val listState = rememberLazyListState()
     LaunchedEffect(Unit) { listState.scrollToItem(0) }
 
@@ -62,31 +64,38 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
         state = listState,
         modifier = Modifier
             .fillMaxSize()
-            .background(MiuiXColors.DarkBg)
+            .background(colors.background)
             .padding(scaffoldPadding),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
     ) {
         // 1. HyperOS Hero Card (Module Status + Master Switch)
         item {
             val heroShape = RoundedCornerShape(24.dp)
+            val heroGradientColors = if (isDark) {
+                if (moduleActivated && appState.isMasterSpoofActive) {
+                    listOf(Color(0xFF152238), Color(0xFF11141C))
+                } else {
+                    listOf(Color(0xFF22171A), Color(0xFF151418))
+                }
+            } else {
+                if (moduleActivated && appState.isMasterSpoofActive) {
+                    listOf(Color(0xFFE5F1FF), Color(0xFFD6E8FF))
+                } else {
+                    listOf(Color(0xFFFFEEEE), Color(0xFFFFF0F0))
+                }
+            }
+            val heroBorderColor = if (moduleActivated && appState.isMasterSpoofActive) {
+                MiuiXColors.Blue.copy(alpha = 0.4f)
+            } else {
+                if (isDark) MiuiXColors.DarkBorder else MiuiXColors.LightBorder
+            }
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(heroShape)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = if (moduleActivated && appState.isMasterSpoofActive) {
-                                listOf(Color(0xFF152238), Color(0xFF11141C))
-                            } else {
-                                listOf(Color(0xFF22171A), Color(0xFF151418))
-                            }
-                        )
-                    )
-                    .border(
-                        1.dp,
-                        if (moduleActivated && appState.isMasterSpoofActive) MiuiXColors.Blue.copy(alpha = 0.4f) else MiuiXColors.DarkBorder,
-                        heroShape
-                    )
+                    .background(Brush.verticalGradient(colors = heroGradientColors))
+                    .border(1.dp, heroBorderColor, heroShape)
                     .padding(20.dp)
             ) {
                 Column {
@@ -113,7 +122,11 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = if (moduleActivated) "MODULE ACTIVE" else "MODULE INACTIVE",
+                                text = if (moduleActivated) {
+                                    stringResource(R.string.home_badge_active)
+                                } else {
+                                    stringResource(R.string.home_badge_inactive)
+                                },
                                 color = if (moduleActivated) MiuiXColors.Green else MiuiXColors.Red,
                                 fontSize = 11.5.sp,
                                 fontWeight = FontWeight.Bold,
@@ -132,7 +145,7 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
 
                     Text(
                         text = profile.model.ifBlank { "LineSpoofer Target" },
-                        color = Color.White,
+                        color = if (isDark) Color.White else colors.textPrimary,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                     )
@@ -141,11 +154,11 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
 
                     Text(
                         text = if (appState.isMasterSpoofActive) {
-                            "Engine spoofing aktif — Sistem & aplikasi otomatis ter-spoof"
+                            stringResource(R.string.home_master_active)
                         } else {
-                            "Master switch dimatikan — Hook dilewati"
+                            stringResource(R.string.home_master_inactive)
                         },
-                        color = MiuiXColors.TextSecondary,
+                        color = if (isDark) MiuiXColors.TextSecondary else colors.textSecondary,
                         fontSize = 13.sp,
                     )
                 }
@@ -160,10 +173,9 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                // Card 1: Target FPS
+                // Card 1: Target FPS (Strictly 30, 60, 90, 120, 144)
                 MiuiCard(
                     modifier = Modifier.weight(1f),
-                    backgroundColor = MiuiXColors.DarkCard,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
@@ -183,15 +195,22 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "DISPLAY FPS",
-                                color = MiuiXColors.TextSecondary,
+                                text = stringResource(R.string.home_telemetry_fps),
+                                color = colors.textSecondary,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 0.5.sp,
                             )
+                            val validFps = when (appState.editor.targetFps.toInt()) {
+                                30 -> 30
+                                60 -> 60
+                                90 -> 90
+                                144 -> 144
+                                else -> 120
+                            }
                             Text(
-                                text = "${appState.editor.targetFps.toInt()} FPS",
-                                color = MiuiXColors.TextPrimary,
+                                text = "$validFps FPS",
+                                color = colors.textPrimary,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                             )
@@ -199,10 +218,9 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
                     }
                 }
 
-                // Card 2: Target RAM
+                // Card 2: Target RAM (Physical + Virtual)
                 MiuiCard(
                     modifier = Modifier.weight(1f),
-                    backgroundColor = MiuiXColors.DarkCard,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
@@ -222,8 +240,8 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "TOTAL RAM",
-                                color = MiuiXColors.TextSecondary,
+                                text = stringResource(R.string.home_telemetry_ram),
+                                color = colors.textSecondary,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 0.5.sp,
@@ -233,7 +251,7 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
                             val ramText = if (virtualGb > 0) "$physicalGb GB (+$virtualGb GB)" else "$physicalGb GB"
                             Text(
                                 text = ramText,
-                                color = MiuiXColors.TextPrimary,
+                                color = colors.textPrimary,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                             )
@@ -253,7 +271,6 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
                 // Card 3: Uptime
                 MiuiCard(
                     modifier = Modifier.weight(1f),
-                    backgroundColor = MiuiXColors.DarkCard,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
@@ -273,8 +290,8 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "BOOT UPTIME",
-                                color = MiuiXColors.TextSecondary,
+                                text = stringResource(R.string.home_telemetry_uptime),
+                                color = colors.textSecondary,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 0.5.sp,
@@ -284,7 +301,7 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
                             val mins = (sec % 3600) / 60
                             Text(
                                 text = "${hrs}h ${mins}m",
-                                color = MiuiXColors.TextPrimary,
+                                color = colors.textPrimary,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                             )
@@ -295,7 +312,6 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
                 // Card 4: MAC Mode
                 MiuiCard(
                     modifier = Modifier.weight(1f),
-                    backgroundColor = MiuiXColors.DarkCard,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
@@ -315,14 +331,19 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "MAC SPOOF",
-                                color = MiuiXColors.TextSecondary,
+                                text = stringResource(R.string.home_telemetry_mac),
+                                color = colors.textSecondary,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 0.5.sp,
                             )
+                            val macLabel = when (appState.editor.macMode.lowercase()) {
+                                "random" -> stringResource(R.string.mode_random)
+                                "custom" -> stringResource(R.string.mode_custom)
+                                else -> stringResource(R.string.mode_off)
+                            }
                             Text(
-                                text = appState.editor.macMode.uppercase(),
+                                text = macLabel.uppercase(),
                                 color = MiuiXColors.Blue,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
@@ -337,7 +358,7 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
 
         // 3. Section Title
         item {
-            MiuiSectionHeader(title = "INFORMASI PROFIL AKTIF")
+            MiuiSectionHeader(title = stringResource(R.string.home_section_active_profile))
         }
 
         // 4. Grouped Profile Details Card
@@ -345,31 +366,31 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
             MiuiCard {
                 DetailItem(
                     icon = Icons.Outlined.PhoneAndroid,
-                    label = "Model Perangkat",
+                    label = stringResource(R.string.home_detail_model),
                     value = profile.model,
                 )
-                Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(MiuiXColors.DarkDivider))
+                Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(colors.divider))
                 DetailItem(
                     icon = Icons.AutoMirrored.Outlined.FormatListBulleted,
-                    label = "Preset Perangkat",
-                    value = "${appState.presetLabel(config.selectedPresetId)} (${if (config.isCustomMode) "Kustom" else "Preset"})",
+                    label = stringResource(R.string.home_detail_preset),
+                    value = "${appState.presetLabel(config.selectedPresetId)} (${if (config.isCustomMode) stringResource(R.string.home_mode_custom) else stringResource(R.string.home_mode_preset)})",
                 )
-                Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(MiuiXColors.DarkDivider))
+                Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(colors.divider))
                 DetailItem(
                     icon = Icons.Outlined.Info,
-                    label = "Versi Android / SDK",
+                    label = stringResource(R.string.home_detail_android),
                     value = "Android ${profile.buildRelease} (API ${profile.buildSdk})",
                 )
-                Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(MiuiXColors.DarkDivider))
+                Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(colors.divider))
                 DetailItem(
                     icon = Icons.Outlined.AspectRatio,
-                    label = "Resolusi & Densitas Layar",
+                    label = stringResource(R.string.home_detail_display),
                     value = "${profile.screenWidth} × ${profile.screenHeight} (${profile.screenDensity} dpi)",
                 )
-                Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(MiuiXColors.DarkDivider))
+                Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(colors.divider))
                 DetailItem(
                     icon = Icons.Outlined.Folder,
-                    label = "Berkas Konfigurasi",
+                    label = stringResource(R.string.home_detail_config),
                     value = "${config.configFile.name} (${DateFormat.format("yyyy-MM-dd HH:mm", config.configFile.lastModified())})",
                 )
             }
@@ -385,6 +406,7 @@ private fun DetailItem(
     label: String,
     value: String,
 ) {
+    val colors = MiuiTheme.colors
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -409,13 +431,13 @@ private fun DetailItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = label,
-                color = MiuiXColors.TextSecondary,
+                color = colors.textSecondary,
                 fontSize = 12.sp,
             )
             Spacer(modifier = Modifier.height(1.dp))
             Text(
                 text = value.ifBlank { "-" },
-                color = MiuiXColors.TextPrimary,
+                color = colors.textPrimary,
                 fontSize = 14.5.sp,
                 fontWeight = FontWeight.Medium,
             )

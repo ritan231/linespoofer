@@ -3,8 +3,9 @@ package my.shanunid.linespoofer.ui
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -16,38 +17,29 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BrightnessAuto
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.outlined.AspectRatio
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Link
-import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonGroupDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.ToggleButton
-import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import my.shanunid.linespoofer.DiagnosticsActivity
 import my.shanunid.linespoofer.R
 import my.shanunid.linespoofer.RealInfoActivity
@@ -57,15 +49,18 @@ import kotlinx.coroutines.launch
 
 private data class SettingOption(val id: String, val labelRes: Int)
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AppSettingsScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
     val context = appState.activity
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
+    val colors = MiuiTheme.colors
     var optionDialog = rememberMutableString()
     var presetSourceDialog = rememberMutableBoolean()
-    val safeModeLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+
+    val safeModeLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
         if (result.resultCode != android.app.Activity.RESULT_OK) {
             return@rememberLauncherForActivityResult
         }
@@ -77,15 +72,16 @@ fun AppSettingsScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
     }
 
     val themeOptions = listOf(
-        SettingOption(AppSettingsStore.THEME_SYSTEM, R.string.theme_system),
-        SettingOption(AppSettingsStore.THEME_LIGHT, R.string.theme_light),
-        SettingOption(AppSettingsStore.THEME_DARK, R.string.theme_dark),
+        stringResource(R.string.theme_system),
+        stringResource(R.string.theme_light),
+        stringResource(R.string.theme_dark),
     )
-    val themeIcons = listOf(
-        Icons.Filled.BrightnessAuto,
-        Icons.Filled.LightMode,
-        Icons.Filled.DarkMode,
-    )
+    val selectedThemeIndex = when (appState.themeMode) {
+        AppSettingsStore.THEME_LIGHT -> 1
+        AppSettingsStore.THEME_DARK -> 2
+        else -> 0
+    }
+
     val languageOptions = listOf(
         SettingOption(AppSettingsStore.LANGUAGE_DEFAULT, R.string.language_default),
         SettingOption(AppSettingsStore.LANGUAGE_INDONESIAN, R.string.language_indonesian),
@@ -94,158 +90,137 @@ fun AppSettingsScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
         SettingOption(AppSettingsStore.LANGUAGE_JAPANESE, R.string.language_japanese),
         SettingOption(AppSettingsStore.LANGUAGE_CHINESE_SIMPLIFIED, R.string.language_chinese),
     )
-    val colorOptions = listOf(
-        SettingOption(AppSettingsStore.COLOR_STYLE_MINT, R.string.color_style_mint),
-        SettingOption(AppSettingsStore.COLOR_STYLE_BLUE, R.string.color_style_blue),
-        SettingOption(AppSettingsStore.COLOR_STYLE_ROSE, R.string.color_style_rose),
-        SettingOption(AppSettingsStore.COLOR_STYLE_AMBER, R.string.color_style_amber),
-    )
-    val systemColors = appState.systemColorsEnabled
-    val appearanceCount = if (systemColors) 2 else 3
+
     LaunchedEffect(Unit) { listState.scrollToItem(0) }
 
     LazyColumn(
         state = listState,
         modifier = Modifier
             .fillMaxSize()
-            .padding(scaffoldPadding)
-            .padding(horizontal = 20.dp),
+            .background(colors.background)
+            .padding(scaffoldPadding),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
     ) {
-        item { SectionTitle(stringResource(R.string.settings_appearance_title)) }
+        // 1. Appearance Section
         item {
-            val selectedTheme = appState.themeMode
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-            ) {
-                themeOptions.forEachIndexed { index, option ->
-                    ToggleButton(
-                        checked = selectedTheme == option.id,
-                        onCheckedChange = {
-                            appState.updateThemeMode(option.id)
+            MiuiSectionHeader(title = stringResource(R.string.settings_appearance_title))
+            MiuiCard {
+                Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                    Text(
+                        text = stringResource(R.string.settings_theme_title),
+                        color = colors.textPrimary,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    MiuiSegmentedPill(
+                        options = themeOptions,
+                        selectedIndex = selectedThemeIndex,
+                        onSelect = { idx ->
+                            val mode = when (idx) {
+                                1 -> AppSettingsStore.THEME_LIGHT
+                                2 -> AppSettingsStore.THEME_DARK
+                                else -> AppSettingsStore.THEME_SYSTEM
+                            }
+                            appState.updateThemeMode(mode)
                         },
-                        modifier = Modifier
-                            .weight(1f)
-                            .semantics { role = Role.RadioButton },
-                        shapes = when (index) {
-                            0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                            themeOptions.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                            else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                        },
-                    ) {
-                        Icon(
-                            imageVector = themeIcons[index],
-                            contentDescription = null,
-                            modifier = Modifier.size(ToggleButtonDefaults.IconSize),
-                        )
-                        Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
-                        Text(stringResource(option.labelRes))
-                    }
+                    )
                 }
-            }
-            Spacer(Modifier.height(12.dp))
-        }
-        item {
-            ConnectedSettingsRow(
-                index = 0,
-                count = appearanceCount,
-                title = stringResource(R.string.settings_system_colors_title),
-                summary = stringResource(R.string.settings_system_colors_summary),
-                icon = Icons.Outlined.Palette,
-                checked = systemColors,
-                onCheckedChange = {
-                    appState.updateSystemColors(it)
-                },
-            )
-        }
-        if (!systemColors) {
-            item {
-                ConnectedSettingsRow(
-                    index = 1,
-                    count = appearanceCount,
-                    title = stringResource(R.string.settings_color_style_title),
-                    summary = stringResource(R.string.settings_color_style_summary, optionLabel(colorOptions, appState.colorStyle)),
-                    icon = Icons.Outlined.Palette,
-                    trailingText = optionLabel(colorOptions, appState.colorStyle),
-                    onClick = { optionDialog.value = "color" },
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(0.8.dp)
+                        .background(colors.divider)
+                )
+
+                MiuiNavigationRow(
+                    title = stringResource(R.string.settings_language_title),
+                    subtitle = stringResource(R.string.settings_language_helper),
+                    valueText = optionLabel(languageOptions, appState.languageMode),
+                    icon = Icons.Outlined.Translate,
+                    onClick = { optionDialog.value = "language" },
                 )
             }
         }
+
+        // 2. Runtime Options Section
         item {
-            ConnectedSettingsRow(
-                index = appearanceCount - 1,
-                count = appearanceCount,
-                title = stringResource(R.string.settings_language_title),
-                summary = stringResource(R.string.settings_language_helper),
-                icon = Icons.Outlined.Translate,
-                trailingText = optionLabel(languageOptions, appState.languageMode),
-                onClick = { optionDialog.value = "language" },
-            )
+            MiuiSectionHeader(title = stringResource(R.string.settings_runtime_title))
+            MiuiCard {
+                MiuiSwitchRow(
+                    title = stringResource(R.string.settings_resolution_title),
+                    subtitle = stringResource(R.string.settings_resolution_summary),
+                    icon = Icons.Outlined.AspectRatio,
+                    checked = appState.isScreenMetricsEnabled(),
+                    onCheckedChange = { enabled -> scope.launch { appState.updateScreenMetrics(enabled) } },
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(0.8.dp)
+                        .background(colors.divider)
+                )
+
+                MiuiNavigationRow(
+                    title = stringResource(R.string.settings_safe_mode_title),
+                    subtitle = if (appState.safeModePackages().isEmpty()) {
+                        stringResource(R.string.settings_safe_mode_summary_disabled)
+                    } else {
+                        stringResource(R.string.settings_safe_mode_summary_count, appState.safeModePackages().size)
+                    },
+                    icon = Icons.Outlined.Security,
+                    onClick = {
+                        safeModeLauncher.launch(
+                            SafeModeAppsActivity.createIntent(context, appState.safeModePackages())
+                        )
+                    },
+                )
+            }
         }
 
-        item { SectionTitle(stringResource(R.string.settings_runtime_title), Modifier.padding(top = 22.dp)) }
+        // 3. Presets & Data Section
         item {
-            ConnectedSettingsRow(
-                index = 0,
-                count = 2,
-                title = stringResource(R.string.settings_resolution_title),
-                summary = stringResource(R.string.settings_resolution_summary),
-                icon = Icons.Outlined.AspectRatio,
-                checked = appState.isScreenMetricsEnabled(),
-                onCheckedChange = { enabled -> scope.launch { appState.updateScreenMetrics(enabled) } },
-            )
-        }
-        item {
-            ConnectedSettingsRow(
-                index = 1,
-                count = 2,
-                title = stringResource(R.string.settings_safe_mode_title),
-                summary = if (appState.safeModePackages().isEmpty()) {
-                    stringResource(R.string.settings_safe_mode_summary_disabled)
-                } else {
-                    stringResource(R.string.settings_safe_mode_summary_count, appState.safeModePackages().size)
-                },
-                icon = Icons.Outlined.Security,
-                onClick = {
-                    safeModeLauncher.launch(SafeModeAppsActivity.createIntent(context, appState.safeModePackages()))
-                },
-            )
+            MiuiSectionHeader(title = stringResource(R.string.settings_presets_title))
+            MiuiCard {
+                MiuiNavigationRow(
+                    title = stringResource(R.string.settings_preset_source_title),
+                    subtitle = AppSettingsStore.getPresetSourceUrl(context),
+                    icon = Icons.Outlined.Link,
+                    onClick = { presetSourceDialog.value = true },
+                )
+            }
         }
 
-        item { SectionTitle(stringResource(R.string.settings_presets_title), Modifier.padding(top = 22.dp)) }
+        // 4. Tools & Diagnostics Section
         item {
-            ConnectedSettingsRow(
-                index = 0,
-                count = 1,
-                title = stringResource(R.string.settings_preset_source_title),
-                summary = AppSettingsStore.getPresetSourceUrl(context),
-                icon = Icons.Outlined.Link,
-                onClick = { presetSourceDialog.value = true },
-            )
+            MiuiSectionHeader(title = stringResource(R.string.settings_tools_title))
+            MiuiCard {
+                MiuiNavigationRow(
+                    title = stringResource(R.string.settings_diagnostics_title),
+                    subtitle = stringResource(R.string.real_info_button_helper),
+                    icon = Icons.Outlined.BugReport,
+                    onClick = { context.startActivity(Intent(context, DiagnosticsActivity::class.java)) },
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(0.8.dp)
+                        .background(colors.divider)
+                )
+
+                MiuiNavigationRow(
+                    title = stringResource(R.string.settings_real_info_title),
+                    subtitle = stringResource(R.string.settings_real_info_summary),
+                    icon = Icons.Outlined.Info,
+                    onClick = { context.startActivity(Intent(context, RealInfoActivity::class.java)) },
+                )
+            }
         }
 
-        item { SectionTitle(stringResource(R.string.settings_tools_title), Modifier.padding(top = 22.dp)) }
-        item {
-            ConnectedSettingsRow(
-                index = 0,
-                count = 2,
-                title = stringResource(R.string.settings_diagnostics_title),
-                summary = stringResource(R.string.real_info_button_helper),
-                icon = Icons.Outlined.BugReport,
-                onClick = { context.startActivity(Intent(context, DiagnosticsActivity::class.java)) },
-            )
-        }
-        item {
-            ConnectedSettingsRow(
-                index = 1,
-                count = 2,
-                title = stringResource(R.string.settings_real_info_title),
-                summary = stringResource(R.string.settings_real_info_summary),
-                icon = Icons.Outlined.Info,
-                onClick = { context.startActivity(Intent(context, RealInfoActivity::class.java)) },
-            )
-        }
-        item { Spacer(Modifier.height(104.dp)) }
+        item { Spacer(Modifier.height(100.dp)) }
     }
 
     when (optionDialog.value) {
@@ -253,20 +228,9 @@ fun AppSettingsScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
             title = stringResource(R.string.settings_choose_language),
             options = languageOptions,
             selectedId = appState.languageMode,
-            compactSpacing = true,
             onDismiss = { optionDialog.value = null },
             onSelect = {
                 appState.updateLanguageMode(it)
-                optionDialog.value = null
-            },
-        )
-        "color" -> OptionDialog(
-            title = stringResource(R.string.settings_choose_color_style),
-            options = colorOptions,
-            selectedId = appState.colorStyle,
-            onDismiss = { optionDialog.value = null },
-            onSelect = {
-                appState.updateColorStyle(it)
                 optionDialog.value = null
             },
         )
@@ -304,13 +268,17 @@ private fun OptionDialog(
     title: String,
     options: List<SettingOption>,
     selectedId: String,
-    compactSpacing: Boolean = false,
     onDismiss: () -> Unit,
     onSelect: (String) -> Unit,
 ) {
+    val colors = MiuiTheme.colors
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title) },
+        containerColor = colors.card,
+        titleContentColor = colors.textPrimary,
+        textContentColor = colors.textPrimary,
+        shape = RoundedCornerShape(20.dp),
+        title = { Text(title, fontWeight = FontWeight.Bold) },
         text = {
             Column {
                 options.forEach { option ->
@@ -318,17 +286,32 @@ private fun OptionDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onSelect(option.id) }
-                            .padding(vertical = if (compactSpacing) 0.dp else 8.dp),
+                            .padding(vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        RadioButton(selected = option.id == selectedId, onClick = { onSelect(option.id) })
-                        Text(stringResource(option.labelRes), modifier = Modifier.padding(start = 8.dp))
+                        RadioButton(
+                            selected = option.id == selectedId,
+                            onClick = { onSelect(option.id) },
+                            colors = RadioButtonDefaults.colors(
+                                selectedColor = MiuiXColors.Blue,
+                                unselectedColor = colors.textSecondary,
+                            ),
+                        )
+                        Text(
+                            text = stringResource(option.labelRes),
+                            color = colors.textPrimary,
+                            modifier = Modifier.padding(start = 8.dp),
+                        )
                     }
                 }
             }
         },
         confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) } },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(android.R.string.cancel), color = MiuiXColors.Blue)
+            }
+        },
     )
 }
 
@@ -337,10 +320,15 @@ private fun PresetSourceDialog(currentUrl: String, onDismiss: () -> Unit, onSave
     val defaultUrl = AppSettingsStore.DEFAULT_PRESET_SOURCE_URL
     val custom = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(currentUrl != defaultUrl) }
     val url = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(if (custom.value) currentUrl else "") }
+    val colors = MiuiTheme.colors
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.settings_preset_source_title)) },
+        containerColor = colors.card,
+        titleContentColor = colors.textPrimary,
+        textContentColor = colors.textPrimary,
+        shape = RoundedCornerShape(20.dp),
+        title = { Text(stringResource(R.string.settings_preset_source_title), fontWeight = FontWeight.Bold) },
         text = {
             Column {
                 Row(
@@ -350,8 +338,19 @@ private fun PresetSourceDialog(currentUrl: String, onDismiss: () -> Unit, onSave
                         .padding(vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    RadioButton(selected = !custom.value, onClick = { custom.value = false })
-                    Text(stringResource(R.string.settings_preset_source_option_default))
+                    RadioButton(
+                        selected = !custom.value,
+                        onClick = { custom.value = false },
+                        colors = RadioButtonDefaults.colors(
+                            selectedColor = MiuiXColors.Blue,
+                            unselectedColor = colors.textSecondary,
+                        ),
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_preset_source_option_default),
+                        color = colors.textPrimary,
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
                 }
                 Row(
                     modifier = Modifier
@@ -360,15 +359,28 @@ private fun PresetSourceDialog(currentUrl: String, onDismiss: () -> Unit, onSave
                         .padding(vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    RadioButton(selected = custom.value, onClick = { custom.value = true })
-                    Text(stringResource(R.string.settings_preset_source_option_custom))
+                    RadioButton(
+                        selected = custom.value,
+                        onClick = { custom.value = true },
+                        colors = RadioButtonDefaults.colors(
+                            selectedColor = MiuiXColors.Blue,
+                            unselectedColor = colors.textSecondary,
+                        ),
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_preset_source_option_custom),
+                        color = colors.textPrimary,
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
                 }
                 if (custom.value) {
+                    Spacer(Modifier.height(8.dp))
                     OutlinedTextField(
                         value = url.value,
                         onValueChange = { url.value = it },
                         label = { Text(stringResource(R.string.settings_preset_source_input_hint)) },
                         modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
                     )
                 }
             }
@@ -378,9 +390,13 @@ private fun PresetSourceDialog(currentUrl: String, onDismiss: () -> Unit, onSave
                 onClick = { onSave(if (custom.value) url.value.trim() else defaultUrl) },
                 enabled = !custom.value || url.value.isNotBlank(),
             ) {
-                Text(stringResource(android.R.string.ok))
+                Text(stringResource(android.R.string.ok), color = MiuiXColors.Blue)
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) } },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(android.R.string.cancel), color = colors.textSecondary)
+            }
+        },
     )
 }
