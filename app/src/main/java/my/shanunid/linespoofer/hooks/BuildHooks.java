@@ -47,19 +47,12 @@ public class BuildHooks {
                 captureOriginalVersionFields(versionClass);
             }
 
-            if (ConfigManager.isUsingEmbeddedDefaults()) {
-                restoreBuildFields(buildClass);
-                if (versionClass != null) {
+            applyBuildFields(buildClass);
+            if (versionClass != null) {
+                if (ConfigManager.shouldBypassVersionSpoof(packageName)) {
                     restoreVersionFields(versionClass);
-                }
-            } else {
-                applyBuildFields(buildClass);
-                if (versionClass != null) {
-                    if (ConfigManager.shouldBypassVersionSpoof(packageName)) {
-                        restoreVersionFields(versionClass);
-                    } else {
-                        applyVersionFields(versionClass);
-                    }
+                } else {
+                    applyVersionFields(versionClass);
                 }
             }
             if (!serialHookInstalled) {

@@ -4,7 +4,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 
+import my.shanunid.linespoofer.MainActivity;
+import my.shanunid.linespoofer.utils.AppLogger;
 import my.shanunid.linespoofer.utils.ConfigManager;
+import my.shanunid.linespoofer.utils.RootScopeManager;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -126,48 +129,89 @@ public final class AppProfileStore {
         context.sendBroadcast(new Intent(ConfigManager.ACTION_CONFIG_CHANGED));
     }
 
+    public static Map<String, Object> buildConfigMap(Context context, State state) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        if (context == null || state == null) {
+            return map;
+        }
+        map.put("master_spoof_active", AppSettingsStore.isMasterSpoofActive(context));
+
+        if (!state.getProfiles().isEmpty()) {
+            Profile defaultProfile = state.getProfiles().get(0);
+            StringBuilder defaultContent = new StringBuilder(defaultProfile.getContent().trim());
+            if (!state.getGlobalProperties().isEmpty()) {
+                defaultContent.append("\n\n# Global runtime options\n");
+                for (Map.Entry<String, String> globalEntry : state.getGlobalProperties().entrySet()) {
+                    defaultContent.append(globalEntry.getKey()).append('=').append(globalEntry.getValue()).append('\n');
+                }
+            }
+            map.put("default_profile", defaultContent.toString());
+        }
+
+        for (Map.Entry<String, String> entry : state.getAssignments().entrySet()) {
+            String pkg = entry.getKey();
+            String profileId = entry.getValue();
+            Profile profile = state.findProfile(profileId);
+            if (profile != null) {
+                StringBuilder fullContent = new StringBuilder(profile.getContent().trim());
+                if (!state.getGlobalProperties().isEmpty()) {
+                    fullContent.append("\n\n# Global runtime options\n");
+                    for (Map.Entry<String, String> globalEntry : state.getGlobalProperties().entrySet()) {
+                        fullContent.append(globalEntry.getKey()).append('=').append(globalEntry.getValue()).append('\n');
+                    }
+                }
+                String resolved = fullContent.toString();
+                map.put(pkg, resolved);
+                map.put("profile_" + pkg, resolved);
+            }
+        }
+        return map;
+    }
+
     public static void syncToRemotePreferences(Context context, State state) {
         if (context == null || state == null) return;
         try {
+            Map<String, Object> configMap = buildConfigMap(context, state);
+
+            // 1. Sync to local private SharedPreferences
             SharedPreferences prefs = context.getSharedPreferences("linespoofer_config", Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.clear();
-            editor.putBoolean("master_spoof_active", AppSettingsStore.isMasterSpoofActive(context));
+            applyConfigMapToPrefs(prefs, configMap);
 
-            // Write active default profile fallback so ANY scoped package gets spoofed immediately
-            if (!state.getProfiles().isEmpty()) {
-                Profile defaultProfile = state.getProfiles().get(0);
-                StringBuilder defaultContent = new StringBuilder(defaultProfile.getContent().trim());
-                if (!state.getGlobalProperties().isEmpty()) {
-                    defaultContent.append("\n\n# Global runtime options\n");
-                    for (Map.Entry<String, String> globalEntry : state.getGlobalProperties().entrySet()) {
-                        defaultContent.append(globalEntry.getKey()).append('=').append(globalEntry.getValue()).append('\n');
+            // 2. Sync to active XposedService RemotePreferences if bound
+            if (MainActivity.getActiveService() != null) {
+                try {
+                    SharedPreferences remotePrefs = MainActivity.getActiveService().getRemotePreferences("linespoofer_config");
+                    if (remotePrefs != null) {
+                        applyConfigMapToPrefs(remotePrefs, configMap);
+                        AppLogger.info("AppProfileStore", "Synchronized " + configMap.size() + " items to XposedService RemotePreferences");
                     }
-                }
-                String defaultResolved = defaultContent.toString();
-                editor.putString("default_profile", defaultResolved);
-            }
-
-            for (Map.Entry<String, String> entry : state.getAssignments().entrySet()) {
-                String pkg = entry.getKey();
-                String profileId = entry.getValue();
-                Profile profile = state.findProfile(profileId);
-                if (profile != null) {
-                    StringBuilder fullContent = new StringBuilder(profile.getContent().trim());
-                    if (!state.getGlobalProperties().isEmpty()) {
-                        fullContent.append("\n\n# Global runtime options\n");
-                        for (Map.Entry<String, String> globalEntry : state.getGlobalProperties().entrySet()) {
-                            fullContent.append(globalEntry.getKey()).append('=').append(globalEntry.getValue()).append('\n');
-                        }
-                    }
-                    String resolved = fullContent.toString();
-                    editor.putString(pkg, resolved);
-                    editor.putString("profile_" + pkg, resolved);
+                } catch (Throwable t) {
+                    AppLogger.info("AppProfileStore", "Failed to sync to XposedService: " + t.getMessage());
                 }
             }
-            editor.apply();
+
+            // 3. Sync to Vector's modules_config.db via root (direct SQLite write)
+            RootScopeManager.syncInBackground(context, state.getAssignments().keySet(), configMap);
         } catch (Throwable ignored) {
         }
+    }
+
+    private static void applyConfigMapToPrefs(SharedPreferences prefs, Map<String, Object> configMap) {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.clear();
+        for (Map.Entry<String, Object> entry : configMap.entrySet()) {
+            Object val = entry.getValue();
+            if (val instanceof Boolean) {
+                editor.putBoolean(entry.getKey(), (Boolean) val);
+            } else if (val instanceof String) {
+                editor.putString(entry.getKey(), (String) val);
+            } else if (val instanceof Integer) {
+                editor.putInt(entry.getKey(), (Integer) val);
+            } else if (val instanceof Long) {
+                editor.putLong(entry.getKey(), (Long) val);
+            }
+        }
+        editor.apply();
     }
 
     public File getStoreFile(Context context) {

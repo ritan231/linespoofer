@@ -7,12 +7,15 @@ import android.os.Process;
 import android.util.Log;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -26,6 +29,17 @@ public final class RootScopeManager {
     private static final String TAG = "LineSpoofer-RootScope";
     private static final String MODULE_PKG = "my.shanunid.linespoofer";
     private static final int USER_ID = 0;
+
+    private static final String[] DEFAULT_TARGET_PACKAGES = new String[]{
+        "com.whatsapp",
+        "com.whatsapp.w4b",
+        "com.trigger_soft.monitor",
+        "com.ytheekshana.deviceinfo",
+        "flar2.devcheck",
+        "com.finalwire.aida64",
+        "com.cpuid.cpu_z",
+        "com.evozi.deviceid"
+    };
 
     private static final String[] CANDIDATE_DBS = new String[]{
         "/data/adb/lspd/config/modules_config.db",
@@ -115,6 +129,10 @@ public final class RootScopeManager {
     }
 
     public boolean syncScope(Set<String> targetPackages) {
+        return syncScope(targetPackages, null);
+    }
+
+    public boolean syncScope(Set<String> targetPackages, Map<String, Object> configs) {
         String dbPath = findDbPath();
         if (dbPath == null) {
             AppLogger.info(TAG, "Vector modules_config.db not found on device");
@@ -160,6 +178,9 @@ public final class RootScopeManager {
             desired.add("system");
             desired.add("android");
             desired.add(MODULE_PKG);
+            for (String pkg : DEFAULT_TARGET_PACKAGES) {
+                desired.add(pkg);
+            }
             if (targetPackages != null) {
                 desired.addAll(targetPackages);
             }
@@ -204,6 +225,27 @@ public final class RootScopeManager {
                 edited = true;
             }
 
+            // Write RemotePreferences to Vector's configs table
+            if (configs != null && !configs.isEmpty()) {
+                boolean hasConfigsTable = false;
+                try (Cursor c = sql.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='configs'", null)) {
+                    hasConfigsTable = (c != null && c.moveToFirst());
+                }
+                if (hasConfigsTable) {
+                    for (Map.Entry<String, Object> entry : configs.entrySet()) {
+                        String key = entry.getKey();
+                        Object val = entry.getValue();
+                        byte[] serialized = serializeObject(val);
+                        if (serialized != null && serialized.length > 0) {
+                            sql.execSQL("INSERT OR REPLACE INTO configs (module_pkg_name, user_id, \"group\", \"key\", data) VALUES (?, ?, 'linespoofer_config', ?, ?)",
+                                    new Object[]{MODULE_PKG, USER_ID, key, serialized});
+                        }
+                    }
+                    edited = true;
+                    AppLogger.info(TAG, "Synchronized " + configs.size() + " configs directly into Vector configs table");
+                }
+            }
+
             // Flush WAL checkpoint to main DB file before copying back
             try (Cursor c = sql.rawQuery("PRAGMA wal_checkpoint(TRUNCATE)", null)) {
                 if (c != null && c.moveToFirst()) {
@@ -246,6 +288,20 @@ public final class RootScopeManager {
         return ok;
     }
 
+    public static byte[] serializeObject(Object obj) {
+        if (obj == null) return new byte[0];
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+            oos.writeObject(obj);
+            oos.flush();
+            return baos.toByteArray();
+        } catch (Throwable t) {
+            AppLogger.logError(TAG, "Failed serializing object: " + t.getMessage(), t);
+            return new byte[0];
+        }
+    }
+
     public static void forceStop(String packageName) {
         if (packageName == null || packageName.trim().isEmpty()) {
             return;
@@ -254,11 +310,15 @@ public final class RootScopeManager {
     }
 
     public static void syncInBackground(Context context, Set<String> targetPackages) {
+        syncInBackground(context, targetPackages, null);
+    }
+
+    public static void syncInBackground(Context context, Set<String> targetPackages, Map<String, Object> configs) {
         new Thread(() -> {
             try {
                 RootScopeManager mgr = new RootScopeManager(context);
                 if (mgr.isRootAvailable()) {
-                    mgr.syncScope(targetPackages);
+                    mgr.syncScope(targetPackages, configs);
                 }
             } catch (Throwable ignored) {
             }

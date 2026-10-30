@@ -538,9 +538,6 @@ public class ConfigManager {
 
     public static String getSystemProperty(String key, String defaultValue) {
         ensureFreshConfig();
-        if (usingEmbeddedDefaults) {
-            return defaultValue;
-        }
         String fieldId = getToggleFieldForSystemProperty(key);
         if (fieldId != null && !isSpoofEnabled(fieldId)) {
             return defaultValue;
@@ -552,7 +549,7 @@ public class ConfigManager {
     public static Map<String, String> getEffectiveSystemProperties() {
         ensureFreshConfig();
         Map<String, String> result = new LinkedHashMap<>();
-        if (usingEmbeddedDefaults || allProperties == null || allProperties.isEmpty()) {
+        if (allProperties == null || allProperties.isEmpty()) {
             return result;
         }
         for (Map.Entry<String, String> entry : allProperties.entrySet()) {

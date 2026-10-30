@@ -23,6 +23,10 @@ class MainActivity : AppCompatActivity() {
         @JvmStatic
         @Volatile
         var isServiceBound: Boolean = false
+
+        @JvmStatic
+        @Volatile
+        var activeService: XposedService? = null
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,10 +38,20 @@ class MainActivity : AppCompatActivity() {
             XposedServiceHelper.registerListener(object : XposedServiceHelper.OnServiceListener {
                 override fun onServiceBind(service: XposedService) {
                     isServiceBound = true
+                    activeService = service
+                    try {
+                        val store = my.shanunid.linespoofer.data.AppProfileStore(my.shanunid.linespoofer.data.ConfigFileManager())
+                        val state = my.shanunid.linespoofer.data.AppProfileSession.getOrLoad(this@MainActivity, store)
+                        my.shanunid.linespoofer.data.AppProfileStore.syncToRemotePreferences(this@MainActivity, state)
+                    } catch (_: Throwable) {
+                    }
                 }
 
                 override fun onServiceDied(service: XposedService) {
                     isServiceBound = false
+                    if (activeService == service) {
+                        activeService = null
+                    }
                 }
             })
         } catch (_: Throwable) {
@@ -51,7 +65,7 @@ class MainActivity : AppCompatActivity() {
         try {
             val store = my.shanunid.linespoofer.data.AppProfileStore(my.shanunid.linespoofer.data.ConfigFileManager())
             val state = my.shanunid.linespoofer.data.AppProfileSession.getOrLoad(this, store)
-            my.shanunid.linespoofer.utils.RootScopeManager.syncInBackground(this, state.assignments.keys)
+            my.shanunid.linespoofer.data.AppProfileStore.syncToRemotePreferences(this, state)
         } catch (_: Throwable) {
         }
 
