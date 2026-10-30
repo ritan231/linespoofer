@@ -31,6 +31,9 @@ import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
@@ -170,13 +173,13 @@ fun LineSpooferApp(appState: SpoofAppState) {
                 },
                 bottomBar = {
                     if (navigationType == NavigationType.Bar) {
-                        androidx.compose.material3.NavigationBar(
+                        NavigationBar(
                             containerColor = MiuiXColors.DarkCard,
                             tonalElevation = 0.dp,
                         ) {
                             AppDestination.entries.forEach { item ->
                                 val selected = item == destination
-                                androidx.compose.material3.NavigationBarItem(
+                                NavigationBarItem(
                                     selected = selected,
                                     onClick = { destinationName = item.name },
                                     icon = {
@@ -192,7 +195,7 @@ fun LineSpooferApp(appState: SpoofAppState) {
                                             fontSize = 11.5.sp,
                                         )
                                     },
-                                    colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                                    colors = NavigationBarItemDefaults.colors(
                                         selectedIconColor = androidx.compose.ui.graphics.Color.White,
                                         selectedTextColor = MiuiXColors.Blue,
                                         indicatorColor = MiuiXColors.Blue,

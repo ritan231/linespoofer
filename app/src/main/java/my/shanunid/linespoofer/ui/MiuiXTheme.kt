@@ -39,3 +39,4 @@ object MiuiXColors {
     val Orange = Color(0xFFFF9100)
     val Red = Color(0xFFFF3B30)
 }
+

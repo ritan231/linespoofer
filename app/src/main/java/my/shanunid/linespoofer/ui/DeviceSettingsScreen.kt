@@ -7,7 +7,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.progressSemantics
 import androidx.compose.material3.TextButton
 import java.util.TimeZone
@@ -908,7 +911,7 @@ private fun DynamicEnvironmentSpoofSection(editor: ProfileEditorState) {
     MiuiCard {
         // 1. Custom FPS
         MiuiSwitchRow(
-            icon = androidx.compose.material.icons.Icons.Outlined.Speed,
+            icon = androidx.compose.material.icons.Icons.Outlined.AspectRatio,
             title = "Custom Display FPS",
             subtitle = "Kustomisasi refresh rate render aplikasi (${editor.targetFps.toInt()} FPS)",
             checked = editor.fpsMode != "off",

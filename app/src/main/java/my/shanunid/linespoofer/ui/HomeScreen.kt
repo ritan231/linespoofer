@@ -26,11 +26,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.AspectRatio
 import androidx.compose.material.icons.outlined.BatteryChargingFull
-import androidx.compose.material.icons.outlined.Folder
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Memory
-import androidx.compose.material.icons.outlined.PhoneAndroid
-import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.material3.Icon
@@ -174,7 +169,7 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(
-                                imageVector = Icons.Outlined.Speed,
+                                imageVector = Icons.Outlined.AspectRatio,
                                 contentDescription = null,
                                 tint = MiuiXColors.Blue,
                                 modifier = Modifier.size(18.dp),
