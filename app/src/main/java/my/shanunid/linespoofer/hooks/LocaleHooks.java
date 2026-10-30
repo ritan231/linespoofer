@@ -38,7 +38,10 @@ public final class LocaleHooks {
             } catch (Throwable ignored) {
             }
             try {
-                ULocale.setDefault(ULocale.forLocale(locale));
+                Class<?> ulocClass = Class.forName("android.icu.util.ULocale");
+                java.lang.reflect.Method m = ulocClass.getMethod("setDefault", ulocClass);
+                Object uloc = ulocClass.getMethod("forLocale", Locale.class).invoke(null, locale);
+                m.invoke(null, uloc);
             } catch (Throwable ignored) {
             }
         }
@@ -132,7 +135,10 @@ public final class LocaleHooks {
             } catch (Throwable ignored) {
             }
             try {
-                android.icu.util.TimeZone.setDefault(android.icu.util.TimeZone.getTimeZone(timezone));
+                Class<?> icuTzClass = Class.forName("android.icu.util.TimeZone");
+                java.lang.reflect.Method m = icuTzClass.getMethod("setDefault", icuTzClass);
+                Object tz = icuTzClass.getMethod("getTimeZone", String.class).invoke(null, timezone);
+                m.invoke(null, tz);
             } catch (Throwable ignored) {
             }
         }

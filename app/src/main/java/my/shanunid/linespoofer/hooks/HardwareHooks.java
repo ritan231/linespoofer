@@ -440,8 +440,8 @@ public class HardwareHooks {
         sb.append("ro.soc.model=").append(ConfigManager.getSystemProperty("ro.soc.model", ConfigManager.getBuildHardware())).append("\n");
         sb.append("ro.build.id=").append(ConfigManager.getBuildId()).append("\n");
         sb.append("ro.build.display.id=").append(ConfigManager.getBuildDisplay()).append("\n");
-        sb.append("ro.build.version.release=").append(ConfigManager.getBuildRelease()).append("\n");
-        sb.append("ro.build.version.sdk=").append(ConfigManager.getBuildSdkInt()).append("\n");
+        sb.append("ro.build.version.release=").append(ConfigManager.getBuildVersionRelease()).append("\n");
+        sb.append("ro.build.version.sdk=").append(ConfigManager.getBuildVersionSdk()).append("\n");
         sb.append("ro.build.fingerprint=").append(ConfigManager.getBuildFingerprint()).append("\n");
         return sb.toString();
     }
