@@ -80,12 +80,21 @@ public class MainHook extends XposedModule implements IXposedHookLoadPackage {
             return;
         }
 
+        int userId = android.os.Process.myUid() / 100000;
+        String targetKey = userId > 0 ? (packageName + "#" + userId) : packageName;
+
         try {
             SharedPreferences remotePrefs = getRemotePreferences("linespoofer_config");
-            ConfigManager.initFromRemotePreferences(packageName, remotePrefs);
+            ConfigManager.initFromRemotePreferences(targetKey, remotePrefs);
+            if (!ConfigManager.hasAssignedProfile() && userId > 0) {
+                ConfigManager.initFromRemotePreferences(packageName, remotePrefs);
+            }
         } catch (Throwable throwable) {
             AppLogger.info(TAG, "libxposed RemotePreferences fallback for " + packageName + ": " + throwable.getMessage());
-            ConfigManager.init(packageName);
+            ConfigManager.init(targetKey);
+            if (!ConfigManager.hasAssignedProfile() && userId > 0) {
+                ConfigManager.init(packageName);
+            }
         }
 
         XC_LoadPackage.LoadPackageParam lpparam = new XC_LoadPackage.LoadPackageParam(
@@ -121,8 +130,14 @@ public class MainHook extends XposedModule implements IXposedHookLoadPackage {
 
         hookApplicationAttachForInitialization(lpparam);
 
+        int userId = android.os.Process.myUid() / 100000;
+        String targetKey = userId > 0 ? (lpparam.packageName + "#" + userId) : lpparam.packageName;
+
         try {
-            ConfigManager.init(lpparam.packageName);
+            ConfigManager.init(targetKey);
+            if (!ConfigManager.hasAssignedProfile() && userId > 0) {
+                ConfigManager.init(lpparam.packageName);
+            }
             if (!ConfigManager.hasAssignedProfile()) {
                 AppLogger.info(TAG, "Profile unavailable before Application.attach; deferring hooks for " + lpparam.packageName);
                 return;

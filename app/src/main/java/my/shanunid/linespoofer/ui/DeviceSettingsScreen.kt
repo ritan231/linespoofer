@@ -673,23 +673,69 @@ private fun DeviceSettingsSection(
 private fun ProfileEditorField(field: EditorField, editor: ProfileEditorState) {
     val spoofEnabled = editor.enabledFields[field.fieldId] != false
     if (field.isToggle) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(field.labelRes),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f),
-            )
-            Switch(
-                checked = spoofEnabled,
-                onCheckedChange = { editor.enabledFields[field.fieldId] = it },
-            )
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(field.labelRes),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f),
+                )
+                Switch(
+                    checked = spoofEnabled,
+                    onCheckedChange = { editor.enabledFields[field.fieldId] = it },
+                )
+            }
+            if (field.fieldId == ConfigManager.FIELD_LOCATION && spoofEnabled) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 4.dp, bottom = 8.dp)
+                ) {
+                    var rawInput by remember { mutableStateOf("") }
+                    OutlinedTextField(
+                        value = rawInput,
+                        onValueChange = { input ->
+                            rawInput = input
+                            val parsed = my.shanunid.linespoofer.utils.LocationCoordinatesParser.parse(input)
+                            if (parsed != null) {
+                                editor.locationLatitude = parsed.latitude.toString()
+                                editor.locationLongitude = parsed.longitude.toString()
+                            }
+                        },
+                        label = { Text("Paste Link / Koordinat Google Maps") },
+                        placeholder = { Text("-6.208763, 106.845599") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = editor.locationLatitude,
+                            onValueChange = { editor.locationLatitude = it },
+                            label = { Text("Latitude") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                        )
+                        OutlinedTextField(
+                            value = editor.locationLongitude,
+                            onValueChange = { editor.locationLongitude = it },
+                            label = { Text("Longitude") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                        )
+                    }
+                }
+            }
         }
     } else {
         Row(

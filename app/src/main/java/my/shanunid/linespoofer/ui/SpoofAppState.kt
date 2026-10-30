@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.database.Cursor
@@ -37,6 +38,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.util.LinkedHashMap
 import java.util.Locale
 import java.util.UUID
@@ -406,22 +409,80 @@ class SpoofAppState(val activity: AppCompatActivity) {
                 @Suppress("DEPRECATION")
                 packageManager.getInstalledPackages(0)
             }
-            packages.mapNotNull { packageInfo ->
-                val applicationInfo = packageInfo.applicationInfo ?: return@mapNotNull null
+            val result = ArrayList<SafeAppEntry>()
+            packages.forEach { packageInfo ->
+                val applicationInfo = packageInfo.applicationInfo ?: return@forEach
                 val packageName = packageInfo.packageName
                 if (packageName == activity.packageName || packageName == "android") {
-                    return@mapNotNull null
+                    return@forEach
                 }
-                SafeAppEntry(
-                    label = applicationInfo.loadLabel(packageManager).toString().ifBlank { packageName },
-                    packageName = packageName,
-                    versionName = packageInfo.versionName.orEmpty(),
-                    systemApp = applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM != 0,
-                    icon = applicationInfo.loadIcon(packageManager).toBitmap(96, 96),
+                result.add(
+                    SafeAppEntry(
+                        label = applicationInfo.loadLabel(packageManager).toString().ifBlank { packageName },
+                        packageName = packageName,
+                        versionName = packageInfo.versionName.orEmpty(),
+                        systemApp = applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM != 0,
+                        icon = applicationInfo.loadIcon(packageManager).toBitmap(96, 96),
+                    )
                 )
-            }.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.label })
+            }
+
+            // Muat aplikasi Dual/Clone Apps (User 999) pada HyperOS
+            try {
+                loadUser999Packages().forEach { (pkgName, label) ->
+                    val defaultIcon = Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888)
+                    result.add(
+                        SafeAppEntry(
+                            label = "$label [Clone]",
+                            packageName = "$pkgName#999",
+                            versionName = "",
+                            systemApp = false,
+                            icon = defaultIcon,
+                        )
+                    )
+                }
+            } catch (ignored: Throwable) {
+            }
+
+            result.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.label })
                 .also { cachedInstalledApps = it }
         }
+    }
+
+    private fun loadUser999Packages(): Map<String, String> {
+        val result = LinkedHashMap<String, String>()
+        try {
+            val method = activity.packageManager.javaClass.getMethod(
+                "getInstalledPackagesAsUser",
+                Int::class.javaPrimitiveType,
+                Int::class.javaPrimitiveType
+            )
+            @Suppress("UNCHECKED_CAST")
+            val list = method.invoke(activity.packageManager, 0, 999) as? List<PackageInfo>
+            if (!list.isNullOrEmpty()) {
+                list.forEach { pkg ->
+                    val label = pkg.applicationInfo?.loadLabel(activity.packageManager)?.toString() ?: pkg.packageName
+                    result[pkg.packageName] = label
+                }
+                return result
+            }
+        } catch (ignored: Throwable) {
+        }
+
+        try {
+            val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "pm list packages --user 999"))
+            val reader = BufferedReader(InputStreamReader(process.inputStream))
+            var line: String?
+            while (reader.readLine().also { line = it } != null) {
+                val clean = line?.trim()?.removePrefix("package:") ?: continue
+                if (clean.isNotEmpty() && clean != "android") {
+                    result[clean] = clean
+                }
+            }
+            process.waitFor()
+        } catch (ignored: Throwable) {
+        }
+        return result
     }
 
     suspend fun populateAdvancedDefaults() {
@@ -573,6 +634,8 @@ class ProfileEditorState {
     val values = mutableStateMapOf<String, String>()
     val advancedValues = mutableStateMapOf<String, String>()
     val enabledFields = mutableStateMapOf<String, Boolean>()
+    var locationLatitude by mutableStateOf("-6.2088")
+    var locationLongitude by mutableStateOf("106.8456")
 
     fun reset(config: ConfigFileManager.LoadedConfig) {
         selectedPresetId = config.selectedPresetId
@@ -582,6 +645,8 @@ class ProfileEditorState {
         advancedPropertyKeys.forEach { (fieldId, propertyKey) ->
             advancedValues[fieldId] = config.extraProperties[propertyKey].orEmpty()
         }
+        locationLatitude = config.extraProperties["device.location.latitude"] ?: "-6.2088"
+        locationLongitude = config.extraProperties["device.location.longitude"] ?: "106.8456"
         allFields.forEach { fieldId ->
             val value = config.extraProperties[ConfigManager.getTogglePropertyKey(fieldId)]
             val isRiskGated = fieldId == ConfigManager.FIELD_GPU || fieldId == ConfigManager.FIELD_LOCATION
@@ -656,6 +721,8 @@ class ProfileEditorState {
                 if (!isEnabled) result[key] = "false" else result.remove(key)
             }
         }
+        result["device.location.latitude"] = locationLatitude.trim()
+        result["device.location.longitude"] = locationLongitude.trim()
         return result
     }
 
