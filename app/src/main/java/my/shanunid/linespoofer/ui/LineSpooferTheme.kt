@@ -107,17 +107,6 @@ fun LineSpooferTheme(
     }
 }
 
-@Composable
-fun SpoofMyDeviceTheme(
-    themeMode: String? = null,
-    languageMode: String? = null,
-    useSystemColor: Boolean? = null,
-    colorStyle: String? = null,
-    content: @Composable () -> Unit,
-) {
-    LineSpooferTheme(themeMode, languageMode, useSystemColor, colorStyle, content)
-}
-
 private tailrec fun Context.findActivity(): Activity? {
     return when (this) {
         is Activity -> this

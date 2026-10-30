@@ -196,7 +196,7 @@
     <string name="app_info_links_body">GitHub 项目链接与后续资源链接会显示在这里。</string>
     <string name="app_info_github_button">打开 GitHub</string>
     <string name="app_info_github_title">GitHub</string>
-    <string name="app_info_github_summary">github.com/BuSung-dev/SpoofMyDevice</string>
+    <string name="app_info_github_summary">github.com/ritan231/linespoofer</string>
     <string name="app_info_link_failed">无法打开浏览器。</string>
     <string name="real_info_build_title">运行时构建信息</string>
     <string name="real_info_runtime_title">运行时显示与标识符</string>

@@ -299,8 +299,3 @@ private fun ExpandedNavigationDrawer(
         }
     }
 }
-
-@Composable
-fun SpoofMyDeviceApp(appState: SpoofAppState) {
-    LineSpooferApp(appState)
-}
