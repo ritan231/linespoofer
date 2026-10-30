@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
@@ -48,6 +49,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -195,6 +197,7 @@ fun AppProfilesScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
     )
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun AppSelectionList(
     apps: List<SafeAppEntry>,
@@ -211,7 +214,7 @@ private fun AppSelectionList(
             contentAlignment = Alignment.Center,
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                LoadingIndicator(modifier = Modifier.progressSemantics())
+                CircularProgressIndicator(modifier = Modifier.size(36.dp), color = MiuiXColors.Primary)
                 Spacer(Modifier.height(MdSpacing.sm))
                 Text(
                     text = stringResource(R.string.app_profile_loading_apps),
