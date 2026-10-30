@@ -965,7 +965,11 @@ public class ConfigManager {
     }
 
     public static boolean isRefreshRateSpoofEnabled() {
-        return isSpoofEnabled(FIELD_REFRESH_RATE);
+        String mode = getConfigValue("device.fps.mode");
+        if ("off".equalsIgnoreCase(mode)) {
+            return false;
+        }
+        return isSpoofEnabled(FIELD_REFRESH_RATE, true);
     }
 
     public static float getTargetRefreshRate() {
@@ -984,7 +988,10 @@ public class ConfigManager {
     }
 
     public static boolean isLocationSpoofEnabled() {
-        return isSpoofEnabled(FIELD_LOCATION, false);
+        String lat = getConfigValue("device.location.latitude");
+        String lon = getConfigValue("device.location.longitude");
+        boolean hasCoords = lat != null && !lat.trim().isEmpty() && lon != null && !lon.trim().isEmpty();
+        return isSpoofEnabled(FIELD_LOCATION, hasCoords);
     }
 
     public static double getSpoofedLatitude() {

@@ -848,6 +848,7 @@ class ProfileEditorState {
         result[ConfigManager.getTogglePropertyKey(ConfigManager.FIELD_BATTERY)] = if (batteryMode != "off") "true" else "false"
         result[ConfigManager.getTogglePropertyKey(ConfigManager.FIELD_UPTIME)] = if (uptimeMode != "off") "true" else "false"
         result[ConfigManager.getTogglePropertyKey(ConfigManager.FIELD_REFRESH_RATE)] = if (fpsMode != "off") "true" else "false"
+        result[ConfigManager.getTogglePropertyKey(ConfigManager.FIELD_LOCATION)] = "true"
 
         return result
     }

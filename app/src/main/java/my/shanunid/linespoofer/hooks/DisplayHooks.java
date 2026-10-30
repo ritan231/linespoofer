@@ -148,9 +148,8 @@ public class DisplayHooks {
                     }
                 });
 
-            Class<?> displayModeClass = XposedHelpers.findClassIfExists("android.view.Display$Mode", lpparam.classLoader);
-            if (displayModeClass != null) {
-                XposedHelpers.findAndHookMethod(displayModeClass, "getRefreshRate",
+            try {
+                XposedHelpers.findAndHookMethod(android.view.Display.Mode.class, "getRefreshRate",
                     new XC_MethodHook() {
                         @Override
                         protected void afterHookedMethod(MethodHookParam param) {
@@ -162,6 +161,7 @@ public class DisplayHooks {
                             }
                         }
                     });
+            } catch (Throwable ignored) {
             }
         } catch (Throwable ignored) {
         }

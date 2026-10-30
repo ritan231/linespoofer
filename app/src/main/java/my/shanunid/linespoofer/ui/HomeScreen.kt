@@ -405,10 +405,17 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
                     value = "${profile.screenWidth} × ${profile.screenHeight} (${profile.screenDensity} dpi)",
                 )
                 Box(modifier = Modifier.fillMaxWidth().height(0.8.dp).background(colors.divider))
+                val configDateText = remember(config.configFile) {
+                    try {
+                        DateFormat.format("yyyy-MM-dd HH:mm", config.configFile.lastModified()).toString()
+                    } catch (e: Exception) {
+                        "Active"
+                    }
+                }
                 DetailItem(
                     icon = Icons.Outlined.Folder,
                     label = stringResource(R.string.home_detail_config),
-                    value = "${config.configFile.name} (${DateFormat.format("yyyy-MM-dd HH:mm", config.configFile.lastModified())})",
+                    value = "${config.configFile.name} ($configDateText)",
                 )
             }
         }

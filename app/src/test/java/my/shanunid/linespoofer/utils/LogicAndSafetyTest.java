@@ -69,4 +69,12 @@ public class LogicAndSafetyTest {
         long ms = ConfigManager.getSpoofedUptimeMs();
         assertEquals(sec * 1000L, ms);
     }
+
+    @Test
+    public void testLocationAndFpsDefaults() {
+        assertNotNull(ConfigManager.getSpoofedLatitude());
+        assertNotNull(ConfigManager.getSpoofedLongitude());
+        assertTrue(ConfigManager.getTargetRefreshRate() > 0);
+    }
 }
+

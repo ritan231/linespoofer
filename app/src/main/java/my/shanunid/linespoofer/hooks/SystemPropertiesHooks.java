@@ -61,7 +61,7 @@ public class SystemPropertiesHooks {
                             return;
                         }
                         String spoofedValue = ConfigManager.getSystemProperty(key, null);
-                        if (spoofedValue == null && (key.equals("ro.soc.model") || key.equals("ro.mediatek.platform"))) {
+                        if (spoofedValue == null && (key.equals("ro.soc.model") || key.equals("ro.mediatek.platform") || key.equals("ro.vendor.mediatek.platform") || key.equals("ro.hardware.chipname"))) {
                             spoofedValue = ConfigManager.getSystemProperty("ro.board.platform", null);
                             if (spoofedValue == null) {
                                 spoofedValue = ConfigManager.getBuildHardware();
@@ -89,7 +89,7 @@ public class SystemPropertiesHooks {
                             return;
                         }
                         String spoofedValue = ConfigManager.getSystemProperty(key, null);
-                        if (spoofedValue == null && (key.equals("ro.soc.model") || key.equals("ro.mediatek.platform"))) {
+                        if (spoofedValue == null && (key.equals("ro.soc.model") || key.equals("ro.mediatek.platform") || key.equals("ro.vendor.mediatek.platform") || key.equals("ro.hardware.chipname"))) {
                             spoofedValue = ConfigManager.getSystemProperty("ro.board.platform", null);
                             if (spoofedValue == null) {
                                 spoofedValue = ConfigManager.getBuildHardware();

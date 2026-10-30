@@ -3,10 +3,14 @@ package my.shanunid.linespoofer.hooks;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
+import android.os.CancellationSignal;
 import android.os.SystemClock;
 
 import my.shanunid.linespoofer.utils.AppLogger;
 import my.shanunid.linespoofer.utils.ConfigManager;
+
+import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
@@ -29,6 +33,40 @@ public final class LocationHooks {
         }
 
         try {
+            // 1. Direct coordinate getters on Location class
+            XposedHelpers.findAndHookMethod(
+                Location.class,
+                "getLatitude",
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        try {
+                            if (ConfigManager.isLocationSpoofEnabled()) {
+                                param.setResult(ConfigManager.getSpoofedLatitude());
+                            }
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                }
+            );
+
+            XposedHelpers.findAndHookMethod(
+                Location.class,
+                "getLongitude",
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        try {
+                            if (ConfigManager.isLocationSpoofEnabled()) {
+                                param.setResult(ConfigManager.getSpoofedLongitude());
+                            }
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                }
+            );
+
+            // 2. Anti-mock detection
             XposedHelpers.findAndHookMethod(
                 Location.class,
                 "isFromMockProvider",
@@ -66,6 +104,7 @@ public final class LocationHooks {
                 }
             }
 
+            // 3. LocationManager.getLastKnownLocation
             XposedHelpers.findAndHookMethod(
                 LocationManager.class,
                 "getLastKnownLocation",
@@ -88,6 +127,7 @@ public final class LocationHooks {
                 }
             );
 
+            // 4. LocationManager.getLastLocation
             if (Build.VERSION.SDK_INT >= 31) {
                 try {
                     XposedHelpers.findAndHookMethod(
@@ -99,6 +139,45 @@ public final class LocationHooks {
                                 try {
                                     if (ConfigManager.isLocationSpoofEnabled()) {
                                         param.setResult(createSpoofedLocation(LocationManager.FUSED_PROVIDER));
+                                    }
+                                } catch (Throwable ignored) {
+                                }
+                            }
+                        }
+                    );
+                } catch (Throwable ignored) {
+                }
+            }
+
+            // 5. LocationManager.getCurrentLocation (API 30+)
+            if (Build.VERSION.SDK_INT >= 30) {
+                try {
+                    XposedHelpers.findAndHookMethod(
+                        LocationManager.class,
+                        "getCurrentLocation",
+                        String.class,
+                        CancellationSignal.class,
+                        Executor.class,
+                        Consumer.class,
+                        new XC_MethodHook() {
+                            @Override
+                            @SuppressWarnings("unchecked")
+                            protected void beforeHookedMethod(MethodHookParam param) {
+                                try {
+                                    if (!ConfigManager.isLocationSpoofEnabled()) {
+                                        return;
+                                    }
+                                    String provider = (String) param.args[0];
+                                    Executor executor = (Executor) param.args[2];
+                                    Consumer<Location> consumer = (Consumer<Location>) param.args[3];
+                                    if (consumer != null) {
+                                        Location loc = createSpoofedLocation(provider);
+                                        if (executor != null) {
+                                            executor.execute(() -> consumer.accept(loc));
+                                        } else {
+                                            consumer.accept(loc);
+                                        }
+                                        param.setResult(null);
                                     }
                                 } catch (Throwable ignored) {
                                 }
@@ -128,4 +207,3 @@ public final class LocationHooks {
         return location;
     }
 }
-

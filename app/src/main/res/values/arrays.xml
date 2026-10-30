@@ -1,22 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Vector / LSPosed Default Automatic Scope -->
+    <!-- Vector / LSPosed Default Automatic Scope: Only system, framework, and companion app -->
     <string-array name="xposed_scope">
         <item>system</item>
         <item>android</item>
         <item>my.shanunid.linespoofer</item>
-        <item>com.whatsapp</item>
-        <item>com.whatsapp.w4b</item>
-        <item>com.trigger_soft.monitor</item>
-        <item>com.ytheekshana.deviceinfo</item>
-        <item>flar2.devcheck</item>
-        <item>com.finalwire.aida64</item>
-        <item>com.cpuid.cpu_z</item>
-        <item>com.evozi.deviceid</item>
-        <item>com.primatelabs.geekbench6</item>
-        <item>com.antutu.ABenchMark</item>
-        <item>com.google.android.gms</item>
-        <item>com.android.vending</item>
     </string-array>
 </resources>
-

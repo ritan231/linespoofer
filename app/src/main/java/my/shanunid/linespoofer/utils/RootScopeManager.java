@@ -30,17 +30,6 @@ public final class RootScopeManager {
     private static final String MODULE_PKG = "my.shanunid.linespoofer";
     private static final int USER_ID = 0;
 
-    private static final String[] DEFAULT_TARGET_PACKAGES = new String[]{
-        "com.whatsapp",
-        "com.whatsapp.w4b",
-        "com.trigger_soft.monitor",
-        "com.ytheekshana.deviceinfo",
-        "flar2.devcheck",
-        "com.finalwire.aida64",
-        "com.cpuid.cpu_z",
-        "com.evozi.deviceid"
-    };
-
     private static final String[] CANDIDATE_DBS = new String[]{
         "/data/adb/lspd/config/modules_config.db",
         "/data/adb/lspd/modules_config.db",
@@ -178,9 +167,6 @@ public final class RootScopeManager {
             desired.add("system");
             desired.add("android");
             desired.add(MODULE_PKG);
-            for (String pkg : DEFAULT_TARGET_PACKAGES) {
-                desired.add(pkg);
-            }
             if (targetPackages != null) {
                 desired.addAll(targetPackages);
             }
