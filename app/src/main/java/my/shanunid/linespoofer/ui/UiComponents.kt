@@ -255,19 +255,23 @@ fun connectedListItemShapes(index: Int, count: Int) = if (count == 1) {
 }
 
 object AppIconLoader {
-    private val memoryCache = LruCache<String, ImageBitmap>(120)
+    private val memoryCache = LruCache<String, ImageBitmap>(500)
 
-    fun getCached(packageName: String): ImageBitmap? = memoryCache[packageName]
+    fun getCached(packageName: String): ImageBitmap? {
+        val cleanPkg = packageName.substringBefore("#")
+        return memoryCache[cleanPkg] ?: memoryCache[packageName]
+    }
 
     fun loadIcon(context: android.content.Context, packageName: String): ImageBitmap? {
-        memoryCache[packageName]?.let { return it }
         val cleanPkg = packageName.substringBefore("#")
+        (memoryCache[cleanPkg] ?: memoryCache[packageName])?.let { return it }
         return try {
             val pm = context.packageManager
             val appInfo = pm.getApplicationInfo(cleanPkg, 0)
             val drawable = appInfo.loadIcon(pm)
             val bitmap = drawable.toBitmap(96, 96)
             val imageBitmap = bitmap.asImageBitmap()
+            memoryCache.put(cleanPkg, imageBitmap)
             memoryCache.put(packageName, imageBitmap)
             imageBitmap
         } catch (t: Throwable) {

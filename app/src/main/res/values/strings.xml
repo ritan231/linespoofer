@@ -250,6 +250,8 @@
     <string name="log_preview_title">Recent Log Output</string>
     <string name="log_refresh_button">Refresh</string>
 
-    <!-- Empty scope - user selects apps in LSPosed -->
-    <string-array name="xposed_scope" />
+    <!-- Recommended default scope -->
+    <string-array name="xposed_scope">
+        <item>android</item>
+    </string-array>
 </resources>

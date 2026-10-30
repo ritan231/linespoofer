@@ -5,6 +5,7 @@
 *.class
 /build/
 /app/build/
+build_output/
 
 # Gradle
 .gradle/

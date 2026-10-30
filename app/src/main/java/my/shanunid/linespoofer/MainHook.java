@@ -76,7 +76,38 @@ public class MainHook extends XposedModule implements IXposedHookLoadPackage {
     public void onPackageLoaded(@NonNull PackageLoadedParam param) {
         super.onPackageLoaded(param);
         String packageName = param.getPackageName();
-        if (packageName == null || "android".equals(packageName) || MODULE_PACKAGE.equals(packageName)) {
+        if (packageName == null) {
+            return;
+        }
+
+        if (MODULE_PACKAGE.equals(packageName)) {
+            try {
+                Class<?> activityClass = param.getDefaultClassLoader().loadClass("my.shanunid.linespoofer.MainActivity");
+                java.lang.reflect.Field field = activityClass.getDeclaredField("isHookActivated");
+                field.setAccessible(true);
+                field.setBoolean(null, true);
+                AppLogger.info(TAG, "libxposed: isHookActivated set to true in MainActivity");
+            } catch (Throwable t) {
+                AppLogger.info(TAG, "libxposed: Failed to set isHookActivated: " + t.getMessage());
+            }
+
+            try {
+                java.lang.reflect.Constructor<?> ctor = XC_LoadPackage.LoadPackageParam.class.getDeclaredConstructors()[0];
+                ctor.setAccessible(true);
+                XC_LoadPackage.LoadPackageParam lpparam = (XC_LoadPackage.LoadPackageParam) ctor.newInstance(new Object[]{null});
+                lpparam.packageName = packageName;
+                lpparam.processName = packageName;
+                lpparam.classLoader = param.getDefaultClassLoader();
+                lpparam.appInfo = param.getApplicationInfo();
+                lpparam.isFirstApplication = param.isFirstPackage();
+                hookActivationCheck(lpparam);
+            } catch (Throwable ignored) {
+            }
+            return;
+        }
+
+        if ("android".equals(packageName)) {
+            AppLogger.info(TAG, "libxposed: Android system framework loaded successfully");
             return;
         }
 

@@ -133,7 +133,6 @@ class SpoofAppState(val activity: AppCompatActivity) {
             activeProfileId = result.second.profiles.first().id
             editor.reset(result.third)
             initialized = true
-            refreshRemotePresets(false)
         } catch (exception: Exception) {
             message = exception.message
         } finally {
