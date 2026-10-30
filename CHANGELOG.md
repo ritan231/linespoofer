@@ -9,6 +9,12 @@ All notable changes to this project will be documented in this file.
 - Credited **Code Line** as creator & maintainer.
 - Updated app labels and localization strings (`values`, `values-ja`, `values-ko`, `values-zh-rCN`).
 - Retained full Material Design (Material 3 Expressive) UI integrity.
+- **Milestone 11 (HyperOS & Vector / Modern LSPosed Integration)**:
+  - Vector Scope Auto-Check: Added `META-INF/xposed/scope.list` and updated `xposed_scope` string array with `android` (System Framework), enabling automatic scope check in Vector/LSPosed upon module activation (RAM checker `com.trigger_soft.monitor` strictly excluded).
+  - Launcher Icon & HyperOS Visibility: Added adaptive launcher icons (`res/mipmap-anydpi-v26/ic_launcher.xml`, `ic_launcher_round.xml`, `ic_launcher_background.xml`, `ic_launcher_foreground.xml`) and configured `android:icon` / `android:roundIcon` in `AndroidManifest.xml`, resolving `icon=0x0` launcher rejection.
+  - Anti-Self-Hiding: Removed `my.shanunid.linespoofer` from `PackageManagerHooks.HIDDEN_PACKAGES` so Vector and HyperOS launcher can inspect the package without `NameNotFoundException`.
+  - Companion App Activation Status: Implemented `XposedServiceHelper` listener and dual-channel activation hook in `MainActivity.kt` and `MainHook.java` to reflect live active module state.
+  - UI Smoothness & Jank Elimination: Removed startup network remote preset fetching in `SpoofAppState.initialize()` and increased `AppIconLoader` LRU cache to 500 with clone app package normalization (`#999`).
 - **Milestone 1**: Refactored package name, namespace, and applicationId to `my.shanunid.linespoofer`.
 - **Milestone 1**: Moved source directories to `my/shanunid/linespoofer` for main and test suites.
 - **Milestone 1**: Updated ContentProvider authority to `my.shanunid.linespoofer.configprovider`.
