@@ -92,7 +92,9 @@ public final class AppProfileStore {
     }
 
     public State load(Context context) throws Exception {
-        return parse(readFile(getStoreFile(context)));
+        State state = parse(readFile(getStoreFile(context)));
+        syncToRemotePreferences(context, state);
+        return state;
     }
 
     public void save(Context context, State state) throws Exception {
@@ -120,6 +122,12 @@ public final class AppProfileStore {
             outputStream.write(root.toString(2).getBytes(StandardCharsets.UTF_8));
         }
 
+        syncToRemotePreferences(context, state);
+        context.sendBroadcast(new Intent(ConfigManager.ACTION_CONFIG_CHANGED));
+    }
+
+    public static void syncToRemotePreferences(Context context, State state) {
+        if (context == null || state == null) return;
         try {
             SharedPreferences prefs = context.getSharedPreferences("linespoofer_config", Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = prefs.edit();
@@ -160,8 +168,6 @@ public final class AppProfileStore {
             editor.apply();
         } catch (Throwable ignored) {
         }
-
-        context.sendBroadcast(new Intent(ConfigManager.ACTION_CONFIG_CHANGED));
     }
 
     public File getStoreFile(Context context) {
@@ -184,6 +190,9 @@ public final class AppProfileStore {
             }
             if (profileId == null) {
                 profileId = state.getAssignments().get(packageName);
+            }
+            if (profileId == null && !state.getProfiles().isEmpty()) {
+                profileId = state.getProfiles().get(0).getId();
             }
             if (profileId == null) {
                 return null;

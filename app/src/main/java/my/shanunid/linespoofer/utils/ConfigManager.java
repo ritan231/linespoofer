@@ -1339,6 +1339,28 @@ public class ConfigManager {
         return 8;
     }
 
+    public static long getPhysicalRamBytes() {
+        String val = getConfigValue("ro.ram.physical");
+        if (val != null) {
+            try {
+                long ram = Long.parseLong(val.trim());
+                if (ram > 0) return ram;
+            } catch (Exception ignored) {}
+        }
+        return 8L * 1024 * 1024 * 1024L;
+    }
+
+    public static long getVirtualRamBytes() {
+        String val = getConfigValue("ro.ram.virtual");
+        if (val != null) {
+            try {
+                long ram = Long.parseLong(val.trim());
+                if (ram >= 0) return ram;
+            } catch (Exception ignored) {}
+        }
+        return 4L * 1024 * 1024 * 1024L;
+    }
+
     public static long getTotalRamBytes() {
         String val = getConfigValue("ro.ram.bytes");
         if (val != null) {
@@ -1347,7 +1369,7 @@ public class ConfigManager {
                 if (ram > 0) return ram;
             } catch (Exception ignored) {}
         }
-        return 12L * 1024 * 1024 * 1024L;
+        return getPhysicalRamBytes() + getVirtualRamBytes();
     }
 
     private static int parseInt(String value, int fallback) {

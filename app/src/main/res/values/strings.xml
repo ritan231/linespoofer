@@ -114,6 +114,7 @@
     <string name="color_style_amber">Amber</string>
     <string name="settings_language_title">Language</string>
     <string name="language_default">Default</string>
+    <string name="language_indonesian">Bahasa Indonesia</string>
     <string name="language_english">English</string>
     <string name="language_korean">한국어</string>
     <string name="language_japanese">日本語</string>
@@ -174,11 +175,11 @@
     <string name="settings_field_imei_2">IMEI 2 (SIM 2)</string>
     <string name="master_spoof_switch">Start Spoofing</string>
     <string name="master_spoof_switch_summary">Force close target app and apply spoof profile</string>
-    <string name="dialog_select_timezone">Pilih Zona Waktu</string>
-    <string name="dialog_select_locale">Pilih Bahasa (Locale)</string>
-    <string name="search_timezone">Cari Zona Waktu (mis. Jakarta)...</string>
-    <string name="search_locale">Cari Bahasa (mis. Indonesia)...</string>
-    <string name="target_app_force_stopped">Target %1$s berhasil di-force close. Buka kembali aplikasi untuk menerapkan profil.</string>
+    <string name="dialog_select_timezone">Select Timezone</string>
+    <string name="dialog_select_locale">Select Locale</string>
+    <string name="search_timezone">Search Timezone (e.g. Jakarta)…</string>
+    <string name="search_locale">Search Locale (e.g. Indonesia)…</string>
+    <string name="target_app_force_stopped">Target %1$s was force-stopped. Re-launch the app to apply the profile.</string>
     <string name="settings_field_meid">MEID</string>
     <string name="settings_field_imsi">IMSI</string>
     <string name="settings_field_iccid">ICCID</string>

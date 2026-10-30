@@ -71,42 +71,56 @@ fun MiuiCard(
 }
 
 /**
- * HyperOS iOS/MIUI-style smooth pill toggle switch.
+ * HyperOS iOS/MIUI-style smooth pill toggle switch with crisp borders and zero-lag animation.
  */
 @Composable
 fun MiuiSwitch(
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
+    onCheckedChange: ((Boolean) -> Unit)? = null,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     val trackColor by animateColorAsState(
-        targetValue = if (checked) MiuiXColors.Blue else Color(0xFF2E323D),
+        targetValue = if (checked) MiuiXColors.Blue else Color(0xFF232732),
         animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
         label = "miuiSwitchTrack",
     )
+    val borderColor by animateColorAsState(
+        targetValue = if (checked) MiuiXColors.Blue else Color(0xFF383E4E),
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "miuiSwitchBorder",
+    )
     val thumbOffset by animateDpAsState(
-        targetValue = if (checked) 22.dp else 2.dp,
-        animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMediumLow),
+        targetValue = if (checked) 25.dp else 3.dp,
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
         label = "miuiSwitchThumb",
     )
 
+    val shape = RoundedCornerShape(14.dp)
+    val baseModifier = modifier
+        .width(50.dp)
+        .height(28.dp)
+        .clip(shape)
+        .background(trackColor)
+        .border(1.2.dp, borderColor, shape)
+        .let {
+            if (onCheckedChange != null && enabled) {
+                it.clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                ) { onCheckedChange(!checked) }
+            } else it
+        }
+
     Box(
-        modifier = modifier
-            .width(48.dp)
-            .height(28.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(trackColor)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-            ) { onCheckedChange(!checked) },
+        modifier = baseModifier,
         contentAlignment = Alignment.CenterStart,
     ) {
         Box(
             modifier = Modifier
                 .offset(x = thumbOffset)
-                .size(24.dp)
-                .shadow(2.dp, CircleShape)
+                .size(22.dp)
+                .shadow(elevation = 2.dp, shape = CircleShape)
                 .clip(CircleShape)
                 .background(Color.White)
         )
@@ -125,11 +139,13 @@ fun MiuiSwitchRow(
     subtitle: String? = null,
     icon: ImageVector? = null,
     iconTint: Color = MiuiXColors.Blue,
+    enabled: Boolean = true,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(enabled = enabled) { onCheckedChange(!checked) }
             .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -158,7 +174,7 @@ fun MiuiSwitchRow(
             Column {
                 Text(
                     text = title,
-                    color = MiuiXColors.TextPrimary,
+                    color = if (enabled) MiuiXColors.TextPrimary else MiuiXColors.TextSecondary.copy(alpha = 0.6f),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                 )
@@ -175,7 +191,8 @@ fun MiuiSwitchRow(
         Spacer(modifier = Modifier.width(12.dp))
         MiuiSwitch(
             checked = checked,
-            onCheckedChange = onCheckedChange,
+            onCheckedChange = null, // Row handles the click without double-firing
+            enabled = enabled,
         )
     }
 }

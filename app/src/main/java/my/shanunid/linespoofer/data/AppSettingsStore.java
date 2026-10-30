@@ -14,6 +14,7 @@ public final class AppSettingsStore {
     public static final String THEME_DARK = "dark";
 
     public static final String LANGUAGE_DEFAULT = "default";
+    public static final String LANGUAGE_INDONESIAN = "in";
     public static final String LANGUAGE_ENGLISH = "en";
     public static final String LANGUAGE_KOREAN = "ko";
     public static final String LANGUAGE_JAPANESE = "ja";
@@ -120,6 +121,9 @@ public final class AppSettingsStore {
     }
 
     private static String normalizeLanguage(String value) {
+        if (LANGUAGE_INDONESIAN.equals(value) || "id".equals(value)) {
+            return LANGUAGE_INDONESIAN;
+        }
         if (LANGUAGE_ENGLISH.equals(value)) {
             return LANGUAGE_ENGLISH;
         }

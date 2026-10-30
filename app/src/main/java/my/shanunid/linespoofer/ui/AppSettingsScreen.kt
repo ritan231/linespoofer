@@ -88,6 +88,7 @@ fun AppSettingsScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
     )
     val languageOptions = listOf(
         SettingOption(AppSettingsStore.LANGUAGE_DEFAULT, R.string.language_default),
+        SettingOption(AppSettingsStore.LANGUAGE_INDONESIAN, R.string.language_indonesian),
         SettingOption(AppSettingsStore.LANGUAGE_ENGLISH, R.string.language_english),
         SettingOption(AppSettingsStore.LANGUAGE_KOREAN, R.string.language_korean),
         SettingOption(AppSettingsStore.LANGUAGE_JAPANESE, R.string.language_japanese),

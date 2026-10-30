@@ -60,6 +60,7 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -137,15 +138,10 @@ private val networkFields = listOf(
 )
 
 private val systemFields = listOf(
-    EditorField(ConfigManager.FIELD_BATTERY, R.string.settings_field_battery, isToggle = true),
-    EditorField(ConfigManager.FIELD_UPTIME, R.string.settings_field_uptime, isToggle = true),
     EditorField(ConfigManager.FIELD_STORAGE, R.string.settings_field_storage, isToggle = true),
     EditorField(ConfigManager.FIELD_AUDIO, R.string.settings_field_audio, isToggle = true),
     EditorField(ConfigManager.FIELD_GPU, R.string.settings_field_gpu, isToggle = true),
-    EditorField(ConfigManager.FIELD_REFRESH_RATE, R.string.settings_field_refresh_rate, isToggle = true),
-    EditorField(ConfigManager.FIELD_BLUETOOTH, R.string.settings_field_bluetooth, isToggle = true),
     EditorField(ConfigManager.FIELD_LOCATION, R.string.settings_field_location, isToggle = true),
-    EditorField(ConfigManager.FIELD_WIFI, R.string.settings_field_wifi, isToggle = true),
 )
 
 private val advancedFields = listOf(
@@ -198,7 +194,6 @@ fun AppProfilesScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
 }
 
 @Composable
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 private fun AppSelectionList(
     apps: List<SafeAppEntry>,
     loading: Boolean,
@@ -219,7 +214,7 @@ private fun AppSelectionList(
                 Text(
                     text = stringResource(R.string.app_profile_loading_apps),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MiuiXColors.TextSecondary,
                 )
             }
         }
@@ -239,79 +234,130 @@ private fun AppSelectionList(
         }
     }
 
-    LazyColumn(
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(scaffoldPadding)
-            .padding(horizontal = 20.dp),
+            .padding(scaffoldPadding),
     ) {
-        item {
+        // Sticky/Fixed HyperOS Search Header
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        ) {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text(stringResource(R.string.app_profile_search)) },
-                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MiuiXColors.DarkCard,
+                    unfocusedContainerColor = MiuiXColors.DarkCard,
+                    focusedBorderColor = MiuiXColors.Blue,
+                    unfocusedBorderColor = MiuiXColors.DarkBorder,
+                    focusedTextColor = MiuiXColors.TextPrimary,
+                    unfocusedTextColor = MiuiXColors.TextPrimary,
+                ),
+                placeholder = {
+                    Text(stringResource(R.string.app_profile_search), color = MiuiXColors.TextSecondary)
+                },
+                leadingIcon = {
+                    Icon(Icons.Outlined.Search, contentDescription = null, tint = MiuiXColors.Blue)
+                },
                 singleLine = true,
             )
-            Spacer(Modifier.height(MdSpacing.sm))
         }
-        itemsIndexed(
-            items = filteredApps,
-            key = { _, app -> app.packageName },
-        ) { index, app ->
-            val assignedProfile = profileName(app.packageName)
-            SegmentedListItem(
-                onClick = { onSelect(app) },
-                shapes = connectedListItemShapes(index, filteredApps.size),
-                modifier = if (index < filteredApps.lastIndex) {
-                    Modifier.padding(bottom = ListItemDefaults.SegmentedGap)
-                } else {
-                    Modifier
-                },
-                leadingContent = {
-                    AppIcon(
-                        packageName = app.packageName,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(MaterialTheme.shapes.medium),
-                    )
-                },
-                supportingContent = {
-                    Text(
-                        text = app.packageName,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                },
-                trailingContent = {
-                    Text(
-                        text = assignedProfile ?: stringResource(R.string.app_profile_unassigned),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (assignedProfile == null) {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        } else {
-                            MaterialTheme.colorScheme.primary
-                        },
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                },
-                colors = ListItemDefaults.segmentedColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                    supportingContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                ),
-            ) {
-                Text(app.label, maxLines = 1, overflow = TextOverflow.Ellipsis)
+
+        // High Performance 120Hz Fluid LazyColumn
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items(
+                items = filteredApps,
+                key = { it.packageName },
+                contentType = { "app_row" },
+            ) { app ->
+                val assignedProfile = profileName(app.packageName)
+                MiuiAppRow(
+                    app = app,
+                    assignedProfile = assignedProfile,
+                    onClick = { onSelect(app) },
+                )
             }
+            item { Spacer(Modifier.height(100.dp)) }
         }
-        item { Spacer(Modifier.height(112.dp)) }
     }
 }
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+private fun MiuiAppRow(
+    app: SafeAppEntry,
+    assignedProfile: String?,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(MiuiXColors.DarkCard)
+            .border(0.8.dp, MiuiXColors.DarkBorder, RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 11.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AppIcon(
+                packageName = app.packageName,
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(RoundedCornerShape(10.dp)),
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = app.label,
+                    color = MiuiXColors.TextPrimary,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = app.packageName,
+                    color = MiuiXColors.TextSecondary,
+                    fontSize = 12.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(
+                        if (assignedProfile != null) MiuiXColors.BlueContainer else androidx.compose.ui.graphics.Color(0xFF222630)
+                    )
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+            ) {
+                Text(
+                    text = assignedProfile ?: stringResource(R.string.app_profile_unassigned),
+                    color = if (assignedProfile != null) MiuiXColors.Blue else MiuiXColors.TextSecondary,
+                    fontSize = 11.5.sp,
+                    fontWeight = if (assignedProfile != null) FontWeight.SemiBold else FontWeight.Normal,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun ProfileManagementScreen(
     appState: SpoofAppState,
     scaffoldPadding: PaddingValues,
@@ -333,68 +379,131 @@ fun ProfileManagementScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(scaffoldPadding)
-            .padding(horizontal = 20.dp),
+            .padding(scaffoldPadding),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item { SectionTitle(stringResource(R.string.profile_management_list_title)) }
-        itemsIndexed(
+        item {
+            MiuiSectionHeader(title = stringResource(R.string.profile_management_list_title))
+        }
+        items(
             items = profiles,
-            key = { _, profile -> profile.id },
-        ) { index, profile ->
-            SegmentedListItem(
+            key = { it.id },
+            contentType = { "profile_card" },
+        ) { profile ->
+            val isActive = profile.id == appState.activeProfileId
+            val assignmentCount = appState.profileAssignmentCount(profile.id)
+
+            MiuiCard(
                 onClick = {
                     editorLauncher.launch(ProfileEditorActivity.createEditIntent(context, profile.id))
                 },
-                shapes = connectedListItemShapes(index, profiles.size),
-                modifier = if (index < profiles.lastIndex) {
-                    Modifier.padding(bottom = ListItemDefaults.SegmentedGap)
-                } else {
-                    Modifier
-                },
-                leadingContent = {
-                    Icon(Icons.Outlined.AccountBox, contentDescription = null)
-                },
-                supportingContent = {
-                    Text(stringResource(R.string.app_profile_assignment_count, appState.profileAssignmentCount(profile.id)))
-                },
-                trailingContent = {
-                    IconButton(
-                        onClick = { profileIdPendingDeletion = profile.id },
-                        enabled = profiles.size > 1,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Delete,
-                            contentDescription = stringResource(R.string.profile_delete),
-                            tint = if (profiles.size > 1) {
-                                MaterialTheme.colorScheme.error
-                            } else {
-                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                            },
-                        )
-                    }
-                },
-                colors = ListItemDefaults.segmentedColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                    supportingContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                ),
             ) {
-                Text(profile.name)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (isActive) MiuiXColors.BlueContainer else androidx.compose.ui.graphics.Color(0xFF222631)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.AccountBox,
+                                contentDescription = null,
+                                tint = if (isActive) MiuiXColors.Blue else MiuiXColors.TextSecondary,
+                                modifier = Modifier.size(22.dp),
+                            )
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = profile.name,
+                                    color = MiuiXColors.TextPrimary,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                                if (isActive) {
+                                    Spacer(Modifier.width(8.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(MiuiXColors.BlueContainer)
+                                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                                    ) {
+                                        Text(
+                                            text = "ACTIVE",
+                                            color = MiuiXColors.Blue,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                        )
+                                    }
+                                }
+                            }
+                            Spacer(Modifier.height(3.dp))
+                            Text(
+                                text = stringResource(R.string.app_profile_assignment_count, assignmentCount),
+                                color = MiuiXColors.TextSecondary,
+                                fontSize = 12.5.sp,
+                            )
+                        }
+                    }
+
+                    if (profiles.size > 1) {
+                        IconButton(
+                            onClick = { profileIdPendingDeletion = profile.id },
+                            modifier = Modifier.size(36.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Delete,
+                                contentDescription = stringResource(R.string.profile_delete),
+                                tint = MiuiXColors.Red,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    }
+                }
             }
         }
         item {
-            FilledTonalButton(
-                onClick = { editorLauncher.launch(ProfileEditorActivity.createCreateIntent(context)) },
+            Spacer(Modifier.height(4.dp))
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = MdSpacing.sm),
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(MiuiXColors.Blue)
+                    .clickable {
+                        editorLauncher.launch(ProfileEditorActivity.createCreateIntent(context))
+                    }
+                    .padding(vertical = 14.dp),
+                contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Outlined.Add, contentDescription = null)
-                Spacer(Modifier.width(MdSpacing.xs))
-                Text(stringResource(R.string.app_profile_create))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Outlined.Add,
+                        contentDescription = null,
+                        tint = androidx.compose.ui.graphics.Color.White,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.app_profile_create),
+                        color = androidx.compose.ui.graphics.Color.White,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
             }
         }
-        item { Spacer(Modifier.height(112.dp)) }
+        item { Spacer(Modifier.height(100.dp)) }
     }
 
     val profilePendingDeletion = profiles.firstOrNull { it.id == profileIdPendingDeletion }
@@ -419,7 +528,7 @@ fun ProfileManagementScreen(
                         scope.launch { appState.deleteProfile(profilePendingDeletion.id) }
                     },
                     colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error,
+                        contentColor = MiuiXColors.Red,
                     ),
                 ) {
                     Text(stringResource(R.string.profile_delete))
@@ -488,37 +597,14 @@ fun ProfileEditorForm(
             DeviceSettingsSection(stringResource(R.string.settings_section_preset_mode)) {
                 PresetSelector(appState)
                 Spacer(Modifier.height(14.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-                ) {
-                    val options = listOf(
-                        Triple(false, R.string.mode_preset, Icons.AutoMirrored.Outlined.ViewList),
-                        Triple(true, R.string.mode_custom, Icons.Outlined.Edit),
-                    )
-                    options.forEachIndexed { index, option ->
-                        ToggleButton(
-                            checked = editor.customMode == option.first,
-                            onCheckedChange = { editor.setCustomMode(option.first, appState.presets) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .semantics { role = Role.RadioButton },
-                            shapes = when (index) {
-                                0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                                options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                                else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                            },
-                        ) {
-                            Icon(
-                                imageVector = option.third,
-                                contentDescription = null,
-                                modifier = Modifier.size(ToggleButtonDefaults.IconSize),
-                            )
-                            Spacer(Modifier.size(ToggleButtonDefaults.IconSpacing))
-                            Text(stringResource(option.second))
-                        }
+                val modeOptions = listOf(stringResource(R.string.mode_preset), stringResource(R.string.mode_custom))
+                MiuiSegmentedPill(
+                    options = modeOptions,
+                    selectedIndex = if (editor.customMode) 1 else 0,
+                    onSelect = { idx ->
+                        editor.setCustomMode(idx == 1, appState.presets)
                     }
-                }
+                )
             }
         }
         item {
@@ -670,13 +756,8 @@ private fun DeviceSettingsSection(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        SectionTitle(title)
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = MdSpacing.xxs),
-            content = content,
-        )
+        MiuiSectionHeader(title)
+        MiuiCard(content = content)
     }
 }
 
@@ -694,11 +775,12 @@ private fun ProfileEditorField(field: EditorField, editor: ProfileEditorState) {
             ) {
                 Text(
                     text = stringResource(field.labelRes),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MiuiXColors.TextPrimary,
+                    fontSize = 14.5.sp,
+                    fontWeight = FontWeight.Normal,
                     modifier = Modifier.weight(1f),
                 )
-                Switch(
+                MiuiSwitch(
                     checked = spoofEnabled,
                     onCheckedChange = { editor.enabledFields[field.fieldId] = it },
                 )

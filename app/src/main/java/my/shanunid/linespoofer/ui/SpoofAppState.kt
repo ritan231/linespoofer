@@ -119,6 +119,7 @@ class SpoofAppState(val activity: AppCompatActivity) {
                     loadedPresets,
                     localizedContext.getString(R.string.profile_default_name),
                 )
+                AppProfileStore.syncToRemotePreferences(activity, storedProfiles)
                 val profile = storedProfiles.profiles.first()
                 val config = configFileManager.loadContent(
                     appProfileStore.getStoreFile(activity),
@@ -814,6 +815,13 @@ class ProfileEditorState {
         result["device.battery.status"] = batteryStatus
         result["device.fps.mode"] = fpsMode
         result["device.display.refresh_rate"] = targetFps.toInt().toString()
+
+        // Sync toggle flags with dynamic environment modes
+        result[ConfigManager.getTogglePropertyKey(ConfigManager.FIELD_WIFI)] = if (wifiMode != "off") "true" else "false"
+        result[ConfigManager.getTogglePropertyKey(ConfigManager.FIELD_BLUETOOTH)] = if (bluetoothMode != "off") "true" else "false"
+        result[ConfigManager.getTogglePropertyKey(ConfigManager.FIELD_BATTERY)] = if (batteryMode != "off") "true" else "false"
+        result[ConfigManager.getTogglePropertyKey(ConfigManager.FIELD_UPTIME)] = if (uptimeMode != "off") "true" else "false"
+        result[ConfigManager.getTogglePropertyKey(ConfigManager.FIELD_REFRESH_RATE)] = if (fpsMode != "off") "true" else "false"
 
         return result
     }

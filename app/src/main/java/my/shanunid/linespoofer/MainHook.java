@@ -157,8 +157,10 @@ public class MainHook extends XposedModule implements IXposedHookLoadPackage {
         lpparam.appInfo = param.getApplicationInfo();
         lpparam.isFirstApplication = param.isFirstPackage();
 
+        hookApplicationAttachForInitialization(lpparam);
+
         if (!ConfigManager.hasAssignedProfile()) {
-            AppLogger.info(TAG, "libxposed: no assigned profile for " + packageName + "; skipping hooks");
+            AppLogger.info(TAG, "libxposed: profile not yet loaded for " + packageName + "; waiting for Application.attach");
             return;
         }
 

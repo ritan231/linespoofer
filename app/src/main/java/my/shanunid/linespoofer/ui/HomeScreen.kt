@@ -227,11 +227,13 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
                                 fontWeight = FontWeight.Bold,
                                 letterSpacing = 0.5.sp,
                             )
-                            val ramGb = ConfigManager.getTotalRamBytes() / (1024L * 1024L * 1024L)
+                            val physicalGb = remember { ConfigManager.getPhysicalRamBytes() / (1024L * 1024L * 1024L) }
+                            val virtualGb = remember { ConfigManager.getVirtualRamBytes() / (1024L * 1024L * 1024L) }
+                            val ramText = if (virtualGb > 0) "$physicalGb GB (+$virtualGb GB)" else "$physicalGb GB"
                             Text(
-                                text = if (ramGb > 0) "$ramGb GB" else "12 GB",
+                                text = ramText,
                                 color = MiuiXColors.TextPrimary,
-                                fontSize = 15.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                             )
                         }

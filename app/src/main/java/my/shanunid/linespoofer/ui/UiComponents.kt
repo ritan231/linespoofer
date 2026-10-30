@@ -126,7 +126,7 @@ fun ConnectedSettingsRow(
     }
     val trailingContent: (@Composable () -> Unit)? = when {
         checked != null && onCheckedChange != null -> {
-            { Switch(checked = checked, onCheckedChange = onCheckedChange) }
+            { MiuiSwitch(checked = checked, onCheckedChange = onCheckedChange) }
         }
         !trailingText.isNullOrBlank() -> {
             {
