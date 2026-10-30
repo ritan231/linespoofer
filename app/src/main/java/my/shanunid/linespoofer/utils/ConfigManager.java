@@ -104,6 +104,7 @@ public class ConfigManager {
     private static boolean assignedProfile = false;
     private static String targetPackageName = null;
     private static long lastReloadAttemptTime = 0L;
+    private static volatile SharedPreferences sRemotePrefs = null;
 
     public static synchronized void init(String packageName) {
         targetPackageName = packageName;
@@ -112,27 +113,36 @@ public class ConfigManager {
 
     public static synchronized void initFromRemotePreferences(String packageName, SharedPreferences remotePrefs) {
         targetPackageName = packageName;
+        sRemotePrefs = remotePrefs;
         if (remotePrefs != null) {
-            String profileContent = remotePrefs.getString("profile_" + packageName, null);
-            if (profileContent == null) {
-                profileContent = remotePrefs.getString(packageName, null);
-            }
-            if (profileContent == null || profileContent.trim().isEmpty()) {
-                profileContent = remotePrefs.getString("default_profile", null);
-            }
-            if (profileContent != null && !profileContent.trim().isEmpty()) {
-                Map<String, String> parsed = parseConfigContent(profileContent);
-                if (!parsed.isEmpty()) {
-                    allProperties = parsed;
-                    usingEmbeddedDefaults = false;
-                    assignedProfile = true;
-                    resetGeneratedCaches();
-                    AppLogger.info("ConfigManager", "Config loaded via libxposed RemotePreferences for " + packageName + ": " + allProperties.size() + " properties");
-                    return;
-                }
+            Map<String, String> parsed = readFromRemotePreferences(packageName, remotePrefs);
+            if (!parsed.isEmpty()) {
+                allProperties = parsed;
+                usingEmbeddedDefaults = false;
+                assignedProfile = true;
+                resetGeneratedCaches();
+                AppLogger.info("ConfigManager", "Config loaded via libxposed RemotePreferences for " + packageName + ": " + allProperties.size() + " properties");
+                return;
             }
         }
         reload(false);
+    }
+
+    private static Map<String, String> readFromRemotePreferences(String packageName, SharedPreferences remotePrefs) {
+        if (remotePrefs == null) {
+            return new HashMap<>();
+        }
+        String profileContent = remotePrefs.getString("profile_" + packageName, null);
+        if (profileContent == null) {
+            profileContent = remotePrefs.getString(packageName, null);
+        }
+        if (profileContent == null || profileContent.trim().isEmpty()) {
+            profileContent = remotePrefs.getString("default_profile", null);
+        }
+        if (profileContent != null && !profileContent.trim().isEmpty()) {
+            return parseConfigContent(profileContent);
+        }
+        return new HashMap<>();
     }
 
     public static Map<String, String> parseConfigContent(String content) {
@@ -190,6 +200,13 @@ public class ConfigManager {
     }
 
     private static LoadedProperties readConfig(Context preferredContext) {
+        if (sRemotePrefs != null) {
+            Map<String, String> configFromRemote = readFromRemotePreferences(targetPackageName, sRemotePrefs);
+            if (!configFromRemote.isEmpty()) {
+                return new LoadedProperties(configFromRemote, false);
+            }
+        }
+
         Map<String, String> configFromProvider = readFromProvider(preferredContext);
         if (!configFromProvider.isEmpty()) {
             return new LoadedProperties(configFromProvider, false);

@@ -464,6 +464,7 @@ public class MainHook extends XposedModule {
                         try {
                             Context context = (Context) param.args[0];
                             ConfigManager.forceReload(context);
+                            TimeHooks.updateConfig();
                             registerConfigChangeReceiver(context, lpparam);
                             if (!ConfigManager.hasAssignedProfile()) {
                                 AppLogger.info(TAG, "No profile assigned after Application.attach for " + lpparam.packageName);

@@ -41,6 +41,7 @@ public class PackageManagerHooks {
     private static final Set<String> HIDDEN_PACKAGES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
         "org.lsposed.manager",
         "org.lsposed.lspd",
+        "my.shanunid.linespoofer",
         "com.topjohnwu.magisk",
         "io.github.vvb2060.magisk",
         "me.bmax.apatch",

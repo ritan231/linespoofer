@@ -48,10 +48,6 @@ public final class TimeHooks {
 
     public static void hook(XC_LoadPackage.LoadPackageParam lpparam) {
         updateConfig();
-        if (!sUptimeSpoofEnabled || sFakeBaseMs <= 0L) {
-            return;
-        }
-
         if (sHooksInstalled) {
             return;
         }

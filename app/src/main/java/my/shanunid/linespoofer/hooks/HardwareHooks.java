@@ -318,7 +318,21 @@ public class HardwareHooks {
 
     private static File createCachedVirtualFile(String prefix, String content, String packageName) {
         try {
-            File cacheDir = new File("/data/data/" + packageName + "/cache");
+            File cacheDir = null;
+            try {
+                Class<?> activityThreadClass = Class.forName("android.app.ActivityThread");
+                Object app = activityThreadClass.getMethod("currentApplication").invoke(null);
+                if (app instanceof android.content.Context) {
+                    cacheDir = ((android.content.Context) app).getCacheDir();
+                }
+            } catch (Throwable ignored) {
+            }
+            if (cacheDir == null) {
+                int uid = android.os.Process.myUid();
+                int userId = uid / 100000;
+                String basePath = (userId > 0) ? ("/data/user/" + userId + "/" + packageName) : ("/data/data/" + packageName);
+                cacheDir = new File(basePath, "cache");
+            }
             if (!cacheDir.exists()) {
                 cacheDir.mkdirs();
             }
