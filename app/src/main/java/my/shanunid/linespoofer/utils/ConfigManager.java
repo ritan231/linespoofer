@@ -850,17 +850,18 @@ public class ConfigManager {
 
     public static long getSpoofedUptimeSeconds() {
         String mode = getConfigValue("device.uptime.mode");
-        if ("custom".equalsIgnoreCase(mode)) {
-            String secStr = getConfigValue("device.uptime.seconds");
-            if (secStr != null) {
-                try {
-                    long sec = Long.parseLong(secStr.trim());
-                    if (sec > 0) return sec;
-                } catch (Exception ignored) {}
-            }
+        if ("off".equalsIgnoreCase(mode)) {
+            return 0L;
+        }
+        String secStr = getConfigValue("device.uptime.seconds");
+        if (secStr != null && !secStr.trim().isEmpty()) {
+            try {
+                long sec = Long.parseLong(secStr.trim());
+                if (sec > 0) return sec;
+            } catch (Exception ignored) {}
         }
         if (cachedRandomUptimeSec == null) {
-            cachedRandomUptimeSec = 14400L + (long) (Math.random() * 115200L);
+            cachedRandomUptimeSec = 21600L; // deterministic 6h
         }
         return cachedRandomUptimeSec;
     }

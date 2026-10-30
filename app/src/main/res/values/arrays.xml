@@ -2,7 +2,9 @@
 <resources>
     <!-- Vector / LSPosed Default Automatic Scope -->
     <string-array name="xposed_scope">
+        <item>system</item>
         <item>android</item>
         <item>my.shanunid.linespoofer</item>
     </string-array>
 </resources>
+

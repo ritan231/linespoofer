@@ -48,6 +48,13 @@ class MainActivity : AppCompatActivity() {
         } catch (_: Throwable) {
         }
 
+        try {
+            val store = my.shanunid.linespoofer.data.AppProfileStore(my.shanunid.linespoofer.data.ConfigFileManager())
+            val state = my.shanunid.linespoofer.data.AppProfileSession.getOrLoad(this, store)
+            my.shanunid.linespoofer.utils.RootScopeManager.syncInBackground(this, state.assignments.keys)
+        } catch (_: Throwable) {
+        }
+
         setContent {
             val appState = remember { SpoofAppState(this) }
             LaunchedEffect(appState) {

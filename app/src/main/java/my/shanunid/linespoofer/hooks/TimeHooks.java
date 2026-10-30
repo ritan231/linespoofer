@@ -38,7 +38,7 @@ public final class TimeHooks {
                             }
                             long realElapsed = (long) param.getResult();
                             long fakeBaseMs = ConfigManager.getSpoofedUptimeMs();
-                            param.setResult(fakeBaseMs + (realElapsed % 3600000L));
+                            param.setResult(fakeBaseMs + realElapsed);
                         } catch (Throwable ignored) {
                         }
                     }
@@ -57,7 +57,7 @@ public final class TimeHooks {
                             }
                             long realUptime = (long) param.getResult();
                             long fakeBaseMs = ConfigManager.getSpoofedUptimeMs();
-                            param.setResult(fakeBaseMs + (realUptime % 3600000L));
+                            param.setResult(fakeBaseMs + realUptime);
                         } catch (Throwable ignored) {
                         }
                     }
@@ -76,7 +76,7 @@ public final class TimeHooks {
                             }
                             long realNanos = (long) param.getResult();
                             long fakeBaseNanos = ConfigManager.getSpoofedUptimeMs() * 1_000_000L;
-                            param.setResult(fakeBaseNanos + (realNanos % 3_600_000_000_000L));
+                            param.setResult(fakeBaseNanos + realNanos);
                         } catch (Throwable ignored) {
                         }
                     }

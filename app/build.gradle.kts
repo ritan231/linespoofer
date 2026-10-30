@@ -60,8 +60,8 @@ dependencies {
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     compileOnly("de.robv.android.xposed:api:82")
-    compileOnly("io.github.libxposed:api:102.0.0")
-    implementation("io.github.libxposed:service:102.0.0")
+    compileOnly("io.github.libxposed:api:101.0.1")
+    implementation("io.github.libxposed:service:101.0.0")
 
     testImplementation("junit:junit:4.13.2")
 }

@@ -300,8 +300,9 @@ public class HardwareHooks {
             return createCachedVirtualFile("fake_meminfo", generateMemInfo(), packageName);
         }
         if (path.equals("/proc/uptime")) {
-            long uptime = ConfigManager.getSpoofedUptimeSeconds();
-            String content = uptime + ".45 " + (uptime * 4) + ".12\n";
+            long uptime = ConfigManager.getSpoofedUptimeSeconds() + (android.os.SystemClock.elapsedRealtime() / 1000L);
+            long idle = uptime * 4;
+            String content = uptime + ".50 " + idle + ".20\n";
             return createCachedVirtualFile("fake_uptime", content, packageName);
         }
         if (path.startsWith("/sys/devices/system/cpu/present")
@@ -342,8 +343,9 @@ public class HardwareHooks {
             VIRTUAL_FILE_LINES.put(readerObj, lines);
             VIRTUAL_FILE_OFFSETS.put(readerObj, 0);
         } else if (path.equals("/proc/uptime")) {
-            long uptime = ConfigManager.getSpoofedUptimeSeconds();
-            String[] lines = new String[] { uptime + ".45 " + (uptime * 4) + ".12" };
+            long uptime = ConfigManager.getSpoofedUptimeSeconds() + (android.os.SystemClock.elapsedRealtime() / 1000L);
+            long idle = uptime * 4;
+            String[] lines = new String[] { uptime + ".50 " + idle + ".20" };
             VIRTUAL_FILE_LINES.put(readerObj, lines);
             VIRTUAL_FILE_OFFSETS.put(readerObj, 0);
         }
