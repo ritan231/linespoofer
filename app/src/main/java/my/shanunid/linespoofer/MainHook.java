@@ -399,6 +399,7 @@ public class MainHook extends XposedModule {
         }
 
         try {
+            TimeHooks.updateConfig();
             TimeHooks.hook(lpparam);
             AppLogger.debug(TAG, "TimeHooks loaded");
         } catch (Exception exception) {
@@ -496,6 +497,7 @@ public class MainHook extends XposedModule {
                     return;
                 }
                 ConfigManager.forceReload(receiverContext);
+                TimeHooks.updateConfig();
                 if (!ConfigManager.hasAssignedProfile()) {
                     return;
                 }

@@ -7,7 +7,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.SystemClock;
 import android.os.Handler;
 import android.os.HandlerThread;
 
@@ -104,7 +103,7 @@ public class ConfigManager {
     private static boolean usingEmbeddedDefaults = true;
     private static boolean assignedProfile = false;
     private static String targetPackageName = null;
-    private static long lastReloadAttemptElapsed = 0L;
+    private static long lastReloadAttemptTime = 0L;
 
     public static synchronized void init(String packageName) {
         targetPackageName = packageName;
@@ -167,15 +166,15 @@ public class ConfigManager {
     }
 
     private static void reload(boolean force, Context context) {
-        long now = SystemClock.elapsedRealtime();
+        long now = System.currentTimeMillis();
         if (!force && allProperties != null && !usingEmbeddedDefaults) {
             return;
         }
-        if (!force && allProperties != null && usingEmbeddedDefaults && (now - lastReloadAttemptElapsed) < RETRY_INTERVAL_MS) {
+        if (!force && allProperties != null && usingEmbeddedDefaults && (now - lastReloadAttemptTime) < RETRY_INTERVAL_MS) {
             return;
         }
 
-        lastReloadAttemptElapsed = now;
+        lastReloadAttemptTime = now;
         LoadedProperties loadedProperties = readConfig(context);
         allProperties = loadedProperties.properties;
         usingEmbeddedDefaults = loadedProperties.fromEmbeddedDefaults;
