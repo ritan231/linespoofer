@@ -83,8 +83,16 @@
             android:value="@string/xposed_module_description" />
 
         <meta-data
+            android:name="xposedapi"
+            android:value="102" />
+
+        <meta-data
             android:name="xposedminversion"
-            android:value="82" />
+            android:value="102" />
+
+        <meta-data
+            android:name="xposedsharedprefs"
+            android:value="true" />
 
         <meta-data
             android:name="xposedscope"

@@ -5,7 +5,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Build;
+import androidx.annotation.NonNull;
+
+import io.github.libxposed.api.XposedModule;
+import io.github.libxposed.api.XposedInterface.PackageLoadedParam;
 
 import my.shanunid.linespoofer.hooks.AdvertisingIdHooks;
 import my.shanunid.linespoofer.hooks.AppSetIdHooks;
@@ -55,13 +60,50 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  * This module hooks Android APIs to spoof device identifiers and properties
  * that some apps read directly from Java APIs or SystemProperties.
  */
-public class MainHook implements IXposedHookLoadPackage {
+public class MainHook extends XposedModule implements IXposedHookLoadPackage {
 
     private static final String TAG = "LineSpoofer";
     private static final String MODULE_PACKAGE = "my.shanunid.linespoofer";
     private static final int REAL_SDK_INT = Build.VERSION.SDK_INT;
     private static final Set<String> INITIALIZED_HOOK_PROCESSES = ConcurrentHashMap.newKeySet();
     private static final Set<String> CONFIG_RECEIVER_PROCESSES = ConcurrentHashMap.newKeySet();
+
+    public MainHook() {
+        super();
+    }
+
+    @Override
+    public void onPackageLoaded(@NonNull PackageLoadedParam param) {
+        super.onPackageLoaded(param);
+        String packageName = param.getPackageName();
+        if (packageName == null || "android".equals(packageName) || MODULE_PACKAGE.equals(packageName)) {
+            return;
+        }
+
+        try {
+            SharedPreferences remotePrefs = getRemotePreferences("linespoofer_config");
+            ConfigManager.initFromRemotePreferences(packageName, remotePrefs);
+        } catch (Throwable throwable) {
+            AppLogger.info(TAG, "libxposed RemotePreferences fallback for " + packageName + ": " + throwable.getMessage());
+            ConfigManager.init(packageName);
+        }
+
+        XC_LoadPackage.LoadPackageParam lpparam = new XC_LoadPackage.LoadPackageParam(
+            new XposedBridge.CopyOnWriteSortedSet<>()
+        );
+        lpparam.packageName = packageName;
+        lpparam.processName = packageName;
+        lpparam.classLoader = param.getDefaultClassLoader();
+        lpparam.appInfo = param.getApplicationInfo();
+        lpparam.isFirstApplication = param.isFirstPackage();
+
+        if (!ConfigManager.hasAssignedProfile()) {
+            AppLogger.info(TAG, "libxposed: no assigned profile for " + packageName + "; skipping hooks");
+            return;
+        }
+
+        initializeHooks(lpparam);
+    }
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {

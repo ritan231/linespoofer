@@ -3,6 +3,7 @@ package my.shanunid.linespoofer.utils;
 import android.content.Context;
 import android.content.Intent;
 import android.content.BroadcastReceiver;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.database.Cursor;
 import android.net.Uri;
@@ -106,6 +107,36 @@ public class ConfigManager {
     public static synchronized void init(String packageName) {
         targetPackageName = packageName;
         reload(false);
+    }
+
+    public static synchronized void initFromRemotePreferences(String packageName, SharedPreferences remotePrefs) {
+        targetPackageName = packageName;
+        if (remotePrefs != null) {
+            String profileContent = remotePrefs.getString("profile_" + packageName, null);
+            if (profileContent == null) {
+                profileContent = remotePrefs.getString(packageName, null);
+            }
+            if (profileContent != null && !profileContent.trim().isEmpty()) {
+                Map<String, String> parsed = parseConfigContent(profileContent);
+                if (!parsed.isEmpty()) {
+                    allProperties = parsed;
+                    usingEmbeddedDefaults = false;
+                    assignedProfile = true;
+                    resetGeneratedCaches();
+                    AppLogger.info("ConfigManager", "Config loaded via libxposed RemotePreferences for " + packageName + ": " + allProperties.size() + " properties");
+                    return;
+                }
+            }
+        }
+        reload(false);
+    }
+
+    public static Map<String, String> parseConfigContent(String content) {
+        if (content == null || content.trim().isEmpty()) {
+            return new HashMap<>();
+        }
+        InputStream stream = new java.io.ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
+        return parseConfigStream(stream);
     }
 
     public static synchronized void forceReload() {

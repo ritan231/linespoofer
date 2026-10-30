@@ -5,6 +5,11 @@
 # Keep Xposed entry point
 -keep class my.shanunid.linespoofer.MainHook { *; }
 
+# Keep libxposed module entry point
+-keep,allowoptimization,allowobfuscation public class * extends io.github.libxposed.api.XposedModule {
+    public <init>();
+}
+
 # Keep all hook classes
 -keep class my.shanunid.linespoofer.hooks.** { *; }
 

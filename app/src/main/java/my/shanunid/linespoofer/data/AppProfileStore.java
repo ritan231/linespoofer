@@ -2,6 +2,7 @@ package my.shanunid.linespoofer.data;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 
 import my.shanunid.linespoofer.utils.ConfigManager;
 
@@ -118,6 +119,32 @@ public final class AppProfileStore {
         try (FileOutputStream outputStream = new FileOutputStream(storeFile, false)) {
             outputStream.write(root.toString(2).getBytes(StandardCharsets.UTF_8));
         }
+
+        try {
+            SharedPreferences prefs = context.getSharedPreferences("linespoofer_config", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.clear();
+            for (Map.Entry<String, String> entry : state.getAssignments().entrySet()) {
+                String pkg = entry.getKey();
+                String profileId = entry.getValue();
+                Profile profile = state.findProfile(profileId);
+                if (profile != null) {
+                    StringBuilder fullContent = new StringBuilder(profile.getContent().trim());
+                    if (!state.getGlobalProperties().isEmpty()) {
+                        fullContent.append("\n\n# Global runtime options\n");
+                        for (Map.Entry<String, String> globalEntry : state.getGlobalProperties().entrySet()) {
+                            fullContent.append(globalEntry.getKey()).append('=').append(globalEntry.getValue()).append('\n');
+                        }
+                    }
+                    String resolved = fullContent.toString();
+                    editor.putString(pkg, resolved);
+                    editor.putString("profile_" + pkg, resolved);
+                }
+            }
+            editor.apply();
+        } catch (Throwable ignored) {
+        }
+
         context.sendBroadcast(new Intent(ConfigManager.ACTION_CONFIG_CHANGED));
     }
 
