@@ -214,7 +214,7 @@ private fun AppSelectionList(
             contentAlignment = Alignment.Center,
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                CircularProgressIndicator(modifier = Modifier.size(36.dp), color = MiuiXColors.Primary)
+                CircularProgressIndicator(modifier = Modifier.size(36.dp), color = MiuiXColors.Blue)
                 Spacer(Modifier.height(MdSpacing.sm))
                 Text(
                     text = stringResource(R.string.app_profile_loading_apps),

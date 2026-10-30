@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Color
 object MiuiXColors {
     // HyperOS / MIUI Official Primary Blue
     val Blue = Color(0xFF007DFF)
+    val Primary = Blue
     val BlueDark = Color(0xFF0066D6)
     val BlueLight = Color(0xFF3397FF)
     val BlueContainer = Color(0x1F007DFF)
@@ -19,6 +20,7 @@ object MiuiXColors {
     val DarkCard = Color(0xFF171920)
     val DarkCardElevated = Color(0xFF20232C)
     val DarkBorder = Color(0xFF262934)
+    val Border = DarkBorder
     val DarkDivider = Color(0xFF1E212A)
 
     // Dark Mode Text
