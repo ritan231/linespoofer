@@ -142,7 +142,7 @@ fun LineSpooferApp(appState: SpoofAppState) {
                         } else {
                             null
                         },
-                        colors = TopAppBarDefaults.largeFlexibleTopAppBarColors(
+                        colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = colors.background,
                             scrolledContainerColor = colors.background,
                             titleContentColor = colors.textPrimary,
