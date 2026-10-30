@@ -222,7 +222,7 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
                     Switch(
                         checked = appState.isMasterSpoofActive,
                         onCheckedChange = { checked ->
-                            appState.setMasterSpoofActive(checked)
+                            appState.updateMasterSpoofActive(checked)
                         }
                     )
                 }

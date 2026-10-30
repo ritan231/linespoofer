@@ -496,7 +496,7 @@ class SpoofAppState(val activity: AppCompatActivity) {
         }
     }
 
-    fun setMasterSpoofActive(active: Boolean) {
+    fun updateMasterSpoofActive(active: Boolean) {
         AppSettingsStore.setMasterSpoofActive(activity, active)
         isMasterSpoofActive = active
         try {
