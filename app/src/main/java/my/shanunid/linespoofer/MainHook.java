@@ -10,7 +10,7 @@ import android.os.Build;
 import androidx.annotation.NonNull;
 
 import io.github.libxposed.api.XposedModule;
-import io.github.libxposed.api.XposedInterface.PackageLoadedParam;
+import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam;
 
 import my.shanunid.linespoofer.hooks.AdvertisingIdHooks;
 import my.shanunid.linespoofer.hooks.AppSetIdHooks;
@@ -101,9 +101,17 @@ public class MainHook extends XposedModule implements IXposedHookLoadPackage {
             }
         }
 
-        XC_LoadPackage.LoadPackageParam lpparam = new XC_LoadPackage.LoadPackageParam(
-            new XposedBridge.CopyOnWriteSortedSet<>()
-        );
+        XC_LoadPackage.LoadPackageParam lpparam = null;
+        try {
+            java.lang.reflect.Constructor<?> ctor = XC_LoadPackage.LoadPackageParam.class.getDeclaredConstructors()[0];
+            ctor.setAccessible(true);
+            lpparam = (XC_LoadPackage.LoadPackageParam) ctor.newInstance(new Object[]{null});
+        } catch (Throwable t) {
+            AppLogger.info(TAG, "Failed to instantiate LoadPackageParam: " + t.getMessage());
+        }
+        if (lpparam == null) {
+            return;
+        }
         lpparam.packageName = packageName;
         lpparam.processName = packageName;
         lpparam.classLoader = param.getDefaultClassLoader();
