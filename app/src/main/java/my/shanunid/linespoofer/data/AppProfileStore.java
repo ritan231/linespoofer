@@ -226,6 +226,10 @@ public final class AppProfileStore {
         if (context == null || packageName == null || packageName.trim().isEmpty()) {
             return null;
         }
+        if (!AppSettingsStore.isMasterSpoofActive(context)) {
+            AppLogger.info("AppProfileStore", "Master spoof is disabled. Skipping profile resolution for " + packageName);
+            return null;
+        }
         try {
             State state = parse(readFile(new File(context.getFilesDir(), FILE_NAME)));
             String profileId = null;

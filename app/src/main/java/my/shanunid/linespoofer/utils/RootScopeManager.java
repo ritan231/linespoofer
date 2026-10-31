@@ -168,7 +168,12 @@ public final class RootScopeManager {
             desired.add("android");
             desired.add(MODULE_PKG);
             if (targetPackages != null) {
-                desired.addAll(targetPackages);
+                for (String p : targetPackages) {
+                    if (p != null && !p.trim().isEmpty()) {
+                        String clean = p.contains("#") ? p.substring(0, p.indexOf('#')) : p;
+                        desired.add(clean.trim());
+                    }
+                }
             }
 
             if (hasMid) {
@@ -260,11 +265,10 @@ public final class RootScopeManager {
         String pushScript =
             "cp '" + sdb + "' '" + dbPath + "'\n" +
             "rm -f '" + dbPath + "-wal' '" + dbPath + "-shm'\n" +
-            "chmod 660 '" + dbPath + "' 2>/dev/null\n" +
+            "chmod 644 '" + dbPath + "' 2>/dev/null\n" +
             "chown root:root '" + dbPath + "' 2>/dev/null\n" +
             "restorecon -F '" + dbPath + "' 2>/dev/null\n" +
             "touch '" + dbPath + "'\n" +
-            "pkill -HUP -f lspd 2>/dev/null || true\n" +
             "echo PUSH_OK";
         ShellResult pushRes = runRoot(pushScript);
         runRoot("rm -rf '" + stageDir.getAbsolutePath() + "'");
@@ -294,7 +298,16 @@ public final class RootScopeManager {
         }
         new Thread(() -> {
             try {
-                runRoot("am force-stop '" + packageName.trim() + "'");
+                String clean = packageName.trim();
+                if (clean.contains("#")) {
+                    String[] parts = clean.split("#");
+                    if (parts.length == 2) {
+                        runRoot("am force-stop --user " + parts[1] + " '" + parts[0] + "'\nam force-stop '" + parts[0] + "'");
+                        return;
+                    }
+                    clean = parts[0];
+                }
+                runRoot("am force-stop '" + clean + "'");
             } catch (Throwable ignored) {
             }
         }).start();
@@ -309,7 +322,16 @@ public final class RootScopeManager {
                 StringBuilder sb = new StringBuilder();
                 for (String pkg : packages) {
                     if (pkg != null && !pkg.trim().isEmpty() && !"android".equals(pkg) && !MODULE_PKG.equals(pkg)) {
-                        sb.append("am force-stop '").append(pkg.trim()).append("'\n");
+                        String clean = pkg.trim();
+                        if (clean.contains("#")) {
+                            String[] parts = clean.split("#");
+                            if (parts.length == 2) {
+                                sb.append("am force-stop --user ").append(parts[1]).append(" '").append(parts[0]).append("'\n");
+                            }
+                            sb.append("am force-stop '").append(parts[0]).append("'\n");
+                        } else {
+                            sb.append("am force-stop '").append(clean).append("'\n");
+                        }
                     }
                 }
                 if (sb.length() > 0) {

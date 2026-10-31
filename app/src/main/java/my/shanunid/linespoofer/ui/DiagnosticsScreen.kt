@@ -136,12 +136,14 @@ fun DiagnosticsScreen(appState: SpoofAppState, onBack: () -> Unit) {
                 val subs = subManager?.activeSubscriptionInfoList
                 if (subs != null && subs.size > 1) {
                     val sub2 = subs[1]
-                    sub2.number?.takeIf { it.isNotBlank() }
-                        ?: if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            telephonyManager?.createForSubscriptionId(sub2.subscriptionId)?.line1Number
-                        } else null
-                        ?: profile.phoneNumberSim2
-                        ?: "-"
+                    val num = sub2.number
+                    if (!num.isNullOrBlank()) {
+                        num
+                    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        telephonyManager?.createForSubscriptionId(sub2.subscriptionId)?.line1Number ?: (profile.phoneNumberSim2 ?: "-")
+                    } else {
+                        profile.phoneNumberSim2 ?: "-"
+                    }
                 } else {
                     profile.phoneNumberSim2 ?: "-"
                 }
@@ -149,10 +151,10 @@ fun DiagnosticsScreen(appState: SpoofAppState, onBack: () -> Unit) {
                 profile.phoneNumberSim2 ?: "-"
             }
         }
-        val simRows = listOf(
-            stringResource(R.string.settings_field_operator_alpha) to (telephonyManager?.networkOperatorName ?: profile.operatorAlpha ?: "-"),
-            stringResource(R.string.settings_field_operator_numeric) to (telephonyManager?.networkOperator ?: profile.operatorNumeric ?: "-"),
-            stringResource(R.string.settings_field_sim_country) to (telephonyManager?.simCountryIso ?: profile.simCountryIso ?: "-"),
+        val simRows: List<Pair<String, String>> = listOf(
+            stringResource(R.string.settings_field_operator_name) to telephonyManager?.networkOperatorName.orEmpty().ifBlank { profile.operatorAlpha ?: "-" },
+            stringResource(R.string.settings_field_operator_numeric) to telephonyManager?.networkOperator.orEmpty().ifBlank { profile.operatorNumeric ?: "-" },
+            stringResource(R.string.settings_field_sim_country_iso) to telephonyManager?.simCountryIso.orEmpty().ifBlank { profile.simCountryIso ?: "-" },
             stringResource(R.string.settings_field_phone_number) to sim1Number,
             stringResource(R.string.settings_field_phone_number_2) to sim2Number,
         )
@@ -167,7 +169,7 @@ fun DiagnosticsScreen(appState: SpoofAppState, onBack: () -> Unit) {
                 "-"
             }
         }
-        val localeRows = listOf(
+        val localeRows: List<Pair<String, String>> = listOf(
             "Java TimeZone" to "${TimeZone.getDefault().id} (${TimeZone.getDefault().displayName})",
             "ICU TimeZone" to icuTz,
             "Java Default Locale" to Locale.getDefault().toLanguageTag(),
@@ -186,7 +188,7 @@ fun DiagnosticsScreen(appState: SpoofAppState, onBack: () -> Unit) {
                 "-"
             }
         }
-        val displayRows = listOf(
+        val displayRows: List<Pair<String, String>> = listOf(
             "Current Refresh Rate" to displayRefreshRate,
             "Target FPS Mode" to "${appState.editor.targetFps.toInt()} FPS (${appState.editor.fpsMode})",
             "Screen Resolution" to "${metrics.widthPixels} × ${metrics.heightPixels}",
@@ -208,7 +210,7 @@ fun DiagnosticsScreen(appState: SpoofAppState, onBack: () -> Unit) {
             BatteryManager.BATTERY_STATUS_NOT_CHARGING -> "Not Charging"
             else -> "Unknown"
         }
-        val batteryRows = listOf(
+        val batteryRows: List<Pair<String, String>> = listOf(
             "Battery Level" to if (batteryLevel >= 0) "$batteryLevel %" else "-",
             "Battery Temperature" to batteryTempCelsius,
             "Battery Status" to batteryStatusStr,
@@ -216,7 +218,7 @@ fun DiagnosticsScreen(appState: SpoofAppState, onBack: () -> Unit) {
         )
 
         // 5. Network & Wireless Verifier
-        val networkRows = listOf(
+        val networkRows: List<Pair<String, String>> = listOf(
             "Wi-Fi SSID" to (config.extraProperties["device.wifi.ssid"] ?: "\"Home-WiFi-5G\""),
             "Wi-Fi BSSID" to (config.extraProperties["device.wifi.bssid"] ?: "-"),
             "MAC Mode" to appState.editor.macMode.uppercase(),
@@ -225,19 +227,19 @@ fun DiagnosticsScreen(appState: SpoofAppState, onBack: () -> Unit) {
         )
 
         // 6. Build & Device Identifiers
-        val buildRows = listOf(
-            stringResource(R.string.settings_field_brand) to Build.BRAND,
-            stringResource(R.string.settings_field_manufacturer) to Build.MANUFACTURER,
-            stringResource(R.string.settings_field_model) to Build.MODEL,
-            stringResource(R.string.settings_field_device_codename) to Build.DEVICE,
-            stringResource(R.string.settings_field_board) to Build.BOARD,
-            stringResource(R.string.settings_field_hardware) to Build.HARDWARE,
-            stringResource(R.string.settings_field_build_id) to Build.ID,
-            stringResource(R.string.settings_field_build_display_id) to Build.DISPLAY,
-            stringResource(R.string.settings_field_fingerprint) to Build.FINGERPRINT,
-            stringResource(R.string.settings_field_android_release) to Build.VERSION.RELEASE,
+        val buildRows: List<Pair<String, String>> = listOf(
+            stringResource(R.string.settings_field_brand) to Build.BRAND.orEmpty().ifBlank { "-" },
+            stringResource(R.string.settings_field_manufacturer) to Build.MANUFACTURER.orEmpty().ifBlank { "-" },
+            stringResource(R.string.settings_field_model) to Build.MODEL.orEmpty().ifBlank { "-" },
+            stringResource(R.string.settings_field_device_codename) to Build.DEVICE.orEmpty().ifBlank { "-" },
+            stringResource(R.string.settings_field_board) to Build.BOARD.orEmpty().ifBlank { "-" },
+            stringResource(R.string.settings_field_hardware) to Build.HARDWARE.orEmpty().ifBlank { "-" },
+            stringResource(R.string.settings_field_build_id) to Build.ID.orEmpty().ifBlank { "-" },
+            stringResource(R.string.settings_field_build_display_id) to Build.DISPLAY.orEmpty().ifBlank { "-" },
+            stringResource(R.string.settings_field_fingerprint) to Build.FINGERPRINT.orEmpty().ifBlank { "-" },
+            stringResource(R.string.settings_field_android_release) to Build.VERSION.RELEASE.orEmpty().ifBlank { "-" },
             stringResource(R.string.settings_field_sdk_level) to Build.VERSION.SDK_INT.toString(),
-            stringResource(R.string.settings_field_security_patch) to Build.VERSION.SECURITY_PATCH,
+            stringResource(R.string.settings_field_security_patch) to Build.VERSION.SECURITY_PATCH.orEmpty().ifBlank { "-" },
             stringResource(R.string.settings_field_device_id) to (Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID) ?: "-"),
         )
 
@@ -276,7 +278,7 @@ fun DiagnosticsScreen(appState: SpoofAppState, onBack: () -> Unit) {
                 // Save report to file for attachment
                 val reportFile = File(context.cacheDir, "LineSpoofer_Diagnostics_Report.txt")
                 try {
-                    FileOutputStream(reportFile).use { it.write(reportContent.getBytes(StandardCharsets.UTF_8)) }
+                    FileOutputStream(reportFile).use { it.write(reportContent.toByteArray(StandardCharsets.UTF_8)) }
                 } catch (_: Throwable) {
                 }
 
