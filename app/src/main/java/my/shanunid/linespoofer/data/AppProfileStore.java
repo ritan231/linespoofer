@@ -7,7 +7,6 @@ import android.content.SharedPreferences;
 import my.shanunid.linespoofer.MainActivity;
 import my.shanunid.linespoofer.utils.AppLogger;
 import my.shanunid.linespoofer.utils.ConfigManager;
-import my.shanunid.linespoofer.utils.RootScopeManager;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

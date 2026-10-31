@@ -1,53 +1,30 @@
 package my.shanunid.linespoofer.utils;
 
 import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Process;
-import android.util.Log;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.InputStreamReader;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.LinkedHashSet;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * Root Scope Direct-Writer Manager for Vector / LSPosed.
- * 
- * Directly synchronizes assigned target apps and system framework into Vector's
- * modules_config.db via root, bypassing Vector Manager UI crashes on Android 16.
+ * Root Process Manager for LineSpoofer.
+ *
+ * Safely handles application restarts (force-stop and process kill) for target apps.
+ * Direct modification of Vector's SQLite database has been completely eliminated
+ * to guarantee that Vector's database integrity and module states (Core Patch,
+ * DisableFlagSecure, etc.) remain intact across reboots.
  */
 public final class RootScopeManager {
 
-    private static final String TAG = "LineSpoofer-RootScope";
+    private static final String TAG = "LineSpoofer-RootProcess";
     private static final String MODULE_PKG = "my.shanunid.linespoofer";
-    private static final int USER_ID = 0;
-
-    private static final String[] CANDIDATE_DBS = new String[]{
-        "/data/adb/lspd/config/modules_config.db",
-        "/data/adb/lspd/modules_config.db",
-        "/data/adb/modules/zygisk_vector/config/modules_config.db",
-        "/data/adb/modules/zygisk_vector/modules_config.db",
-        "/data/adb/modules/zygisk_lsposed/config/modules_config.db",
-        "/data/adb/modules/zygisk_lsposed/modules_config.db"
-    };
-
-    private final Context context;
-    private final File stageDir;
-    private final File stageDb;
-    private String cachedDbPath = null;
 
     public RootScopeManager(Context context) {
-        this.context = context.getApplicationContext();
-        this.stageDir = new File(this.context.getFilesDir(), "vector_root_sync");
-        this.stageDb = new File(stageDir, "modules_config.db");
     }
 
     public static final class ShellResult {
@@ -98,50 +75,13 @@ public final class RootScopeManager {
         return r.ok() && r.output.contains("uid=0");
     }
 
-    public String findDbPath() {
-        if (cachedDbPath != null) {
-            return cachedDbPath;
-        }
-        for (String path : CANDIDATE_DBS) {
-            ShellResult r = runRoot("[ -f '" + path + "' ] && echo FOUND");
-            if (r.ok() && r.output.contains("FOUND")) {
-                cachedDbPath = path;
-                return cachedDbPath;
-            }
-        }
-        ShellResult fallback = runRoot("find /data/adb -name 'modules_config.db' 2>/dev/null | head -n 1");
-        if (fallback.ok() && !fallback.output.trim().isEmpty() && fallback.output.contains("modules_config.db")) {
-            cachedDbPath = fallback.output.trim();
-            return cachedDbPath;
-        }
-        return null;
-    }
-
     public boolean syncScope(Set<String> targetPackages) {
         return syncScope(targetPackages, null);
     }
 
     public boolean syncScope(Set<String> targetPackages, Map<String, Object> configs) {
-        // Direct SQLite file overwriting (copying modules_config.db and deleting WAL/SHM files
-        // while vectord is actively running) causes SQLite lock contention, database corruption,
-        // and deactivates all installed Xposed modules (Core Patch, DisableFlagSecure, etc.) upon reboot.
-        // We now safely rely on official LibXposed XposedService RemotePreferences and ConfigProvider.
-        AppLogger.info(TAG, "Direct SQLite database modification skipped to preserve Vector integrity and module states.");
+        // Direct SQLite database modification skipped to preserve Vector integrity and module states.
         return true;
-    }
-
-    public static byte[] serializeObject(Object obj) {
-        if (obj == null) return new byte[0];
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
-            oos.writeObject(obj);
-            oos.flush();
-            return baos.toByteArray();
-        } catch (Throwable t) {
-            AppLogger.logError(TAG, "Failed serializing object: " + t.getMessage(), t);
-            return new byte[0];
-        }
     }
 
     public static void forceStop(String packageName) {
@@ -165,7 +105,7 @@ public final class RootScopeManager {
         }).start();
     }
 
-    public static void forceStop(java.util.Collection<String> packages) {
+    public static void forceStop(Collection<String> packages) {
         if (packages == null || packages.isEmpty()) {
             return;
         }
@@ -201,14 +141,6 @@ public final class RootScopeManager {
     }
 
     public static void syncInBackground(Context context, Set<String> targetPackages, Map<String, Object> configs) {
-        new Thread(() -> {
-            try {
-                RootScopeManager mgr = new RootScopeManager(context);
-                if (mgr.isRootAvailable()) {
-                    mgr.syncScope(targetPackages, configs);
-                }
-            } catch (Throwable ignored) {
-            }
-        }).start();
+        // Safe no-op: Vector database files are never touched.
     }
 }

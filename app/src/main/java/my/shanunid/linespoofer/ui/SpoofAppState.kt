@@ -204,10 +204,6 @@ class SpoofAppState(val activity: AppCompatActivity) {
             loadedConfig = result.second
             editor.reset(result.second)
             try {
-                my.shanunid.linespoofer.utils.RootScopeManager.syncInBackground(
-                    activity,
-                    result.first.assignments.keys
-                )
                 val affectedPackages = result.first.assignments.filter { it.value == profileId }.keys
                 if (affectedPackages.isNotEmpty()) {
                     my.shanunid.linespoofer.utils.RootScopeManager.forceStop(affectedPackages)
