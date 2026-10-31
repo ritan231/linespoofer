@@ -1,4 +1,13 @@
-# LineSpoofer
+# LineSpoofer [DISCONTINUED / PROYEK DIHENTIKAN]
+
+> [!WARNING]
+> **STATUS: PROJECT STOPPED / DISCONTINUED**
+>
+> **Alasan**: Developer capek dan lelah lalu menyerah.
+>
+> Repositori ini sekarang berstatus **Public** dan bebas untuk di-fork oleh siapa saja. Silakan fork, pelajari kodenya, atau lanjutkan pengembangannya secara mandiri.
+
+---
 
 LineSpoofer is an advanced Xposed module and companion application for constructing, managing, and applying spoofed Android device profiles to targeted applications.
 
