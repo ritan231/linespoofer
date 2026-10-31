@@ -1,6 +1,8 @@
 package my.shanunid.linespoofer.ui
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -107,9 +109,8 @@ fun LineSpooferApp(appState: SpoofAppState) {
         }
     }
 
-    key(destination) {
-        val packageInfo = remember { appState.activity.packageManager.getPackageInfo(appState.activity.packageName, 0) }
-        val page: @Composable () -> Unit = {
+    val packageInfo = remember { appState.activity.packageManager.getPackageInfo(appState.activity.packageName, 0) }
+    val page: @Composable () -> Unit = {
             val colors = MiuiTheme.colors
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
@@ -228,16 +229,26 @@ fun LineSpooferApp(appState: SpoofAppState) {
             ) { contentPadding ->
                 Box(modifier = Modifier.fillMaxSize().background(colors.background)) {
                     if (appState.initialized) {
-                        when (destination) {
-                            AppDestination.Home -> HomeScreen(
-                                appState = appState,
-                                scaffoldPadding = contentPadding,
-                                onNavigateToDiagnostics = { destinationName = AppDestination.Diagnostics.name },
-                            )
-                            AppDestination.Profiles -> ProfileManagementScreen(appState, contentPadding)
-                            AppDestination.Apps -> AppProfilesScreen(appState, contentPadding)
-                            AppDestination.Diagnostics -> DiagnosticsScreen(appState = appState, onBack = null)
-                            AppDestination.Settings -> AppSettingsScreen(appState, contentPadding)
+                        Crossfade(
+                            targetState = destination,
+                            animationSpec = tween(150),
+                            label = "MainTabTransition",
+                        ) { currentDest ->
+                            when (currentDest) {
+                                AppDestination.Home -> HomeScreen(
+                                    appState = appState,
+                                    scaffoldPadding = contentPadding,
+                                    onNavigateToDiagnostics = { destinationName = AppDestination.Diagnostics.name },
+                                )
+                                AppDestination.Profiles -> ProfileManagementScreen(appState, contentPadding)
+                                AppDestination.Apps -> AppProfilesScreen(appState, contentPadding)
+                                AppDestination.Diagnostics -> DiagnosticsScreen(
+                                    appState = appState,
+                                    contentPadding = contentPadding,
+                                    onBack = null,
+                                )
+                                AppDestination.Settings -> AppSettingsScreen(appState, contentPadding)
+                            }
                         }
                     }
                 }
@@ -269,7 +280,6 @@ fun LineSpooferApp(appState: SpoofAppState) {
                 }
             }
         }
-    }
 }
 
 @Composable

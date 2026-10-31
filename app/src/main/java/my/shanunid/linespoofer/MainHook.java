@@ -154,16 +154,12 @@ public class MainHook extends XposedModule {
             return;
         }
 
-        if ("android".equals(packageName)) {
-            AppLogger.info(TAG, "libxposed: Hooking Android system framework (system_server)");
-            try {
-                SharedPreferences remotePrefs = getRemotePreferences("linespoofer_config");
-                ConfigManager.initFromRemotePreferences("android", remotePrefs);
-                HardwareHooks.hookSystemServer(param.getDefaultClassLoader());
-                BuildHooks.reapply(param.getDefaultClassLoader(), "android");
-            } catch (Throwable t) {
-                AppLogger.logError(TAG, "Failed hooking system framework: " + t.getMessage(), t);
-            }
+        // CRITICAL BOOTLOADER / PMIC SAFETY GUARD:
+        // Never hook system_server ("android") or any system process (UID < 10000).
+        // Modifying Build.VERSION.SDK_INT or injecting into system_server crashes package manager
+        // bootstrap on Android 16 (HyperOS) and causes immediate soft brick / emergency power-off.
+        if ("android".equals(packageName) || "system".equals(packageName) || (android.os.Process.myUid() % 100000) < 10000) {
+            AppLogger.info(TAG, "Ignoring system process / framework (" + packageName + ", uid=" + android.os.Process.myUid() + ") to guarantee system stability");
             return;
         }
 
@@ -207,19 +203,15 @@ public class MainHook extends XposedModule {
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
         AppLogger.info(TAG, "Loading hooks for " + lpparam.packageName);
 
-        if ("android".equals(lpparam.packageName)) {
-            AppLogger.info(TAG, "Legacy Xposed: Hooking Android system framework");
-            try {
-                HardwareHooks.hookSystemServer(lpparam.classLoader);
-                BuildHooks.reapply(lpparam.classLoader, "android");
-            } catch (Throwable t) {
-                AppLogger.logError(TAG, "Failed hooking system framework: " + t.getMessage(), t);
-            }
+        if (MODULE_PACKAGE.equals(lpparam.packageName)) {
+            hookActivationCheck(lpparam);
             return;
         }
 
-        if (MODULE_PACKAGE.equals(lpparam.packageName)) {
-            hookActivationCheck(lpparam);
+        // CRITICAL BOOTLOADER / PMIC SAFETY GUARD:
+        // Never hook system_server ("android") or any system process (UID < 10000).
+        if ("android".equals(lpparam.packageName) || "system".equals(lpparam.packageName) || (android.os.Process.myUid() % 100000) < 10000) {
+            AppLogger.info(TAG, "Ignoring system process / framework (" + lpparam.packageName + ", uid=" + android.os.Process.myUid() + ") to guarantee system stability");
             return;
         }
 
@@ -247,6 +239,10 @@ public class MainHook extends XposedModule {
     }
 
     private void initializeHooks(XC_LoadPackage.LoadPackageParam lpparam) {
+        if ("android".equals(lpparam.packageName) || "system".equals(lpparam.packageName) || (android.os.Process.myUid() % 100000) < 10000) {
+            AppLogger.info(TAG, "initializeHooks: aborting for system process / framework (" + lpparam.packageName + ")");
+            return;
+        }
         String processName = lpparam.processName == null ? lpparam.packageName : lpparam.processName;
         if (!INITIALIZED_HOOK_PROCESSES.add(processName)) {
             return;

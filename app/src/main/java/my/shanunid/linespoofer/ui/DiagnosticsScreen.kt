@@ -27,14 +27,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -72,9 +71,44 @@ import java.util.Locale
 import java.util.TimeZone
 
 @SuppressLint("MissingPermission", "HardwareIds")
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-fun DiagnosticsScreen(appState: SpoofAppState, onBack: (() -> Unit)? = null) {
+fun DiagnosticsScreen(
+    appState: SpoofAppState,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
+    onBack: (() -> Unit)? = null,
+) {
+    if (onBack != null) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            topBar = {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.settings_diagnostics_title), fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.safe_mode_back))
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    ),
+                )
+            },
+        ) { paddingValues ->
+            DiagnosticsContent(appState = appState, paddingValues = paddingValues)
+        }
+    } else {
+        DiagnosticsContent(appState = appState, paddingValues = contentPadding)
+    }
+}
+
+@SuppressLint("MissingPermission", "HardwareIds")
+@Composable
+private fun DiagnosticsContent(
+    appState: SpoofAppState,
+    paddingValues: PaddingValues,
+) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val configuration = LocalConfiguration.current
@@ -89,40 +123,21 @@ fun DiagnosticsScreen(appState: SpoofAppState, onBack: (() -> Unit)? = null) {
         }
     }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.settings_diagnostics_title), fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    if (onBack != null) {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.safe_mode_back))
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground,
-                ),
-            )
-        },
-    ) { paddingValues ->
-        val config = appState.loadedConfig
-        if (!appState.initialized || config == null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator()
-            }
-            return@Scaffold
+    val config = appState.loadedConfig
+    if (!appState.initialized || config == null) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator()
         }
+        return
+    }
 
-        val profile = config.profile
-        val metrics = appState.activity.resources.displayMetrics
+    val profile = config.profile
+    val metrics = appState.activity.resources.displayMetrics
 
         // 1. Telephony & SIM Verifier
         val telephonyManager = remember { context.getSystemService(TelephonyManager::class.java) }
@@ -474,5 +489,4 @@ fun DiagnosticsScreen(appState: SpoofAppState, onBack: (() -> Unit)? = null) {
 
             item(key = "bottom_spacer", contentType = "spacer") { Spacer(Modifier.height(36.dp)) }
         }
-    }
 }

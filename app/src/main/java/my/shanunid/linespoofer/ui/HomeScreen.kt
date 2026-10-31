@@ -69,7 +69,6 @@ fun HomeScreen(
     val colors = MiuiTheme.colors
     val isDark = colors.isDark
     val listState = rememberLazyListState()
-    LaunchedEffect(Unit) { listState.scrollToItem(0) }
 
     LazyColumn(
         state = listState,

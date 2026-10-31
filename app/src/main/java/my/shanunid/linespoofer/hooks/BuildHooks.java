@@ -25,6 +25,9 @@ public class BuildHooks {
     private static boolean serialHookInstalled;
 
     public static void hook(XC_LoadPackage.LoadPackageParam lpparam) {
+        if ("android".equals(lpparam.packageName) || "system".equals(lpparam.packageName) || (android.os.Process.myUid() % 100000) < 10000) {
+            return;
+        }
         reapply(lpparam.classLoader, lpparam.packageName);
     }
 
@@ -33,6 +36,10 @@ public class BuildHooks {
     }
 
     public static void reapply(ClassLoader classLoader, String packageName) {
+        if ("android".equals(packageName) || "system".equals(packageName) || (android.os.Process.myUid() % 100000) < 10000) {
+            XposedBridge.log(TAG + ": Refusing to spoof Build in system process " + packageName);
+            return;
+        }
         try {
             Class<?> buildClass = findBuildClass(classLoader, "android.os.Build");
             Class<?> versionClass = findBuildClass(classLoader, "android.os.Build$VERSION");
