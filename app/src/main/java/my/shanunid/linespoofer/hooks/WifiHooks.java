@@ -1,7 +1,9 @@
 package my.shanunid.linespoofer.hooks;
 
 import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 
+import java.lang.reflect.Constructor;
 import java.net.NetworkInterface;
 
 import my.shanunid.linespoofer.utils.AppLogger;
@@ -138,9 +140,88 @@ public final class WifiHooks {
                 }
             );
 
+            XposedHelpers.findAndHookMethod(
+                WifiInfo.class,
+                "getLinkSpeed",
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        try {
+                            if (ConfigManager.isWifiSpoofEnabled()) {
+                                param.setResult(866);
+                            }
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                }
+            );
+
             AppLogger.debug(TAG, "WifiHooks loaded successfully");
         } catch (Throwable throwable) {
             AppLogger.logError(TAG, "Failed to hook WifiInfo: " + throwable.getMessage(), throwable);
+        }
+
+        // 3. Hook WifiManager.getConnectionInfo()
+        try {
+            Class<?> wifiManagerClass = XposedHelpers.findClassIfExists("android.net.wifi.WifiManager", lpparam.classLoader);
+            if (wifiManagerClass != null) {
+                XposedHelpers.findAndHookMethod(wifiManagerClass, "getConnectionInfo", new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        if (param.getResult() == null && (ConfigManager.isWifiSpoofEnabled() || ConfigManager.isMacSpoofEnabled())) {
+                            try {
+                                Object synthetic = createSyntheticWifiInfo();
+                                if (synthetic != null) {
+                                    param.setResult(synthetic);
+                                }
+                            } catch (Throwable ignored) {
+                            }
+                        }
+                    }
+                });
+            }
+        } catch (Throwable ignored) {
+        }
+
+        // 4. Hook NetworkCapabilities.getTransportInfo() (Android 10+)
+        try {
+            Class<?> ncClass = XposedHelpers.findClassIfExists("android.net.NetworkCapabilities", lpparam.classLoader);
+            if (ncClass != null) {
+                XposedHelpers.findAndHookMethod(ncClass, "getTransportInfo", new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        if (param.getResult() == null && ConfigManager.isWifiSpoofEnabled()) {
+                            try {
+                                Object synthetic = createSyntheticWifiInfo();
+                                if (synthetic != null) {
+                                    param.setResult(synthetic);
+                                }
+                            } catch (Throwable ignored) {
+                            }
+                        }
+                    }
+                });
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static Object createSyntheticWifiInfo() {
+        try {
+            Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
+            java.lang.reflect.Field f = unsafeClass.getDeclaredField("theUnsafe");
+            f.setAccessible(true);
+            Object unsafe = f.get(null);
+            java.lang.reflect.Method allocateInstance = unsafeClass.getMethod("allocateInstance", Class.class);
+            return allocateInstance.invoke(unsafe, WifiInfo.class);
+        } catch (Throwable ignored) {
+        }
+        try {
+            Constructor<?> constructor = WifiInfo.class.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            return constructor.newInstance();
+        } catch (Throwable ignored) {
+            return null;
         }
     }
 }

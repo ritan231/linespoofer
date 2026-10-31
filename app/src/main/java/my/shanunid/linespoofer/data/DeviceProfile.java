@@ -32,6 +32,8 @@ public class DeviceProfile {
     private String simOperatorAlpha;
     private String simOperatorNumeric;
     private String simCountryIso;
+    private String phoneNumberSim1;
+    private String phoneNumberSim2;
     private String timezone;
     private String locale;
     private String userAgent;
@@ -76,6 +78,8 @@ public class DeviceProfile {
         this.simOperatorAlpha = other.simOperatorAlpha;
         this.simOperatorNumeric = other.simOperatorNumeric;
         this.simCountryIso = other.simCountryIso;
+        this.phoneNumberSim1 = other.phoneNumberSim1;
+        this.phoneNumberSim2 = other.phoneNumberSim2;
         this.timezone = other.timezone;
         this.locale = other.locale;
         this.userAgent = other.userAgent;
@@ -144,6 +148,8 @@ public class DeviceProfile {
         simOperatorAlpha = firstNonBlank(simOperatorAlpha, operatorAlpha);
         simOperatorNumeric = firstNonBlank(simOperatorNumeric, operatorNumeric);
         simCountryIso = firstNonBlank(simCountryIso, "us");
+        phoneNumberSim1 = firstNonBlank(phoneNumberSim1, "+18404933320");
+        phoneNumberSim2 = firstNonBlank(phoneNumberSim2, "+18404933321");
         timezone = firstNonBlank(timezone, "America/Los_Angeles");
         locale = firstNonBlank(locale, "en-US");
         userAgent = firstNonBlank(
@@ -198,6 +204,8 @@ public class DeviceProfile {
             && Objects.equals(left.simOperatorAlpha, right.simOperatorAlpha)
             && Objects.equals(left.simOperatorNumeric, right.simOperatorNumeric)
             && Objects.equals(left.simCountryIso, right.simCountryIso)
+            && Objects.equals(left.phoneNumberSim1, right.phoneNumberSim1)
+            && Objects.equals(left.phoneNumberSim2, right.phoneNumberSim2)
             && Objects.equals(left.timezone, right.timezone)
             && Objects.equals(left.locale, right.locale)
             && Objects.equals(left.userAgent, right.userAgent)
@@ -292,6 +300,12 @@ public class DeviceProfile {
     public void setSimOperatorNumeric(String simOperatorNumeric) { this.simOperatorNumeric = simOperatorNumeric; }
     public String getSimCountryIso() { return simCountryIso; }
     public void setSimCountryIso(String simCountryIso) { this.simCountryIso = simCountryIso; }
+    public String getPhoneNumberSim1() { return phoneNumberSim1; }
+    public void setPhoneNumberSim1(String phoneNumberSim1) { this.phoneNumberSim1 = phoneNumberSim1; }
+    public String getPhoneNumberSim2() { return phoneNumberSim2; }
+    public void setPhoneNumberSim2(String phoneNumberSim2) { this.phoneNumberSim2 = phoneNumberSim2; }
+    public String getPhoneNumber() { return phoneNumberSim1; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumberSim1 = phoneNumber; }
     public String getTimezone() { return timezone; }
     public void setTimezone(String timezone) { this.timezone = timezone; }
     public String getLocale() { return locale; }

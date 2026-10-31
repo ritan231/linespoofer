@@ -129,13 +129,11 @@ class AppProfileAssignmentActivity : AppCompatActivity() {
             )
             store.save(this@AppProfileAssignmentActivity, updatedState)
             AppProfileSession.update(updatedState)
-            if (profileId != null) {
-                my.shanunid.linespoofer.utils.RootScopeManager.syncInBackground(
-                    this@AppProfileAssignmentActivity,
-                    assignments.keys,
-                )
-                my.shanunid.linespoofer.utils.RootScopeManager.forceStop(packageName)
-            }
+            my.shanunid.linespoofer.utils.RootScopeManager.syncInBackground(
+                this@AppProfileAssignmentActivity,
+                assignments.keys,
+            )
+            my.shanunid.linespoofer.utils.RootScopeManager.forceStop(packageName)
             updatedState
         }
     }

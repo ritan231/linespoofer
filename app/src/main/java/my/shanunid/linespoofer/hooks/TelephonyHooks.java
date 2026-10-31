@@ -27,6 +27,27 @@ public class TelephonyHooks {
     private static final int SYNTHETIC_SIM_SLOT_INDEX = 0;
     private static final Set<Object> SYNTHETIC_SUBSCRIPTION_INFOS =
         Collections.newSetFromMap(new WeakHashMap<>());
+    private static final Map<Object, Integer> SYNTHETIC_SUB_IDS =
+        Collections.synchronizedMap(new WeakHashMap<>());
+    private static final Map<Object, Integer> SYNTHETIC_SLOTS =
+        Collections.synchronizedMap(new WeakHashMap<>());
+
+    private static int getSlotForInfo(Object thisObject) {
+        if (thisObject == null) return 0;
+        Integer synthSlot = SYNTHETIC_SLOTS.get(thisObject);
+        if (synthSlot != null) return synthSlot;
+        Integer synthSubId = SYNTHETIC_SUB_IDS.get(thisObject);
+        if (synthSubId != null && synthSubId == 2) return 1;
+        try {
+            java.lang.reflect.Field slotField = XposedHelpers.findFieldIfExists(thisObject.getClass(), "mSimSlotIndex");
+            if (slotField != null) {
+                slotField.setAccessible(true);
+                return slotField.getInt(thisObject);
+            }
+        } catch (Throwable ignored) {
+        }
+        return 0;
+    }
 
     public static void hook(XC_LoadPackage.LoadPackageParam lpparam) {
         Class<?> telephonyManager = XposedHelpers.findClassIfExists(
@@ -239,7 +260,7 @@ public class TelephonyHooks {
                     new XC_MethodHook() {
                         @Override
                         protected void beforeHookedMethod(MethodHookParam param) {
-                            String spoofedValue = ConfigManager.getPhoneNumber();
+                            String spoofedValue = ConfigManager.getPhoneNumberSim1();
                             if (spoofedValue != null) {
                                 param.setResult(spoofedValue);
                                 return;
@@ -257,7 +278,8 @@ public class TelephonyHooks {
                     new XC_MethodHook() {
                         @Override
                         protected void beforeHookedMethod(MethodHookParam param) {
-                            String spoofedValue = ConfigManager.getPhoneNumber();
+                            int subId = (int) param.args[0];
+                            String spoofedValue = (subId == 2) ? ConfigManager.getPhoneNumberSim2() : ConfigManager.getPhoneNumberSim1();
                             if (spoofedValue != null) {
                                 param.setResult(spoofedValue);
                                 return;
@@ -695,7 +717,7 @@ public class TelephonyHooks {
                                 return;
                             }
                             if (ConfigManager.shouldReportSimPresent()) {
-                                param.setResult(1);
+                                param.setResult(2);
                             }
                         }
                     });
@@ -711,7 +733,7 @@ public class TelephonyHooks {
                                 param.setResult(0);
                                 return;
                             }
-                            param.setResult(1);
+                            param.setResult(2);
                         }
                     });
         } catch (NoSuchMethodError ignored) {
@@ -727,11 +749,48 @@ public class TelephonyHooks {
                                 return;
                             }
                             if (ConfigManager.shouldReportSimPresent()) {
-                                param.setResult(new int[]{SYNTHETIC_SUBSCRIPTION_ID});
+                                param.setResult(new int[]{1, 2});
                             }
                         }
                     });
         } catch (NoSuchMethodError ignored) {
+        }
+
+        // Modern Android 13+ (API 33+) SubscriptionManager.getPhoneNumber
+        try {
+            XposedHelpers.findAndHookMethod(subscriptionManager, "getPhoneNumber",
+                    int.class,
+                    new XC_MethodHook() {
+                        @Override
+                        protected void afterHookedMethod(MethodHookParam param) {
+                            if (!ConfigManager.shouldExposeTelephony()) {
+                                param.setResult("");
+                                return;
+                            }
+                            int subId = (int) param.args[0];
+                            String number = (subId == 2) ? ConfigManager.getPhoneNumberSim2() : ConfigManager.getPhoneNumberSim1();
+                            param.setResult(number != null ? number : "");
+                        }
+                    });
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            XposedHelpers.findAndHookMethod(subscriptionManager, "getPhoneNumber",
+                    int.class, int.class,
+                    new XC_MethodHook() {
+                        @Override
+                        protected void afterHookedMethod(MethodHookParam param) {
+                            if (!ConfigManager.shouldExposeTelephony()) {
+                                param.setResult("");
+                                return;
+                            }
+                            int subId = (int) param.args[0];
+                            String number = (subId == 2) ? ConfigManager.getPhoneNumberSim2() : ConfigManager.getPhoneNumberSim1();
+                            param.setResult(number != null ? number : "");
+                        }
+                    });
+        } catch (Throwable ignored) {
         }
 
         hookSubscriptionInfoListMethod(subscriptionManager, "getActiveSubscriptionInfoList", subscriptionInfoClass);
@@ -750,7 +809,9 @@ public class TelephonyHooks {
                                 return;
                             }
                             if (ConfigManager.shouldReportSimPresent()) {
-                                param.setResult(createSyntheticSubscriptionInfo(subscriptionInfoClass));
+                                int subId = (int) param.args[0];
+                                int slot = (subId == 2) ? 1 : 0;
+                                param.setResult(createSyntheticSubscriptionInfo(subscriptionInfoClass, subId, slot));
                             }
                         }
                     });
@@ -768,10 +829,14 @@ public class TelephonyHooks {
                                 param.setResult(null);
                                 return;
                             }
-                            if (ConfigManager.shouldReportSimPresent() && slotIndex == SYNTHETIC_SIM_SLOT_INDEX) {
-                                param.setResult(createSyntheticSubscriptionInfo(subscriptionInfoClass));
-                            } else if (slotIndex != SYNTHETIC_SIM_SLOT_INDEX) {
-                                param.setResult(null);
+                            if (ConfigManager.shouldReportSimPresent()) {
+                                if (slotIndex == 0) {
+                                    param.setResult(createSyntheticSubscriptionInfo(subscriptionInfoClass, 1, 0));
+                                } else if (slotIndex == 1) {
+                                    param.setResult(createSyntheticSubscriptionInfo(subscriptionInfoClass, 2, 1));
+                                } else {
+                                    param.setResult(null);
+                                }
                             }
                         }
                     });
@@ -794,12 +859,15 @@ public class TelephonyHooks {
                             if (!ConfigManager.shouldReportSimPresent()) {
                                 return;
                             }
-                            Object info = createSyntheticSubscriptionInfo(subscriptionInfoClass);
-                            if (info == null) {
-                                return;
-                            }
                             List<Object> list = new ArrayList<>();
-                            list.add(info);
+                            Object sim1 = createSyntheticSubscriptionInfo(subscriptionInfoClass, 1, 0);
+                            if (sim1 != null) {
+                                list.add(sim1);
+                            }
+                            Object sim2 = createSyntheticSubscriptionInfo(subscriptionInfoClass, 2, 1);
+                            if (sim2 != null) {
+                                list.add(sim2);
+                            }
                             param.setResult(list);
                         }
                     });
@@ -822,9 +890,7 @@ public class TelephonyHooks {
                         protected void beforeHookedMethod(MethodHookParam param) {
                             int slotIndex = param.args[0] instanceof Integer ? (Integer) param.args[0] : 0;
                             if (ConfigManager.shouldExposeTelephony() && ConfigManager.shouldReportSimPresent()) {
-                                param.setResult(slotIndex == SYNTHETIC_SIM_SLOT_INDEX
-                                    ? SYNTHETIC_SUBSCRIPTION_ID
-                                    : -1);
+                                param.setResult(slotIndex == 1 ? 2 : 1);
                             }
                         }
                     });
@@ -837,8 +903,9 @@ public class TelephonyHooks {
                     new XC_MethodHook() {
                         @Override
                         protected void afterHookedMethod(MethodHookParam param) {
+                            int subId = param.args[0] instanceof Integer ? (Integer) param.args[0] : 1;
                             if (ConfigManager.shouldExposeTelephony() && ConfigManager.shouldReportSimPresent()) {
-                                param.setResult(SYNTHETIC_SIM_SLOT_INDEX);
+                                param.setResult(subId == 2 ? 1 : 0);
                             }
                         }
                     });
@@ -857,9 +924,7 @@ public class TelephonyHooks {
                                 return;
                             }
                             if (ConfigManager.shouldReportSimPresent()) {
-                                param.setResult(slotIndex == SYNTHETIC_SIM_SLOT_INDEX
-                                    ? new int[]{SYNTHETIC_SUBSCRIPTION_ID}
-                                    : new int[0]);
+                                param.setResult(slotIndex == 1 ? new int[]{2} : new int[]{1});
                             }
                         }
                     });
@@ -932,36 +997,47 @@ public class TelephonyHooks {
     }
 
     private static void hookSubscriptionInfo(Class<?> subscriptionInfoClass) {
-        hookSubscriptionInfoGetter(subscriptionInfoClass, "getSubscriptionId", () -> SYNTHETIC_SUBSCRIPTION_ID);
-        hookSubscriptionInfoGetter(subscriptionInfoClass, "getSimSlotIndex", () -> SYNTHETIC_SIM_SLOT_INDEX);
-        hookSubscriptionInfoGetter(subscriptionInfoClass, "getCarrierId", () -> 0);
-        hookSubscriptionInfoGetter(subscriptionInfoClass, "getDisplayName", () -> firstNonBlank(
-                ConfigManager.getSystemProperty("gsm.sim.operator.alpha", null),
-                ConfigManager.getSystemProperty("gsm.operator.alpha", null),
-                "SIM 1"
-        ));
-        hookSubscriptionInfoGetter(subscriptionInfoClass, "getCarrierName", () -> firstNonBlank(
+        hookSubscriptionInfoGetter(subscriptionInfoClass, "getSubscriptionId", thisObj -> (getSlotForInfo(thisObj) == 1 ? 2 : 1));
+        hookSubscriptionInfoGetter(subscriptionInfoClass, "getSimSlotIndex", TelephonyHooks::getSlotForInfo);
+        hookSubscriptionInfoGetter(subscriptionInfoClass, "getCarrierId", thisObj -> 0);
+        hookSubscriptionInfoGetter(subscriptionInfoClass, "getDisplayName", thisObj -> {
+            int slot = getSlotForInfo(thisObj);
+            String carrier = firstNonBlank(
+                    ConfigManager.getSystemProperty("gsm.sim.operator.alpha", null),
+                    ConfigManager.getSystemProperty("gsm.operator.alpha", null),
+                    "SIM"
+            );
+            return carrier + " " + (slot + 1);
+        });
+        hookSubscriptionInfoGetter(subscriptionInfoClass, "getCarrierName", thisObj -> firstNonBlank(
                 ConfigManager.getSystemProperty("gsm.sim.operator.alpha", null),
                 ConfigManager.getSystemProperty("gsm.operator.alpha", null),
                 "Carrier"
         ));
-        hookSubscriptionInfoGetter(subscriptionInfoClass, "getNumber", () -> firstNonBlank(ConfigManager.getPhoneNumber(), ""));
-        hookSubscriptionInfoGetter(subscriptionInfoClass, "getDataRoaming", () -> 0);
-        hookSubscriptionInfoGetter(subscriptionInfoClass, "getMcc", TelephonyHooks::parseMcc);
-        hookSubscriptionInfoGetter(subscriptionInfoClass, "getMnc", TelephonyHooks::parseMnc);
-        hookSubscriptionInfoGetter(subscriptionInfoClass, "getMccString", TelephonyHooks::parseMccString);
-        hookSubscriptionInfoGetter(subscriptionInfoClass, "getMncString", TelephonyHooks::parseMncString);
-        hookSubscriptionInfoGetter(subscriptionInfoClass, "getCountryIso", () -> firstNonBlank(
+        hookSubscriptionInfoGetter(subscriptionInfoClass, "getNumber", thisObj -> {
+            int slot = getSlotForInfo(thisObj);
+            String num = (slot == 1) ? ConfigManager.getPhoneNumberSim2() : ConfigManager.getPhoneNumberSim1();
+            return firstNonBlank(num, "");
+        });
+        hookSubscriptionInfoGetter(subscriptionInfoClass, "getDataRoaming", thisObj -> 0);
+        hookSubscriptionInfoGetter(subscriptionInfoClass, "getMcc", thisObj -> parseMcc());
+        hookSubscriptionInfoGetter(subscriptionInfoClass, "getMnc", thisObj -> parseMnc());
+        hookSubscriptionInfoGetter(subscriptionInfoClass, "getMccString", thisObj -> parseMccString());
+        hookSubscriptionInfoGetter(subscriptionInfoClass, "getMncString", thisObj -> parseMncString());
+        hookSubscriptionInfoGetter(subscriptionInfoClass, "getCountryIso", thisObj -> firstNonBlank(
                 ConfigManager.getSystemProperty("gsm.sim.operator.iso-country", null),
                 "us"
         ));
-        hookSubscriptionInfoGetter(subscriptionInfoClass, "isEmbedded", () -> false);
-        hookSubscriptionInfoGetter(subscriptionInfoClass, "isOpportunistic", () -> false);
-        hookSubscriptionInfoGetter(subscriptionInfoClass, "getSubscriptionType", () -> 0);
-        hookSubscriptionInfoGetter(subscriptionInfoClass, "getCardId", () -> 0);
-        hookSubscriptionInfoGetter(subscriptionInfoClass, "getPortIndex", () -> 0);
-        hookSubscriptionInfoGetter(subscriptionInfoClass, "getUsageSetting", () -> 0);
-        hookSubscriptionInfoGetter(subscriptionInfoClass, "getIccId", () -> firstNonBlank(ConfigManager.getICCID(), ""));
+        hookSubscriptionInfoGetter(subscriptionInfoClass, "isEmbedded", thisObj -> false);
+        hookSubscriptionInfoGetter(subscriptionInfoClass, "isOpportunistic", thisObj -> false);
+        hookSubscriptionInfoGetter(subscriptionInfoClass, "getSubscriptionType", thisObj -> 0);
+        hookSubscriptionInfoGetter(subscriptionInfoClass, "getCardId", thisObj -> (getSlotForInfo(thisObj) == 1 ? 1 : 0));
+        hookSubscriptionInfoGetter(subscriptionInfoClass, "getPortIndex", thisObj -> 0);
+        hookSubscriptionInfoGetter(subscriptionInfoClass, "getUsageSetting", thisObj -> 0);
+        hookSubscriptionInfoGetter(subscriptionInfoClass, "getIccId", thisObj -> {
+            String base = firstNonBlank(ConfigManager.getICCID(), "8901260123456789011");
+            return (getSlotForInfo(thisObj) == 1) ? (base.substring(0, Math.max(0, base.length() - 1)) + "2") : base;
+        });
     }
 
     private static void hookSubscriptionInfoGetter(Class<?> subscriptionInfoClass, String methodName, ValueProvider valueProvider) {
@@ -971,7 +1047,7 @@ public class TelephonyHooks {
                         @Override
                         protected void afterHookedMethod(MethodHookParam param) {
                             if (ConfigManager.shouldExposeTelephony() && ConfigManager.shouldReportSimPresent()) {
-                                Object val = valueProvider.get();
+                                Object val = valueProvider.get(param.thisObject);
                                 if (val != null) {
                                     param.setResult(val);
                                 }
@@ -983,31 +1059,51 @@ public class TelephonyHooks {
     }
 
     private static Object createSyntheticSubscriptionInfo(Class<?> subscriptionInfoClass) {
+        return createSyntheticSubscriptionInfo(subscriptionInfoClass, 1, 0);
+    }
+
+    private static Object createSyntheticSubscriptionInfo(Class<?> subscriptionInfoClass, int subId, int slotIndex) {
         if (subscriptionInfoClass == null) {
             return null;
         }
+        Object instance = null;
         try {
             Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
             java.lang.reflect.Field f = unsafeClass.getDeclaredField("theUnsafe");
             f.setAccessible(true);
             Object unsafe = f.get(null);
             java.lang.reflect.Method allocateInstance = unsafeClass.getMethod("allocateInstance", Class.class);
-            Object instance = allocateInstance.invoke(unsafe, subscriptionInfoClass);
-            if (instance != null) {
-                SYNTHETIC_SUBSCRIPTION_INFOS.add(instance);
-                return instance;
+            instance = allocateInstance.invoke(unsafe, subscriptionInfoClass);
+        } catch (Throwable ignored) {
+        }
+        if (instance == null) {
+            try {
+                Constructor<?> constructor = subscriptionInfoClass.getDeclaredConstructor();
+                constructor.setAccessible(true);
+                instance = constructor.newInstance();
+            } catch (Throwable ignored) {
+                return null;
             }
-        } catch (Throwable ignored) {
         }
-        try {
-            Constructor<?> constructor = subscriptionInfoClass.getDeclaredConstructor();
-            constructor.setAccessible(true);
-            Object instance = constructor.newInstance();
+        if (instance != null) {
             SYNTHETIC_SUBSCRIPTION_INFOS.add(instance);
-            return instance;
-        } catch (Throwable ignored) {
-            return null;
+            SYNTHETIC_SUB_IDS.put(instance, subId);
+            SYNTHETIC_SLOTS.put(instance, slotIndex);
+            try {
+                java.lang.reflect.Field slotField = XposedHelpers.findFieldIfExists(subscriptionInfoClass, "mSimSlotIndex");
+                if (slotField != null) {
+                    slotField.setAccessible(true);
+                    slotField.setInt(instance, slotIndex);
+                }
+                java.lang.reflect.Field idField = XposedHelpers.findFieldIfExists(subscriptionInfoClass, "mId");
+                if (idField != null) {
+                    idField.setAccessible(true);
+                    idField.setInt(instance, subId);
+                }
+            } catch (Throwable ignored) {
+            }
         }
+        return instance;
     }
 
     private static String firstNonBlank(String value, String fallback) {
@@ -1158,6 +1254,6 @@ public class TelephonyHooks {
     }
 
     private interface ValueProvider {
-        Object get();
+        Object get(Object thisObject);
     }
 }

@@ -292,7 +292,32 @@ public final class RootScopeManager {
         if (packageName == null || packageName.trim().isEmpty()) {
             return;
         }
-        runRoot("am force-stop '" + packageName.trim() + "'");
+        new Thread(() -> {
+            try {
+                runRoot("am force-stop '" + packageName.trim() + "'");
+            } catch (Throwable ignored) {
+            }
+        }).start();
+    }
+
+    public static void forceStop(java.util.Collection<String> packages) {
+        if (packages == null || packages.isEmpty()) {
+            return;
+        }
+        new Thread(() -> {
+            try {
+                StringBuilder sb = new StringBuilder();
+                for (String pkg : packages) {
+                    if (pkg != null && !pkg.trim().isEmpty() && !"android".equals(pkg) && !MODULE_PKG.equals(pkg)) {
+                        sb.append("am force-stop '").append(pkg.trim()).append("'\n");
+                    }
+                }
+                if (sb.length() > 0) {
+                    runRoot(sb.toString());
+                }
+            } catch (Throwable ignored) {
+            }
+        }).start();
     }
 
     public static void syncInBackground(Context context, Set<String> targetPackages) {

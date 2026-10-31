@@ -1,9 +1,11 @@
 package my.shanunid.linespoofer.hooks;
 
 import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
+import android.os.Handler;
 
 import my.shanunid.linespoofer.utils.AppLogger;
 import my.shanunid.linespoofer.utils.ConfigManager;
@@ -71,28 +73,51 @@ public final class BatteryHooks {
             AppLogger.logError(TAG, "Failed to hook BatteryManager.getIntProperty: " + throwable.getMessage(), throwable);
         }
 
-        try {
-            XC_MethodHook receiverHook = new XC_MethodHook() {
-                @Override
-                protected void afterHookedMethod(MethodHookParam param) {
-                    try {
-                        if (!ConfigManager.isBatterySpoofEnabled()) {
-                            return;
-                        }
-                        if (param.args != null && param.args.length > 1 && param.args[1] instanceof IntentFilter) {
-                            IntentFilter filter = (IntentFilter) param.args[1];
-                            if (filter.hasAction(Intent.ACTION_BATTERY_CHANGED)) {
-                                Intent intent = (Intent) param.getResult();
-                                if (intent != null) {
-                                    applyBatteryIntentExtras(intent);
+        XC_MethodHook receiverHook = new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) {
+                try {
+                    if (!ConfigManager.isBatterySpoofEnabled()) {
+                        return;
+                    }
+                    boolean isBatteryQuery = false;
+                    if (param.args != null) {
+                        for (Object arg : param.args) {
+                            if (arg instanceof IntentFilter) {
+                                IntentFilter filter = (IntentFilter) arg;
+                                if (filter.hasAction(Intent.ACTION_BATTERY_CHANGED)) {
+                                    isBatteryQuery = true;
+                                    break;
                                 }
                             }
                         }
-                    } catch (Throwable ignored) {
+                    }
+                    if (isBatteryQuery || (param.getResult() instanceof Intent && Intent.ACTION_BATTERY_CHANGED.equals(((Intent) param.getResult()).getAction()))) {
+                        Intent intent = (Intent) param.getResult();
+                        if (intent == null) {
+                            intent = new Intent(Intent.ACTION_BATTERY_CHANGED);
+                        }
+                        applyBatteryIntentExtras(intent);
+                        param.setResult(intent);
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
+        };
+
+        try {
+            Class<?> contextImplClass = XposedHelpers.findClassIfExists("android.app.ContextImpl", lpparam.classLoader);
+            if (contextImplClass != null) {
+                for (java.lang.reflect.Method m : contextImplClass.getDeclaredMethods()) {
+                    if ("registerReceiverInternal".equals(m.getName())) {
+                        XposedHelpers.findAndHookMethod(contextImplClass, "registerReceiverInternal", m.getParameterTypes(), receiverHook);
                     }
                 }
-            };
+            }
+        } catch (Throwable ignored) {
+        }
 
+        try {
             XposedHelpers.findAndHookMethod(
                 "android.content.ContextWrapper",
                 lpparam.classLoader,
@@ -119,7 +144,7 @@ public final class BatteryHooks {
                 BroadcastReceiver.class,
                 IntentFilter.class,
                 String.class,
-                android.os.Handler.class,
+                Handler.class,
                 receiverHook
             );
 
@@ -130,7 +155,7 @@ public final class BatteryHooks {
                 BroadcastReceiver.class,
                 IntentFilter.class,
                 String.class,
-                android.os.Handler.class,
+                Handler.class,
                 int.class,
                 receiverHook
             );
@@ -153,4 +178,3 @@ public final class BatteryHooks {
         intent.putExtra(BatteryManager.EXTRA_PRESENT, true);
     }
 }
-

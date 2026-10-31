@@ -1,6 +1,8 @@
 package my.shanunid.linespoofer.hooks;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
 
 import my.shanunid.linespoofer.utils.AppLogger;
 import my.shanunid.linespoofer.utils.ConfigManager;
@@ -10,7 +12,7 @@ import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
- * Spoofs Bluetooth adapter name and hardware MAC address.
+ * Spoofs Bluetooth adapter name, device name, and hardware MAC address.
  * Standardizes privacy response to prevent tracking via persistent Bluetooth device identities.
  */
 public final class BluetoothHooks {
@@ -59,6 +61,31 @@ public final class BluetoothHooks {
                     }
                 }
             );
+
+            // Hook BluetoothDevice.getName() & getAddress()
+            try {
+                Class<?> deviceClass = XposedHelpers.findClassIfExists("android.bluetooth.BluetoothDevice", lpparam.classLoader);
+                if (deviceClass != null) {
+                    XposedHelpers.findAndHookMethod(deviceClass, "getName", new XC_MethodHook() {
+                        @Override
+                        protected void afterHookedMethod(MethodHookParam param) {
+                            if (ConfigManager.isBluetoothSpoofEnabled()) {
+                                param.setResult(ConfigManager.getSpoofedBluetoothName());
+                            }
+                        }
+                    });
+
+                    XposedHelpers.findAndHookMethod(deviceClass, "getAddress", new XC_MethodHook() {
+                        @Override
+                        protected void afterHookedMethod(MethodHookParam param) {
+                            if (ConfigManager.isBluetoothSpoofEnabled()) {
+                                param.setResult(ConfigManager.getSpoofedBluetoothMac());
+                            }
+                        }
+                    });
+                }
+            } catch (Throwable ignored) {
+            }
 
             AppLogger.debug(TAG, "BluetoothHooks loaded successfully");
         } catch (Throwable throwable) {

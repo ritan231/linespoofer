@@ -39,6 +39,7 @@ public class ConfigManager {
     public static final String KEY_SPOOF_IMSI = "device.imsi";
     public static final String KEY_SPOOF_ICCID = "device.iccid";
     public static final String KEY_SPOOF_PHONE_NUMBER = "device.phone_number";
+    public static final String KEY_SPOOF_PHONE_NUMBER_2 = "device.phone_number2";
     public static final String KEY_SPOOF_GAID = "device.gaid";
     public static final String KEY_SPOOF_GSF_ID = "device.gsf_id";
     public static final String KEY_SPOOF_MEDIA_DRM_ID = "device.media_drm_id";
@@ -76,6 +77,7 @@ public class ConfigManager {
     public static final String FIELD_IMSI = "imsi";
     public static final String FIELD_ICCID = "iccid";
     public static final String FIELD_PHONE_NUMBER = "phone_number";
+    public static final String FIELD_PHONE_NUMBER_2 = "phone_number2";
     public static final String FIELD_GAID = "gaid";
     public static final String FIELD_GSF_ID = "gsf_id";
     public static final String FIELD_MEDIA_DRM_ID = "media_drm_id";
@@ -1199,10 +1201,36 @@ public class ConfigManager {
     }
 
     public static String getPhoneNumber() {
+        return getPhoneNumberSim1();
+    }
+
+    public static String getPhoneNumberSim1() {
         if (!isSpoofEnabled(FIELD_PHONE_NUMBER)) {
             return null;
         }
-        return getOptionalConfigValue(KEY_SPOOF_PHONE_NUMBER);
+        String num = getFirstOptionalConfigValue(KEY_SPOOF_PHONE_NUMBER, "device.phone_number_sim1");
+        return (num != null && !num.trim().isEmpty()) ? num.trim() : null;
+    }
+
+    public static String getPhoneNumberSim2() {
+        if (!isSpoofEnabled(FIELD_PHONE_NUMBER) && !isSpoofEnabled(FIELD_PHONE_NUMBER_2)) {
+            return null;
+        }
+        String num2 = getFirstOptionalConfigValue(KEY_SPOOF_PHONE_NUMBER_2, "device.phone_number_sim2");
+        if (num2 != null && !num2.trim().isEmpty()) {
+            return num2.trim();
+        }
+        // Fallback to distinct number derived from SIM 1 or random
+        String num1 = getPhoneNumberSim1();
+        if (num1 != null && num1.length() >= 4) {
+            try {
+                char lastChar = num1.charAt(num1.length() - 1);
+                char newLastChar = (char) ('0' + ((lastChar - '0' + 1) % 10));
+                return num1.substring(0, num1.length() - 1) + newLastChar;
+            } catch (Throwable ignored) {
+            }
+        }
+        return "+18404933321";
     }
 
     public static String getSerial() {

@@ -15,7 +15,9 @@ public final class VendorSystemPropertiesHooks {
     private static final String TAG = "LineSpoofer-VendorProps";
     private static final String[] CANDIDATE_CLASSES = {
         "android.os.SemSystemProperties",
-        "com.samsung.android.os.SemSystemProperties"
+        "com.samsung.android.os.SemSystemProperties",
+        "miui.os.SystemProperties",
+        "com.oneplus.util.OpSystemProperties"
     };
 
     private VendorSystemPropertiesHooks() {

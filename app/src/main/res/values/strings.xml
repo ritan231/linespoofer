@@ -218,7 +218,8 @@
     <string name="settings_field_meid">MEID</string>
     <string name="settings_field_imsi">IMSI</string>
     <string name="settings_field_iccid">ICCID</string>
-    <string name="settings_field_phone_number">Phone number</string>
+    <string name="settings_field_phone_number">Phone number (SIM 1)</string>
+    <string name="settings_field_phone_number_2">Phone number (SIM 2)</string>
     <string name="settings_field_gaid">Google Advertising ID</string>
     <string name="settings_field_gsf_id">GSF ID</string>
     <string name="settings_field_media_drm_id">MediaDrm ID (hex)</string>
@@ -278,6 +279,13 @@
     <string name="settings_field_wifi">Spoof Wi-Fi Connection &amp; BSSID</string>
 
     <string name="diagnostics_logs_title">Diagnostics Log</string>
+    <string name="diagnostics_section_telephony">SIM &amp; Telephony Verification</string>
+    <string name="diagnostics_section_locale">Locale &amp; Timezone Verification</string>
+    <string name="diagnostics_section_display">Display &amp; Refresh Rate Verification</string>
+    <string name="diagnostics_section_battery">Battery &amp; Temperature Verification</string>
+    <string name="diagnostics_section_network">Network &amp; Wireless Verification</string>
+    <string name="diagnostics_section_build">Build &amp; Identifiers Verification</string>
+    <string name="diagnostics_export_full_report">Export Full Diagnostics Report</string>
     <string name="log_export_button">Export Log</string>
     <string name="log_clear_button">Clear Log</string>
     <string name="log_export_title">Share Diagnostics Log</string>

@@ -218,7 +218,8 @@
     <string name="settings_field_meid">MEID</string>
     <string name="settings_field_imsi">IMSI</string>
     <string name="settings_field_iccid">ICCID</string>
-    <string name="settings_field_phone_number">Nomor Telepon</string>
+    <string name="settings_field_phone_number">Nomor Telepon (SIM 1)</string>
+    <string name="settings_field_phone_number_2">Nomor Telepon (SIM 2)</string>
     <string name="settings_field_gaid">Google Advertising ID (GAID)</string>
     <string name="settings_field_gsf_id">Google Service Framework ID (GSF)</string>
     <string name="settings_field_media_drm_id">MediaDrm ID (hex)</string>
@@ -278,6 +279,13 @@
     <string name="settings_field_wifi">Spoof Koneksi Wi-Fi &amp; BSSID</string>
 
     <string name="diagnostics_logs_title">Log Diagnostik</string>
+    <string name="diagnostics_section_telephony">Verifikasi SIM &amp; Telepon</string>
+    <string name="diagnostics_section_locale">Verifikasi Bahasa &amp; Zona Waktu</string>
+    <string name="diagnostics_section_display">Verifikasi Layar &amp; Refresh Rate</string>
+    <string name="diagnostics_section_battery">Verifikasi Baterai &amp; Suhu</string>
+    <string name="diagnostics_section_network">Verifikasi Jaringan &amp; Nirkabel</string>
+    <string name="diagnostics_section_build">Verifikasi Perangkat &amp; ID</string>
+    <string name="diagnostics_export_full_report">Ekspor Laporan Diagnostik Lengkap</string>
     <string name="log_export_button">Ekspor Log</string>
     <string name="log_clear_button">Hapus Log</string>
     <string name="log_export_title">Bagikan Log Diagnostik</string>

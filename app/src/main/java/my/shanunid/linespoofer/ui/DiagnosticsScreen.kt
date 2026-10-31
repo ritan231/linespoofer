@@ -1,7 +1,15 @@
 package my.shanunid.linespoofer.ui
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
 import android.os.Build
+import android.provider.Settings
+import android.telephony.SubscriptionManager
+import android.telephony.TelephonyManager
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -55,8 +63,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import my.shanunid.linespoofer.R
 import my.shanunid.linespoofer.utils.AppLogger
+import my.shanunid.linespoofer.utils.ConfigManager
+import java.io.File
+import java.io.FileOutputStream
+import java.nio.charset.StandardCharsets
+import java.util.Locale
 import java.util.TimeZone
 
+@SuppressLint("MissingPermission", "HardwareIds")
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DiagnosticsScreen(appState: SpoofAppState, onBack: () -> Unit) {
@@ -106,6 +120,111 @@ fun DiagnosticsScreen(appState: SpoofAppState, onBack: () -> Unit) {
 
         val profile = config.profile
         val metrics = appState.activity.resources.displayMetrics
+
+        // 1. Telephony & SIM Verifier
+        val telephonyManager = remember { context.getSystemService(TelephonyManager::class.java) }
+        val subManager = remember { context.getSystemService(SubscriptionManager::class.java) }
+        val sim1Number = remember {
+            try {
+                telephonyManager?.line1Number.orEmpty().ifBlank { profile.phoneNumberSim1 ?: "-" }
+            } catch (_: Throwable) {
+                profile.phoneNumberSim1 ?: "-"
+            }
+        }
+        val sim2Number = remember {
+            try {
+                val subs = subManager?.activeSubscriptionInfoList
+                if (subs != null && subs.size > 1) {
+                    val sub2 = subs[1]
+                    sub2.number?.takeIf { it.isNotBlank() }
+                        ?: if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            telephonyManager?.createForSubscriptionId(sub2.subscriptionId)?.line1Number
+                        } else null
+                        ?: profile.phoneNumberSim2
+                        ?: "-"
+                } else {
+                    profile.phoneNumberSim2 ?: "-"
+                }
+            } catch (_: Throwable) {
+                profile.phoneNumberSim2 ?: "-"
+            }
+        }
+        val simRows = listOf(
+            stringResource(R.string.settings_field_operator_alpha) to (telephonyManager?.networkOperatorName ?: profile.operatorAlpha ?: "-"),
+            stringResource(R.string.settings_field_operator_numeric) to (telephonyManager?.networkOperator ?: profile.operatorNumeric ?: "-"),
+            stringResource(R.string.settings_field_sim_country) to (telephonyManager?.simCountryIso ?: profile.simCountryIso ?: "-"),
+            stringResource(R.string.settings_field_phone_number) to sim1Number,
+            stringResource(R.string.settings_field_phone_number_2) to sim2Number,
+        )
+
+        // 2. Locale & Timezone Verifier
+        val icuTz = remember {
+            try {
+                val icuClass = Class.forName("android.icu.util.TimeZone")
+                val def = icuClass.getMethod("getDefault").invoke(null)
+                icuClass.getMethod("getID").invoke(def)?.toString() ?: "-"
+            } catch (_: Throwable) {
+                "-"
+            }
+        }
+        val localeRows = listOf(
+            "Java TimeZone" to "${TimeZone.getDefault().id} (${TimeZone.getDefault().displayName})",
+            "ICU TimeZone" to icuTz,
+            "Java Default Locale" to Locale.getDefault().toLanguageTag(),
+            "Configuration Locale" to configuration.locales[0].toLanguageTag(),
+            "Spoofed TimeZone Target" to (profile.timezone ?: "-"),
+            "Spoofed Locale Target" to (profile.locale ?: "-"),
+        )
+
+        // 3. Display & FPS Verifier
+        val displayRefreshRate = remember {
+            try {
+                val wm = context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
+                @Suppress("DEPRECATION")
+                wm?.defaultDisplay?.refreshRate?.let { "%.1f Hz".format(it) } ?: "-"
+            } catch (_: Throwable) {
+                "-"
+            }
+        }
+        val displayRows = listOf(
+            "Current Refresh Rate" to displayRefreshRate,
+            "Target FPS Mode" to "${appState.editor.targetFps.toInt()} FPS (${appState.editor.fpsMode})",
+            "Screen Resolution" to "${metrics.widthPixels} × ${metrics.heightPixels}",
+            "Screen Density" to "${metrics.densityDpi} dpi",
+        )
+
+        // 4. Battery & Suhu Verifier
+        val batteryIntent = remember {
+            context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        }
+        val batteryLevel = batteryIntent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
+        val batteryTempRaw = batteryIntent?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1) ?: -1
+        val batteryTempCelsius = if (batteryTempRaw > 0) "%.1f °C".format(batteryTempRaw / 10.0f) else "-"
+        val batteryStatusInt = batteryIntent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
+        val batteryStatusStr = when (batteryStatusInt) {
+            BatteryManager.BATTERY_STATUS_CHARGING -> "Charging"
+            BatteryManager.BATTERY_STATUS_DISCHARGING -> "Discharging"
+            BatteryManager.BATTERY_STATUS_FULL -> "Full"
+            BatteryManager.BATTERY_STATUS_NOT_CHARGING -> "Not Charging"
+            else -> "Unknown"
+        }
+        val batteryRows = listOf(
+            "Battery Level" to if (batteryLevel >= 0) "$batteryLevel %" else "-",
+            "Battery Temperature" to batteryTempCelsius,
+            "Battery Status" to batteryStatusStr,
+            "Spoofed Mode" to appState.editor.batteryMode,
+        )
+
+        // 5. Network & Wireless Verifier
+        val networkRows = listOf(
+            "Wi-Fi SSID" to (config.extraProperties["device.wifi.ssid"] ?: "\"Home-WiFi-5G\""),
+            "Wi-Fi BSSID" to (config.extraProperties["device.wifi.bssid"] ?: "-"),
+            "MAC Mode" to appState.editor.macMode.uppercase(),
+            "Bluetooth Name" to (config.extraProperties["device.bluetooth.name"] ?: "-"),
+            "Bluetooth MAC" to (config.extraProperties["device.bluetooth.mac"] ?: "-"),
+        )
+
+        // 6. Build & Device Identifiers
         val buildRows = listOf(
             stringResource(R.string.settings_field_brand) to Build.BRAND,
             stringResource(R.string.settings_field_manufacturer) to Build.MANUFACTURER,
@@ -119,44 +238,58 @@ fun DiagnosticsScreen(appState: SpoofAppState, onBack: () -> Unit) {
             stringResource(R.string.settings_field_android_release) to Build.VERSION.RELEASE,
             stringResource(R.string.settings_field_sdk_level) to Build.VERSION.SDK_INT.toString(),
             stringResource(R.string.settings_field_security_patch) to Build.VERSION.SECURITY_PATCH,
-        )
-        val runtimeRows = listOf(
-            stringResource(R.string.home_info_profile_display_title) to stringResource(
-                R.string.home_info_display_value_format,
-                metrics.widthPixels,
-                metrics.heightPixels,
-                metrics.densityDpi,
-            ),
-            "ABI" to Build.SUPPORTED_ABIS.joinToString(", "),
-            stringResource(R.string.settings_field_timezone) to TimeZone.getDefault().id,
-            stringResource(R.string.settings_field_locale) to configuration.locales[0].toLanguageTag(),
-        )
-        val savedRows = listOf(
-            stringResource(R.string.settings_hint_preset) to appState.presetLabel(config.selectedPresetId),
-            stringResource(R.string.home_info_profile_mode_title) to stringResource(if (config.isCustomMode) R.string.mode_custom else R.string.mode_preset),
-            stringResource(R.string.settings_field_model) to profile.model,
-            stringResource(R.string.settings_field_device_codename) to profile.deviceCode,
-            stringResource(R.string.settings_field_build_id) to profile.buildId,
-            stringResource(R.string.settings_field_build_display_id) to profile.buildDisplayId,
-            stringResource(R.string.settings_field_fingerprint) to profile.buildFingerprint,
-            stringResource(R.string.settings_field_timezone) to profile.timezone,
-            stringResource(R.string.settings_field_locale) to profile.locale,
+            stringResource(R.string.settings_field_device_id) to (Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID) ?: "-"),
         )
 
         val onExportLog = {
             coroutineScope.launch(Dispatchers.IO) {
+                val reportBuilder = StringBuilder()
+                reportBuilder.append("=== LineSpoofer Comprehensive Diagnostics Report ===\n")
+                reportBuilder.append("Generated At: ").append(java.util.Date()).append("\n")
+                reportBuilder.append("Master Switch: ").append(if (appState.isMasterSpoofActive) "ACTIVE" else "DISABLED").append("\n")
+                reportBuilder.append("Active Profile: ").append(profile.model).append(" (Preset: ").append(appState.presetLabel(config.selectedPresetId)).append(")\n\n")
+
+                reportBuilder.append("--- [1. Telephony & SIM] ---\n")
+                simRows.forEach { reportBuilder.append("  ").append(it.first).append(": ").append(it.second).append("\n") }
+
+                reportBuilder.append("\n--- [2. Locale & TimeZone] ---\n")
+                localeRows.forEach { reportBuilder.append("  ").append(it.first).append(": ").append(it.second).append("\n") }
+
+                reportBuilder.append("\n--- [3. Display & FPS] ---\n")
+                displayRows.forEach { reportBuilder.append("  ").append(it.first).append(": ").append(it.second).append("\n") }
+
+                reportBuilder.append("\n--- [4. Battery & Environment] ---\n")
+                batteryRows.forEach { reportBuilder.append("  ").append(it.first).append(": ").append(it.second).append("\n") }
+
+                reportBuilder.append("\n--- [5. Network & Wireless] ---\n")
+                networkRows.forEach { reportBuilder.append("  ").append(it.first).append(": ").append(it.second).append("\n") }
+
+                reportBuilder.append("\n--- [6. Build & Device Identifiers] ---\n")
+                buildRows.forEach { reportBuilder.append("  ").append(it.first).append(": ").append(it.second).append("\n") }
+
+                reportBuilder.append("\n--- [7. App & Vector Logs] ---\n")
                 val currentLog = AppLogger.getLogContent(context)
+                reportBuilder.append(currentLog.ifBlank { "(No internal logs recorded)" }).append("\n")
+
+                val reportContent = reportBuilder.toString()
+
+                // Save report to file for attachment
+                val reportFile = File(context.cacheDir, "LineSpoofer_Diagnostics_Report.txt")
+                try {
+                    FileOutputStream(reportFile).use { it.write(reportContent.getBytes(StandardCharsets.UTF_8)) }
+                } catch (_: Throwable) {
+                }
+
                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
                     type = "text/plain"
-                    putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.log_export_title))
-                    putExtra(Intent.EXTRA_TEXT, currentLog.ifBlank { "LineSpoofer Diagnostics Log: (empty)" })
+                    putExtra(Intent.EXTRA_SUBJECT, "LineSpoofer Diagnostics Report")
+                    putExtra(Intent.EXTRA_TEXT, reportContent)
                     try {
-                        val logFile = AppLogger.getLogFile(context)
-                        if (logFile != null && logFile.exists() && logFile.length() > 0) {
+                        if (reportFile.exists() && reportFile.length() > 0) {
                             val fileUri = FileProvider.getUriForFile(
                                 context,
                                 "${context.packageName}.fileprovider",
-                                logFile
+                                reportFile
                             )
                             putExtra(Intent.EXTRA_STREAM, fileUri)
                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -195,22 +328,83 @@ fun DiagnosticsScreen(appState: SpoofAppState, onBack: () -> Unit) {
                 .padding(paddingValues)
                 .padding(horizontal = 20.dp),
         ) {
-            item { SectionTitle(stringResource(R.string.real_info_build_title)) }
-            buildRows.forEachIndexed { index, row ->
-                item { ConnectedInfoRow(index, buildRows.size, row.first, row.second) }
+            // Section 1: SIM & Telephony Verification
+            item(key = "hdr_sim", contentType = "header") {
+                SectionTitle(stringResource(R.string.diagnostics_section_telephony))
             }
-            item { SectionTitle(stringResource(R.string.real_info_runtime_title), Modifier.padding(top = 22.dp)) }
-            runtimeRows.forEachIndexed { index, row ->
-                item { ConnectedInfoRow(index, runtimeRows.size, row.first, row.second) }
-            }
-            item { SectionTitle(stringResource(R.string.real_info_saved_title), Modifier.padding(top = 22.dp)) }
-            savedRows.forEachIndexed { index, row ->
-                item { ConnectedInfoRow(index, savedRows.size, row.first, row.second) }
+            items(
+                count = simRows.size,
+                key = { "sim_$it" },
+                contentType = { "info_row" },
+            ) { index ->
+                ConnectedInfoRow(index, simRows.size, simRows[index].first, simRows[index].second)
             }
 
-            // Diagnostics Log Viewer & Export Section
-            item { SectionTitle(stringResource(R.string.diagnostics_logs_title), Modifier.padding(top = 22.dp)) }
-            item {
+            // Section 2: Locale & Timezone Verification
+            item(key = "hdr_locale", contentType = "header") {
+                SectionTitle(stringResource(R.string.diagnostics_section_locale), Modifier.padding(top = 22.dp))
+            }
+            items(
+                count = localeRows.size,
+                key = { "locale_$it" },
+                contentType = { "info_row" },
+            ) { index ->
+                ConnectedInfoRow(index, localeRows.size, localeRows[index].first, localeRows[index].second)
+            }
+
+            // Section 3: Display & Refresh Rate
+            item(key = "hdr_display", contentType = "header") {
+                SectionTitle(stringResource(R.string.diagnostics_section_display), Modifier.padding(top = 22.dp))
+            }
+            items(
+                count = displayRows.size,
+                key = { "display_$it" },
+                contentType = { "info_row" },
+            ) { index ->
+                ConnectedInfoRow(index, displayRows.size, displayRows[index].first, displayRows[index].second)
+            }
+
+            // Section 4: Battery & Temperature
+            item(key = "hdr_battery", contentType = "header") {
+                SectionTitle(stringResource(R.string.diagnostics_section_battery), Modifier.padding(top = 22.dp))
+            }
+            items(
+                count = batteryRows.size,
+                key = { "battery_$it" },
+                contentType = { "info_row" },
+            ) { index ->
+                ConnectedInfoRow(index, batteryRows.size, batteryRows[index].first, batteryRows[index].second)
+            }
+
+            // Section 5: Network & Wireless
+            item(key = "hdr_network", contentType = "header") {
+                SectionTitle(stringResource(R.string.diagnostics_section_network), Modifier.padding(top = 22.dp))
+            }
+            items(
+                count = networkRows.size,
+                key = { "network_$it" },
+                contentType = { "info_row" },
+            ) { index ->
+                ConnectedInfoRow(index, networkRows.size, networkRows[index].first, networkRows[index].second)
+            }
+
+            // Section 6: Build & Identifiers
+            item(key = "hdr_build", contentType = "header") {
+                SectionTitle(stringResource(R.string.diagnostics_section_build), Modifier.padding(top = 22.dp))
+            }
+            items(
+                count = buildRows.size,
+                key = { "build_$it" },
+                contentType = { "info_row" },
+            ) { index ->
+                ConnectedInfoRow(index, buildRows.size, buildRows[index].first, buildRows[index].second)
+            }
+
+            // Section 7: Diagnostics Log Viewer & Export Full Report
+            item(key = "hdr_logs", contentType = "header") {
+                SectionTitle(stringResource(R.string.diagnostics_logs_title), Modifier.padding(top = 22.dp))
+            }
+            item(key = "export_actions", contentType = "actions") {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -224,11 +418,11 @@ fun DiagnosticsScreen(appState: SpoofAppState, onBack: () -> Unit) {
                     ) {
                         Icon(Icons.Outlined.Share, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.size(6.dp))
-                        Text(stringResource(R.string.log_export_button))
+                        Text(stringResource(R.string.diagnostics_export_full_report))
                     }
                     OutlinedButton(
                         onClick = { onClearLog() },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(0.6f)
                     ) {
                         Icon(Icons.Outlined.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.size(6.dp))
@@ -239,7 +433,7 @@ fun DiagnosticsScreen(appState: SpoofAppState, onBack: () -> Unit) {
                     }
                 }
             }
-            item {
+            item(key = "log_viewer_surface", contentType = "log_viewer") {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -273,7 +467,7 @@ fun DiagnosticsScreen(appState: SpoofAppState, onBack: () -> Unit) {
                 }
             }
 
-            item { Spacer(Modifier.height(36.dp)) }
+            item(key = "bottom_spacer", contentType = "spacer") { Spacer(Modifier.height(36.dp)) }
         }
     }
 }

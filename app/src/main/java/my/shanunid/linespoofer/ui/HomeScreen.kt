@@ -72,7 +72,7 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
     ) {
         // 1. HyperOS Hero Card (Module Status + Master Switch)
-        item {
+        item(key = "hero_status_card", contentType = "hero") {
             val heroShape = RoundedCornerShape(24.dp)
             val heroGradientColors = if (isDark) {
                 if (moduleActivated && appState.isMasterSpoofActive) {
@@ -168,10 +168,10 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
             }
         }
 
-        item { Spacer(modifier = Modifier.height(14.dp)) }
+        item(key = "spacer_hero", contentType = "spacer") { Spacer(modifier = Modifier.height(14.dp)) }
 
         // 2. HyperOS Quick Telemetry Grid (2x2 Cards)
-        item {
+        item(key = "telemetry_row1", contentType = "telemetry") {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -264,67 +264,19 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
             }
         }
 
-        item { Spacer(modifier = Modifier.height(10.dp)) }
+        item(key = "spacer_telemetry_mid", contentType = "spacer") { Spacer(modifier = Modifier.height(10.dp)) }
 
-        item {
+        item(key = "telemetry_row2", contentType = "telemetry") {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                // Card 3: Uptime
-                MiuiCard(
+                // Card 3: Uptime (Isolated Recomposition Scope)
+                HomeUptimeCard(
+                    uptimeMode = appState.editor.uptimeMode,
+                    uptimeSeconds = appState.editor.uptimeSeconds,
                     modifier = Modifier.weight(1f),
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(34.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(MiuiXColors.BlueContainer),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Timer,
-                                contentDescription = null,
-                                tint = MiuiXColors.Blue,
-                                modifier = Modifier.size(18.dp),
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = stringResource(R.string.home_telemetry_uptime),
-                                color = colors.textSecondary,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 0.5.sp,
-                            )
-                            val isSpoofEnabled = appState.editor.uptimeMode != "off"
-                            val baseSec = remember(isSpoofEnabled, appState.editor.uptimeSeconds) {
-                                if (isSpoofEnabled) {
-                                    (appState.editor.uptimeSeconds.toLongOrNull() ?: ConfigManager.getSpoofedUptimeSeconds())
-                                } else 0L
-                            }
-                            var liveUptimeSec by remember(baseSec) {
-                                mutableStateOf(baseSec + (android.os.SystemClock.elapsedRealtime() / 1000L))
-                            }
-                            LaunchedEffect(baseSec) {
-                                while (true) {
-                                    liveUptimeSec = baseSec + (android.os.SystemClock.elapsedRealtime() / 1000L)
-                                    kotlinx.coroutines.delay(1000L)
-                                }
-                            }
-                            val hrs = liveUptimeSec / 3600
-                            val mins = (liveUptimeSec % 3600) / 60
-                            Text(
-                                text = "${hrs}h ${mins}m",
-                                color = colors.textPrimary,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold,
-                            )
-                        }
-                    }
-                }
+                )
 
                 // Card 4: MAC Mode
                 MiuiCard(
@@ -371,15 +323,15 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
             }
         }
 
-        item { Spacer(modifier = Modifier.height(16.dp)) }
+        item(key = "spacer_telemetry_end", contentType = "spacer") { Spacer(modifier = Modifier.height(16.dp)) }
 
         // 3. Section Title
-        item {
+        item(key = "section_active_profile_header", contentType = "header") {
             MiuiSectionHeader(title = stringResource(R.string.home_section_active_profile))
         }
 
         // 4. Grouped Profile Details Card
-        item {
+        item(key = "active_profile_card", contentType = "card") {
             MiuiCard {
                 DetailItem(
                     icon = Icons.Outlined.PhoneAndroid,
@@ -420,7 +372,67 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
             }
         }
 
-        item { Spacer(modifier = Modifier.height(32.dp)) }
+        item(key = "bottom_spacer", contentType = "spacer") { Spacer(modifier = Modifier.height(32.dp)) }
+    }
+}
+
+@Composable
+private fun HomeUptimeCard(
+    uptimeMode: String,
+    uptimeSeconds: String,
+    modifier: Modifier = Modifier,
+) {
+    val colors = MiuiTheme.colors
+    MiuiCard(modifier = modifier) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(34.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MiuiXColors.BlueContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Timer,
+                    contentDescription = null,
+                    tint = MiuiXColors.Blue,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Column {
+                Text(
+                    text = stringResource(R.string.home_telemetry_uptime),
+                    color = colors.textSecondary,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.5.sp,
+                )
+                val isSpoofEnabled = uptimeMode != "off"
+                val baseSec = remember(isSpoofEnabled, uptimeSeconds) {
+                    if (isSpoofEnabled) {
+                        (uptimeSeconds.toLongOrNull() ?: ConfigManager.getSpoofedUptimeSeconds())
+                    } else 0L
+                }
+                var liveUptimeSec by remember(baseSec) {
+                    mutableStateOf(baseSec + (android.os.SystemClock.elapsedRealtime() / 1000L))
+                }
+                LaunchedEffect(baseSec) {
+                    while (true) {
+                        liveUptimeSec = baseSec + (android.os.SystemClock.elapsedRealtime() / 1000L)
+                        kotlinx.coroutines.delay(1000L)
+                    }
+                }
+                val hrs = liveUptimeSec / 3600
+                val mins = (liveUptimeSec % 3600) / 60
+                Text(
+                    text = "${hrs}h ${mins}m",
+                    color = colors.textPrimary,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+        }
     }
 }
 

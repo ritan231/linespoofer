@@ -74,6 +74,28 @@ public final class JavaSystemPropertyHooks {
         if ("http.agent".equals(key)) {
             return ConfigManager.getWebViewUserAgent();
         }
+        if ("user.timezone".equals(key)) {
+            String tz = ConfigManager.getTimezone();
+            if (tz != null && !tz.isEmpty()) return tz;
+        }
+        if ("user.language".equals(key)) {
+            String tag = ConfigManager.getLocaleTag();
+            if (tag != null && !tag.isEmpty()) {
+                java.util.Locale loc = java.util.Locale.forLanguageTag(tag.replace('_', '-'));
+                if (!loc.getLanguage().isEmpty()) return loc.getLanguage();
+            }
+        }
+        if ("user.country".equals(key) || "user.region".equals(key)) {
+            String tag = ConfigManager.getLocaleTag();
+            if (tag != null && !tag.isEmpty()) {
+                java.util.Locale loc = java.util.Locale.forLanguageTag(tag.replace('_', '-'));
+                if (!loc.getCountry().isEmpty()) return loc.getCountry();
+            }
+        }
+        if ("user.locale".equals(key)) {
+            String tag = ConfigManager.getLocaleTag();
+            if (tag != null && !tag.isEmpty()) return tag;
+        }
         return null;
     }
 }

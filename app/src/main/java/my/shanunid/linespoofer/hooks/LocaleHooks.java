@@ -1,5 +1,6 @@
 package my.shanunid.linespoofer.hooks;
 
+import android.content.res.Configuration;
 import android.os.LocaleList;
 import android.icu.util.ULocale;
 
@@ -26,15 +27,50 @@ public final class LocaleHooks {
         hookTimeZoneDefaults(lpparam);
     }
 
+    public static void applyLocaleToConfig(Configuration config, Locale locale) {
+        if (config == null || locale == null) return;
+        try {
+            config.setLocales(new LocaleList(locale));
+        } catch (Throwable ignored) {
+            try {
+                config.locale = locale;
+            } catch (Throwable ignored2) {
+            }
+        }
+    }
+
     private static void hookLocaleDefaults(XC_LoadPackage.LoadPackageParam lpparam) {
         Locale locale = configuredLocale();
         if (locale != null) {
             try {
-                Locale.setDefault(locale);
+                System.setProperty("user.language", locale.getLanguage());
+                System.setProperty("user.country", locale.getCountry());
+                System.setProperty("user.locale", locale.toLanguageTag());
             } catch (Throwable ignored) {
             }
             try {
-                LocaleList.setDefault(new LocaleList(locale));
+                Locale.setDefault(locale);
+                for (String fieldName : new String[]{"defaultLocale", "defaultDisplayLocale", "defaultFormatLocale"}) {
+                    try {
+                        java.lang.reflect.Field f = Locale.class.getDeclaredField(fieldName);
+                        f.setAccessible(true);
+                        f.set(null, locale);
+                    } catch (Throwable ignored) {
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
+            try {
+                LocaleList list = new LocaleList(locale);
+                LocaleList.setDefault(list);
+                for (String fieldName : new String[]{"sDefaultLocaleList", "sLastDefaultLocaleList"}) {
+                    try {
+                        java.lang.reflect.Field f = LocaleList.class.getDeclaredField(fieldName);
+                        f.setAccessible(true);
+                        f.set(null, list);
+                    } catch (Throwable ignored) {
+                    }
+                }
             } catch (Throwable ignored) {
             }
             try {
@@ -109,7 +145,7 @@ public final class LocaleHooks {
         } catch (Throwable ignored) {
         }
 
-        // Hook Configuration.getLocales()
+        // Hook Configuration.getLocales(), setTo, and updateFrom
         try {
             Class<?> configClass = XposedHelpers.findClassIfExists("android.content.res.Configuration", lpparam.classLoader);
             if (configClass != null) {
@@ -122,6 +158,57 @@ public final class LocaleHooks {
                         }
                     }
                 });
+                XposedHelpers.findAndHookMethod(configClass, "setTo", "android.content.res.Configuration", new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        Locale l = configuredLocale();
+                        if (l != null && param.thisObject instanceof Configuration) {
+                            applyLocaleToConfig((Configuration) param.thisObject, l);
+                        }
+                    }
+                });
+                XposedHelpers.findAndHookMethod(configClass, "updateFrom", "android.content.res.Configuration", new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        Locale l = configuredLocale();
+                        if (l != null && param.thisObject instanceof Configuration) {
+                            applyLocaleToConfig((Configuration) param.thisObject, l);
+                        }
+                    }
+                });
+            }
+        } catch (Throwable ignored) {
+        }
+
+        // Hook Resources.getConfiguration() and ResourcesImpl.getConfiguration()
+        try {
+            Class<?> resClass = XposedHelpers.findClassIfExists("android.content.res.Resources", lpparam.classLoader);
+            if (resClass != null) {
+                XposedHelpers.findAndHookMethod(resClass, "getConfiguration", new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        Locale l = configuredLocale();
+                        if (l != null && param.getResult() instanceof Configuration) {
+                            applyLocaleToConfig((Configuration) param.getResult(), l);
+                        }
+                    }
+                });
+            }
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            Class<?> resImplClass = XposedHelpers.findClassIfExists("android.content.res.ResourcesImpl", lpparam.classLoader);
+            if (resImplClass != null) {
+                XposedHelpers.findAndHookMethod(resImplClass, "getConfiguration", new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        Locale l = configuredLocale();
+                        if (l != null && param.getResult() instanceof Configuration) {
+                            applyLocaleToConfig((Configuration) param.getResult(), l);
+                        }
+                    }
+                });
             }
         } catch (Throwable ignored) {
         }
@@ -131,7 +218,17 @@ public final class LocaleHooks {
         String timezone = ConfigManager.getTimezone();
         if (timezone != null && !timezone.trim().isEmpty()) {
             try {
+                System.setProperty("user.timezone", timezone);
+            } catch (Throwable ignored) {
+            }
+            try {
                 TimeZone.setDefault(TimeZone.getTimeZone(timezone));
+                try {
+                    java.lang.reflect.Field f = TimeZone.class.getDeclaredField("defaultTimeZone");
+                    f.setAccessible(true);
+                    f.set(null, TimeZone.getTimeZone(timezone));
+                } catch (Throwable ignored) {
+                }
             } catch (Throwable ignored) {
             }
             try {

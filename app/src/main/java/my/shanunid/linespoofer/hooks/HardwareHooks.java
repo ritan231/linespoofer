@@ -313,6 +313,35 @@ public class HardwareHooks {
             int cores = Math.max(1, ConfigManager.getCpuCoreCount());
             return createCachedVirtualFile("fake_cpu_range", "0-" + (cores - 1) + "\n", packageName);
         }
+        if (path.contains("/power_supply/") && path.endsWith("/temp")) {
+            if (ConfigManager.isBatterySpoofEnabled()) {
+                return createCachedVirtualFile("fake_bat_temp", ConfigManager.getBatteryTemperature() + "\n", packageName);
+            }
+        }
+        if (path.contains("/power_supply/") && path.endsWith("/capacity")) {
+            if (ConfigManager.isBatterySpoofEnabled()) {
+                return createCachedVirtualFile("fake_bat_cap", ConfigManager.getBatteryLevel() + "\n", packageName);
+            }
+        }
+        if (path.contains("/power_supply/") && path.endsWith("/status")) {
+            if (ConfigManager.isBatterySpoofEnabled()) {
+                return createCachedVirtualFile("fake_bat_status", "Discharging\n", packageName);
+            }
+        }
+        if (path.contains("/net/wlan0/address") || path.contains("/net/eth0/address") || path.endsWith("/net/wlan0/address")) {
+            if (ConfigManager.isMacSpoofEnabled() || ConfigManager.isWifiSpoofEnabled()) {
+                return createCachedVirtualFile("fake_wlan_mac", ConfigManager.getSpoofedMacAddress() + "\n", packageName);
+            }
+        }
+        if (path.contains("/bluetooth/") && path.endsWith("/address")) {
+            if (ConfigManager.isBluetoothSpoofEnabled()) {
+                return createCachedVirtualFile("fake_bt_mac", ConfigManager.getSpoofedBluetoothMac() + "\n", packageName);
+            }
+        }
+        if (path.startsWith("/sys/devices/soc0/") && path.endsWith("/machine")) {
+            String hw = ConfigManager.getBuildHardware();
+            return createCachedVirtualFile("fake_soc_mach", (hw != null ? hw : "qcom") + "\n", packageName);
+        }
         if (path.endsWith("build.prop") || path.equals("/default.prop")) {
             return createCachedVirtualFile("fake_build_prop", generateBuildProp(), packageName);
         }
@@ -369,6 +398,26 @@ public class HardwareHooks {
             String[] lines = new String[] { uptime + ".50 " + idle + ".20" };
             VIRTUAL_FILE_LINES.put(readerObj, lines);
             VIRTUAL_FILE_OFFSETS.put(readerObj, 0);
+        } else if (path.contains("/power_supply/") && path.endsWith("/temp")) {
+            if (ConfigManager.isBatterySpoofEnabled()) {
+                VIRTUAL_FILE_LINES.put(readerObj, new String[]{String.valueOf(ConfigManager.getBatteryTemperature())});
+                VIRTUAL_FILE_OFFSETS.put(readerObj, 0);
+            }
+        } else if (path.contains("/power_supply/") && path.endsWith("/capacity")) {
+            if (ConfigManager.isBatterySpoofEnabled()) {
+                VIRTUAL_FILE_LINES.put(readerObj, new String[]{String.valueOf(ConfigManager.getBatteryLevel())});
+                VIRTUAL_FILE_OFFSETS.put(readerObj, 0);
+            }
+        } else if (path.contains("/net/wlan0/address") || path.contains("/net/eth0/address") || path.endsWith("/net/wlan0/address")) {
+            if (ConfigManager.isMacSpoofEnabled() || ConfigManager.isWifiSpoofEnabled()) {
+                VIRTUAL_FILE_LINES.put(readerObj, new String[]{ConfigManager.getSpoofedMacAddress()});
+                VIRTUAL_FILE_OFFSETS.put(readerObj, 0);
+            }
+        } else if (path.contains("/bluetooth/") && path.endsWith("/address")) {
+            if (ConfigManager.isBluetoothSpoofEnabled()) {
+                VIRTUAL_FILE_LINES.put(readerObj, new String[]{ConfigManager.getSpoofedBluetoothMac()});
+                VIRTUAL_FILE_OFFSETS.put(readerObj, 0);
+            }
         } else if (path.endsWith("build.prop") || path.equals("/default.prop")) {
             String[] lines = generateBuildProp().split("\n");
             VIRTUAL_FILE_LINES.put(readerObj, lines);

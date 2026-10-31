@@ -206,6 +206,10 @@ class SpoofAppState(val activity: AppCompatActivity) {
                     activity,
                     result.first.assignments.keys
                 )
+                val affectedPackages = result.first.assignments.filter { it.value == profileId }.keys
+                if (affectedPackages.isNotEmpty()) {
+                    my.shanunid.linespoofer.utils.RootScopeManager.forceStop(affectedPackages)
+                }
             } catch (_: Throwable) {
             }
             val profileName = result.first.findProfile(profileId)?.name.orEmpty()
@@ -509,10 +513,7 @@ class SpoofAppState(val activity: AppCompatActivity) {
 
     fun forceStopApp(packageName: String) {
         val cleanPkg = packageName.substringBefore("#")
-        try {
-            Runtime.getRuntime().exec(arrayOf("su", "-c", "am force-stop $cleanPkg"))
-        } catch (ignored: Throwable) {
-        }
+        my.shanunid.linespoofer.utils.RootScopeManager.forceStop(cleanPkg)
     }
 
     fun updateMasterSpoofActive(active: Boolean) {
@@ -524,11 +525,17 @@ class SpoofAppState(val activity: AppCompatActivity) {
         } catch (ignored: Throwable) {
         }
 
+        // Synchronize updated master spoof state to Vector's RemotePreferences and SQLite DB
+        profileState?.let { state ->
+            AppProfileStore.syncToRemotePreferences(activity, state)
+        }
+
+        val targets = profileState?.assignments?.keys.orEmpty()
+        if (targets.isNotEmpty()) {
+            my.shanunid.linespoofer.utils.RootScopeManager.forceStop(targets)
+        }
+
         if (active) {
-            val targets = profileState?.assignments?.keys.orEmpty()
-            targets.forEach { pkg ->
-                forceStopApp(pkg)
-            }
             val count = targets.size
             message = if (count > 0) {
                 activity.getString(R.string.target_app_force_stopped, "$count target aplikasi")
@@ -536,7 +543,7 @@ class SpoofAppState(val activity: AppCompatActivity) {
                 "Spoofing aktif (tambahkan aplikasi ke profil untuk menerapkan)"
             }
         } else {
-            message = "Spoofing dinonaktifkan"
+            message = "Spoofing dinonaktifkan (target aplikasi dihentikan)"
         }
     }
 
@@ -545,10 +552,12 @@ class SpoofAppState(val activity: AppCompatActivity) {
             mapOf(
                 ConfigManager.FIELD_ANDROID_ID to currentAndroidId(),
                 ConfigManager.FIELD_IMEI to currentImei(),
+                ConfigManager.FIELD_IMEI_2 to currentImei2(),
                 ConfigManager.FIELD_MEID to currentMeid(),
                 ConfigManager.FIELD_IMSI to currentImsi(),
                 ConfigManager.FIELD_ICCID to currentIccid(),
                 ConfigManager.FIELD_PHONE_NUMBER to currentPhoneNumber(),
+                ConfigManager.FIELD_PHONE_NUMBER_2 to currentPhoneNumber2(),
                 ConfigManager.FIELD_GAID to currentGaid(),
                 ConfigManager.FIELD_GSF_ID to currentGsfId(),
                 ConfigManager.FIELD_MEDIA_DRM_ID to currentMediaDrmId(),
@@ -593,6 +602,16 @@ class SpoofAppState(val activity: AppCompatActivity) {
         manager.imei
     }.getOrNull()
 
+    @SuppressLint("MissingPermission")
+    private fun currentImei2(): String? = runCatching {
+        val manager = activity.getSystemService(TelephonyManager::class.java) ?: return null
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            manager.getImei(1)
+        } else {
+            null
+        }
+    }.getOrNull()
+
     @SuppressLint("HardwareIds")
     private fun currentAndroidId(): String? = Settings.Secure.getString(
         activity.contentResolver,
@@ -623,6 +642,25 @@ class SpoofAppState(val activity: AppCompatActivity) {
     @Suppress("DEPRECATION")
     private fun currentPhoneNumber(): String? = runCatching {
         activity.getSystemService(TelephonyManager::class.java)?.line1Number
+    }.getOrNull()
+
+    @SuppressLint("HardwareIds", "MissingPermission")
+    @Suppress("DEPRECATION")
+    private fun currentPhoneNumber2(): String? = runCatching {
+        val tm = activity.getSystemService(TelephonyManager::class.java) ?: return null
+        val sm = activity.getSystemService(SubscriptionManager::class.java)
+        val subs = sm?.activeSubscriptionInfoList
+        if (subs != null && subs.size > 1) {
+            val sub2 = subs[1]
+            val num = sub2.number
+            if (!num.isNullOrBlank()) {
+                return num
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                return tm.createForSubscriptionId(sub2.subscriptionId)?.line1Number
+            }
+        }
+        null
     }.getOrNull()
 
     private fun currentGsfId(): String? {
@@ -719,6 +757,12 @@ class ProfileEditorState {
         advancedPropertyKeys.forEach { (fieldId, propertyKey) ->
             advancedValues[fieldId] = config.extraProperties[propertyKey].orEmpty()
         }
+        if (advancedValues[ConfigManager.FIELD_PHONE_NUMBER].isNullOrEmpty() && !config.profile.phoneNumberSim1.isNullOrEmpty()) {
+            advancedValues[ConfigManager.FIELD_PHONE_NUMBER] = config.profile.phoneNumberSim1
+        }
+        if (advancedValues[ConfigManager.FIELD_PHONE_NUMBER_2].isNullOrEmpty() && !config.profile.phoneNumberSim2.isNullOrEmpty()) {
+            advancedValues[ConfigManager.FIELD_PHONE_NUMBER_2] = config.profile.phoneNumberSim2
+        }
         locationLatitude = config.extraProperties["device.location.latitude"] ?: "-6.2088"
         locationLongitude = config.extraProperties["device.location.longitude"] ?: "106.8456"
 
@@ -802,6 +846,9 @@ class ProfileEditorState {
             timezone = value(ConfigManager.FIELD_TIMEZONE)
             locale = value(ConfigManager.FIELD_LOCALE)
             androidId = advancedValue(ConfigManager.FIELD_ANDROID_ID)
+            phoneNumberSim1 = advancedValue(ConfigManager.FIELD_PHONE_NUMBER)
+            phoneNumberSim2 = advancedValue(ConfigManager.FIELD_PHONE_NUMBER_2)
+            phoneNumber = phoneNumberSim1
         }
     }
 
@@ -862,6 +909,7 @@ class ProfileEditorState {
             ConfigManager.FIELD_IMSI -> RandomGenerator.generateIMSI()
             ConfigManager.FIELD_ICCID -> RandomGenerator.generateICCID()
             ConfigManager.FIELD_PHONE_NUMBER -> RandomGenerator.generatePhoneNumber()
+            ConfigManager.FIELD_PHONE_NUMBER_2 -> RandomGenerator.generatePhoneNumber()
             ConfigManager.FIELD_GAID -> RandomGenerator.generateGAID()
             ConfigManager.FIELD_GSF_ID -> RandomGenerator.generateGSFId()
             ConfigManager.FIELD_MEDIA_DRM_ID -> RandomGenerator.generateMediaDrmId().toHex()
@@ -902,6 +950,12 @@ class ProfileEditorState {
         values[ConfigManager.FIELD_SIM_COUNTRY] = profile.simCountryIso.orEmpty()
         values[ConfigManager.FIELD_TIMEZONE] = profile.timezone.orEmpty()
         values[ConfigManager.FIELD_LOCALE] = profile.locale.orEmpty()
+        if (!profile.phoneNumberSim1.isNullOrEmpty()) {
+            advancedValues[ConfigManager.FIELD_PHONE_NUMBER] = profile.phoneNumberSim1
+        }
+        if (!profile.phoneNumberSim2.isNullOrEmpty()) {
+            advancedValues[ConfigManager.FIELD_PHONE_NUMBER_2] = profile.phoneNumberSim2
+        }
     }
 
     private fun value(fieldId: String): String = values[fieldId].orEmpty().trim()
@@ -936,10 +990,12 @@ class ProfileEditorState {
         val advancedFields = listOf(
             ConfigManager.FIELD_ANDROID_ID,
             ConfigManager.FIELD_IMEI,
+            ConfigManager.FIELD_IMEI_2,
             ConfigManager.FIELD_MEID,
             ConfigManager.FIELD_IMSI,
             ConfigManager.FIELD_ICCID,
             ConfigManager.FIELD_PHONE_NUMBER,
+            ConfigManager.FIELD_PHONE_NUMBER_2,
             ConfigManager.FIELD_GAID,
             ConfigManager.FIELD_GSF_ID,
             ConfigManager.FIELD_MEDIA_DRM_ID,
@@ -968,6 +1024,7 @@ class ProfileEditorState {
             ConfigManager.FIELD_IMSI to ConfigManager.KEY_SPOOF_IMSI,
             ConfigManager.FIELD_ICCID to ConfigManager.KEY_SPOOF_ICCID,
             ConfigManager.FIELD_PHONE_NUMBER to ConfigManager.KEY_SPOOF_PHONE_NUMBER,
+            ConfigManager.FIELD_PHONE_NUMBER_2 to ConfigManager.KEY_SPOOF_PHONE_NUMBER_2,
             ConfigManager.FIELD_GAID to ConfigManager.KEY_SPOOF_GAID,
             ConfigManager.FIELD_GSF_ID to ConfigManager.KEY_SPOOF_GSF_ID,
             ConfigManager.FIELD_MEDIA_DRM_ID to ConfigManager.KEY_SPOOF_MEDIA_DRM_ID,

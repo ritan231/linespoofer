@@ -155,6 +155,7 @@ private val advancedFields = listOf(
     EditorField(ConfigManager.FIELD_IMSI, R.string.settings_field_imsi, numeric = true),
     EditorField(ConfigManager.FIELD_ICCID, R.string.settings_field_iccid, numeric = true),
     EditorField(ConfigManager.FIELD_PHONE_NUMBER, R.string.settings_field_phone_number),
+    EditorField(ConfigManager.FIELD_PHONE_NUMBER_2, R.string.settings_field_phone_number_2),
     EditorField(ConfigManager.FIELD_GAID, R.string.settings_field_gaid),
     EditorField(ConfigManager.FIELD_GSF_ID, R.string.settings_field_gsf_id),
     EditorField(ConfigManager.FIELD_MEDIA_DRM_ID, R.string.settings_field_media_drm_id),
@@ -589,7 +590,7 @@ fun ProfileEditorForm(
             .padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        item {
+        item(key = "section_profile_details", contentType = "details") {
             DeviceSettingsSection(stringResource(R.string.profile_details_title)) {
                 OutlinedTextField(
                     value = profileName,
@@ -600,7 +601,7 @@ fun ProfileEditorForm(
                 )
             }
         }
-        item {
+        item(key = "section_preset_mode", contentType = "preset") {
             DeviceSettingsSection(stringResource(R.string.settings_section_preset_mode)) {
                 PresetSelector(appState)
                 Spacer(Modifier.height(14.dp))
@@ -614,38 +615,38 @@ fun ProfileEditorForm(
                 )
             }
         }
-        item {
+        item(key = "section_identity", contentType = "editor_section") {
             EditorSection(
                 title = stringResource(R.string.settings_section_identity),
                 fields = identityFields,
                 editor = editor,
             )
         }
-        item {
+        item(key = "section_build_display", contentType = "editor_section") {
             EditorSection(
                 title = stringResource(R.string.settings_section_build_display),
                 fields = buildFields,
                 editor = editor,
             )
         }
-        item {
+        item(key = "section_network_region", contentType = "editor_section") {
             EditorSection(
                 title = stringResource(R.string.settings_section_network_region),
                 fields = networkFields,
                 editor = editor,
             )
         }
-        item {
+        item(key = "section_system_hardware", contentType = "editor_section") {
             EditorSection(
                 title = stringResource(R.string.settings_section_system_hardware),
                 fields = systemFields,
                 editor = editor,
             )
         }
-        item {
+        item(key = "section_dynamic_env", contentType = "dynamic_env") {
             DynamicEnvironmentSpoofSection(editor)
         }
-        item {
+        item(key = "section_advanced", contentType = "advanced") {
             DeviceSettingsSection(stringResource(R.string.settings_section_advanced)) {
                 Text(
                     text = stringResource(R.string.settings_advanced_summary),

@@ -251,6 +251,10 @@ public class ConfigFileManager {
         append(builder, "gsm.sim.operator.alpha", profile.getSimOperatorAlpha());
         append(builder, "gsm.sim.operator.numeric", profile.getSimOperatorNumeric());
         append(builder, "gsm.sim.operator.iso-country", profile.getSimCountryIso());
+        append(builder, "device.phone_number", profile.getPhoneNumberSim1());
+        append(builder, "device.phone_number_sim1", profile.getPhoneNumberSim1());
+        append(builder, "device.phone_number2", profile.getPhoneNumberSim2());
+        append(builder, "device.phone_number_sim2", profile.getPhoneNumberSim2());
         append(builder, "persist.sys.timezone", profile.getTimezone());
         append(builder, "persist.sys.locale", profile.getLocale());
         append(builder, "ro.product.locale", profile.getLocale());
@@ -308,6 +312,8 @@ public class ConfigFileManager {
         apply(profile::setSimOperatorAlpha, properties.get("gsm.sim.operator.alpha"));
         apply(profile::setSimOperatorNumeric, properties.get("gsm.sim.operator.numeric"));
         apply(profile::setSimCountryIso, properties.get("gsm.sim.operator.iso-country"));
+        apply(profile::setPhoneNumberSim1, firstNonBlank(properties.get("device.phone_number"), properties.get("device.phone_number_sim1")));
+        apply(profile::setPhoneNumberSim2, firstNonBlank(properties.get("device.phone_number2"), properties.get("device.phone_number_sim2")));
         apply(profile::setTimezone, properties.get("persist.sys.timezone"));
         apply(profile::setLocale, firstNonBlank(properties.get("persist.sys.locale"), properties.get("ro.product.locale")));
         apply(profile::setUserAgent, properties.get("webview.user_agent"));
@@ -498,6 +504,10 @@ public class ConfigFileManager {
             "gsm.sim.operator.alpha",
             "gsm.sim.operator.numeric",
             "gsm.sim.operator.iso-country",
+            "device.phone_number",
+            "device.phone_number_sim1",
+            "device.phone_number2",
+            "device.phone_number_sim2",
             "persist.sys.timezone",
             "persist.sys.locale",
             "ro.product.locale",
@@ -559,6 +569,8 @@ public class ConfigFileManager {
         obj.put("simOperatorAlpha", profile.getSimOperatorAlpha());
         obj.put("simOperatorNumeric", profile.getSimOperatorNumeric());
         obj.put("simCountryIso", profile.getSimCountryIso());
+        obj.put("phoneNumberSim1", profile.getPhoneNumberSim1());
+        obj.put("phoneNumberSim2", profile.getPhoneNumberSim2());
         return obj.toString(2);
     }
 
@@ -599,6 +611,8 @@ public class ConfigFileManager {
         profile.setSimOperatorAlpha(obj.optString("simOperatorAlpha"));
         profile.setSimOperatorNumeric(obj.optString("simOperatorNumeric"));
         profile.setSimCountryIso(obj.optString("simCountryIso"));
+        profile.setPhoneNumberSim1(obj.optString("phoneNumberSim1"));
+        profile.setPhoneNumberSim2(obj.optString("phoneNumberSim2"));
         profile.applyFallbacks();
         return profile;
     }

@@ -148,8 +148,64 @@ public class DisplayHooks {
                     }
                 });
 
+            XposedHelpers.findAndHookMethod(displayClass, "getSupportedRefreshRates",
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        try {
+                            if (ConfigManager.isRefreshRateSpoofEnabled()) {
+                                param.setResult(new float[]{ConfigManager.getTargetRefreshRate()});
+                            }
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                });
+
+            XposedHelpers.findAndHookMethod(displayClass, "getMode",
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        try {
+                            if (ConfigManager.isRefreshRateSpoofEnabled() && param.getResult() != null) {
+                                java.lang.reflect.Field rateField = XposedHelpers.findFieldIfExists(param.getResult().getClass(), "mRefreshRate");
+                                if (rateField != null) {
+                                    rateField.setAccessible(true);
+                                    rateField.setFloat(param.getResult(), ConfigManager.getTargetRefreshRate());
+                                }
+                            }
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                });
+
+            XposedHelpers.findAndHookMethod(displayClass, "getSupportedModes",
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        try {
+                            if (ConfigManager.isRefreshRateSpoofEnabled() && param.getResult() instanceof Object[]) {
+                                Object[] modes = (Object[]) param.getResult();
+                                for (Object mode : modes) {
+                                    if (mode != null) {
+                                        java.lang.reflect.Field rateField = XposedHelpers.findFieldIfExists(mode.getClass(), "mRefreshRate");
+                                        if (rateField != null) {
+                                            rateField.setAccessible(true);
+                                            rateField.setFloat(mode, ConfigManager.getTargetRefreshRate());
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                });
+
             try {
-                XposedHelpers.findAndHookMethod(android.view.Display.Mode.class, "getRefreshRate",
+                Class<?> modeClass = XposedHelpers.findClassIfExists("android.view.Display$Mode", lpparam.classLoader);
+                if (modeClass == null) {
+                    modeClass = android.view.Display.Mode.class;
+                }
+                XposedHelpers.findAndHookMethod(modeClass, "getRefreshRate",
                     new XC_MethodHook() {
                         @Override
                         protected void afterHookedMethod(MethodHookParam param) {
@@ -161,6 +217,25 @@ public class DisplayHooks {
                             }
                         }
                     });
+            } catch (Throwable ignored) {
+            }
+
+            try {
+                Class<?> displayInfoClass = XposedHelpers.findClassIfExists("android.view.DisplayInfo", lpparam.classLoader);
+                if (displayInfoClass != null) {
+                    XposedHelpers.findAndHookMethod(displayInfoClass, "getRefreshRate",
+                        new XC_MethodHook() {
+                            @Override
+                            protected void afterHookedMethod(MethodHookParam param) {
+                                try {
+                                    if (ConfigManager.isRefreshRateSpoofEnabled()) {
+                                        param.setResult(ConfigManager.getTargetRefreshRate());
+                                    }
+                                } catch (Throwable ignored) {
+                                }
+                            }
+                        });
+                }
             } catch (Throwable ignored) {
             }
         } catch (Throwable ignored) {
