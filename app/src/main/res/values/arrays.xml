@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Vector / LSPosed Default Automatic Scope: Only system, framework, and companion app -->
+    <!-- Vector / LSPosed Default Automatic Scope -->
     <string-array name="xposed_scope">
         <item>system</item>
         <item>android</item>
         <item>my.shanunid.linespoofer</item>
+        <item>ru.andr7e.deviceinfohw</item>
+        <item>com.whatsapp</item>
+        <item>com.whatsapp.w4b</item>
+        <item>org.telegram.messenger</item>
+        <item>org.telegram.plus</item>
     </string-array>
 </resources>

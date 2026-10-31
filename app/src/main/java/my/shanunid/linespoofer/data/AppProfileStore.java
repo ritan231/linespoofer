@@ -190,8 +190,8 @@ public final class AppProfileStore {
                 }
             }
 
-            // 3. Sync to Vector's modules_config.db via root (direct SQLite write)
-            RootScopeManager.syncInBackground(context, state.getAssignments().keySet(), configMap);
+            // Configuration is safely served via XposedService RemotePreferences,
+            // ConfigProvider, and local private SharedPreferences without touching Vector's SQLite database.
         } catch (Throwable ignored) {
         }
     }
