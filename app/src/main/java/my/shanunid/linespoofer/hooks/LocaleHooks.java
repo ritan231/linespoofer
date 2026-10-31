@@ -193,6 +193,23 @@ public final class LocaleHooks {
                         }
                     }
                 });
+
+                XposedHelpers.findAndHookMethod(resClass, "getSystem", new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        try {
+                            Object systemRes = param.getResult();
+                            if (systemRes instanceof android.content.res.Resources) {
+                                Configuration cfg = ((android.content.res.Resources) systemRes).getConfiguration();
+                                Locale l = configuredLocale();
+                                if (cfg != null && l != null) {
+                                    applyLocaleToConfig(cfg, l);
+                                }
+                            }
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                });
             }
         } catch (Throwable ignored) {
         }
@@ -289,6 +306,28 @@ public final class LocaleHooks {
                         }
                         try {
                             param.setResult(ZoneId.of(tz));
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                });
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            XposedHelpers.findAndHookMethod(java.util.Calendar.class, "getInstance",
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        try {
+                            String tz = ConfigManager.getTimezone();
+                            Locale l = configuredLocale();
+                            if (tz != null && l != null) {
+                                param.setResult(java.util.Calendar.getInstance(TimeZone.getTimeZone(tz), l));
+                            } else if (tz != null) {
+                                param.setResult(java.util.Calendar.getInstance(TimeZone.getTimeZone(tz)));
+                            } else if (l != null) {
+                                param.setResult(java.util.Calendar.getInstance(l));
+                            }
                         } catch (Throwable ignored) {
                         }
                     }

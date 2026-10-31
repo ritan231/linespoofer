@@ -168,14 +168,45 @@ public final class WifiHooks {
                 XposedHelpers.findAndHookMethod(wifiManagerClass, "getConnectionInfo", new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) {
-                        if (param.getResult() == null && (ConfigManager.isWifiSpoofEnabled() || ConfigManager.isMacSpoofEnabled())) {
+                        if (ConfigManager.isWifiSpoofEnabled() || ConfigManager.isMacSpoofEnabled()) {
                             try {
-                                Object synthetic = createSyntheticWifiInfo();
-                                if (synthetic != null) {
-                                    param.setResult(synthetic);
+                                Object res = param.getResult();
+                                if (res == null) {
+                                    res = createSyntheticWifiInfo();
+                                    param.setResult(res);
                                 }
+                                applyWifiInfoFields(res);
                             } catch (Throwable ignored) {
                             }
+                        }
+                    }
+                });
+
+                XposedHelpers.findAndHookMethod(wifiManagerClass, "getScanResults", new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        try {
+                            if (!ConfigManager.isWifiSpoofEnabled()) return;
+                            Object res = param.getResult();
+                            if (res instanceof java.util.List) {
+                                for (Object sr : (java.util.List<?>) res) {
+                                    if (sr != null) {
+                                        try {
+                                            java.lang.reflect.Field bField = XposedHelpers.findFieldIfExists(sr.getClass(), "BSSID");
+                                            if (bField != null) {
+                                                bField.setAccessible(true);
+                                                bField.set(sr, ConfigManager.getSpoofedWifiBssid());
+                                            }
+                                            java.lang.reflect.Field sField = XposedHelpers.findFieldIfExists(sr.getClass(), "SSID");
+                                            if (sField != null) {
+                                                sField.setAccessible(true);
+                                                sField.set(sr, ConfigManager.getSpoofedWifiSsid().replace("\"", ""));
+                                            }
+                                        } catch (Throwable ignored) {}
+                                    }
+                                }
+                            }
+                        } catch (Throwable ignored) {
                         }
                     }
                 });
@@ -190,17 +221,44 @@ public final class WifiHooks {
                 XposedHelpers.findAndHookMethod(ncClass, "getTransportInfo", new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) {
-                        if (param.getResult() == null && ConfigManager.isWifiSpoofEnabled()) {
+                        if (ConfigManager.isWifiSpoofEnabled() || ConfigManager.isMacSpoofEnabled()) {
                             try {
-                                Object synthetic = createSyntheticWifiInfo();
-                                if (synthetic != null) {
-                                    param.setResult(synthetic);
+                                Object res = param.getResult();
+                                if (res == null && ConfigManager.isWifiSpoofEnabled()) {
+                                    res = createSyntheticWifiInfo();
+                                    param.setResult(res);
                                 }
+                                applyWifiInfoFields(res);
                             } catch (Throwable ignored) {
                             }
                         }
                     }
                 });
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void applyWifiInfoFields(Object wifiInfo) {
+        if (wifiInfo == null) return;
+        try {
+            if (ConfigManager.isWifiSpoofEnabled()) {
+                setFieldQuietly(wifiInfo, "mBSSID", ConfigManager.getSpoofedWifiBssid());
+                setFieldQuietly(wifiInfo, "mRssi", ConfigManager.getSpoofedWifiRssi());
+            }
+            if (ConfigManager.isMacSpoofEnabled() || ConfigManager.isWifiSpoofEnabled()) {
+                setFieldQuietly(wifiInfo, "mMacAddress", ConfigManager.getSpoofedMacAddress());
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void setFieldQuietly(Object target, String fieldName, Object value) {
+        try {
+            java.lang.reflect.Field f = XposedHelpers.findFieldIfExists(target.getClass(), fieldName);
+            if (f != null) {
+                f.setAccessible(true);
+                f.set(target, value);
             }
         } catch (Throwable ignored) {
         }

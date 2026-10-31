@@ -22,10 +22,6 @@ public final class StorageHooks {
     }
 
     public static void hook(XC_LoadPackage.LoadPackageParam lpparam) {
-        if (!ConfigManager.isStorageSpoofEnabled()) {
-            return;
-        }
-
         try {
             XposedHelpers.findAndHookMethod(
                 StatFs.class,

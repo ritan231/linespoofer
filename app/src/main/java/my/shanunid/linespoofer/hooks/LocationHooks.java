@@ -32,10 +32,6 @@ public final class LocationHooks {
     }
 
     public static void hook(XC_LoadPackage.LoadPackageParam lpparam) {
-        if (!ConfigManager.isLocationSpoofEnabled()) {
-            return;
-        }
-
         try {
             // 1. Direct coordinate getters on Location class
             XposedHelpers.findAndHookMethod(

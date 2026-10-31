@@ -470,8 +470,19 @@ class SpoofAppState(val activity: AppCompatActivity) {
             } catch (ignored: Throwable) {
             }
 
-            result.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.label })
-                .also { cachedInstalledApps = it }
+            val sorted = result.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.label })
+            cachedInstalledApps = sorted
+
+            // Background pre-warm icon cache so LazyColumn scrolling achieves 120 FPS without binder IPC stalls
+            kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+                for (app in sorted) {
+                    if (AppIconLoader.getCached(app.packageName) == null) {
+                        AppIconLoader.loadIcon(activity, app.packageName)
+                    }
+                }
+            }
+
+            sorted
         }
     }
 

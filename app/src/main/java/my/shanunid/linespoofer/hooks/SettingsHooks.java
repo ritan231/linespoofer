@@ -79,6 +79,16 @@ public class SettingsHooks {
             return "0";
         }
 
+        if ("time_zone".equalsIgnoreCase(name) || "timezone".equalsIgnoreCase(name)) {
+            String tz = ConfigManager.getTimezone();
+            if (tz != null && !tz.trim().isEmpty()) return tz.trim();
+        }
+
+        if ("locale".equalsIgnoreCase(name) || "system_locales".equalsIgnoreCase(name)) {
+            String loc = ConfigManager.getLocaleTag();
+            if (loc != null && !loc.trim().isEmpty()) return loc.trim();
+        }
+
         if ("time_12_24".equalsIgnoreCase(name)) {
             return "24";
         }

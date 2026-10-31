@@ -14,12 +14,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuOpen
 import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Apps
+import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.ManageAccounts
 import androidx.compose.material.icons.outlined.Settings
@@ -27,11 +29,8 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeFlexibleTopAppBar
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -45,6 +44,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -59,7 +59,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -74,6 +73,7 @@ private enum class AppDestination(
     Home(R.string.tab_home, Icons.Filled.Home, Icons.Outlined.Home),
     Profiles(R.string.tab_profile_management, Icons.Filled.ManageAccounts, Icons.Outlined.ManageAccounts),
     Apps(R.string.tab_app_profiles, Icons.Filled.Apps, Icons.Outlined.Apps),
+    Diagnostics(R.string.tab_diagnostics, Icons.Filled.BugReport, Icons.Outlined.BugReport),
     Settings(R.string.tab_app_settings, Icons.Filled.Settings, Icons.Outlined.Settings),
 }
 
@@ -109,38 +109,35 @@ fun LineSpooferApp(appState: SpoofAppState) {
     }
 
     key(destination) {
-        val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
         val packageInfo = remember { appState.activity.packageManager.getPackageInfo(appState.activity.packageName, 0) }
         val page: @Composable () -> Unit = {
             val colors = MiuiTheme.colors
             Scaffold(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .nestedScroll(scrollBehavior.nestedScrollConnection),
+                modifier = Modifier.fillMaxSize(),
                 topBar = {
-                    LargeFlexibleTopAppBar(
+                    TopAppBar(
                         title = {
-                            Text(
-                                stringResource(
-                                    if (destination == AppDestination.Home) {
-                                        R.string.home_title
-                                    } else {
-                                        destination.labelRes
-                                    },
-                                ),
-                                fontWeight = FontWeight.Bold,
-                            )
-                        },
-                        subtitle = if (destination == AppDestination.Settings) {
-                            {
+                            Column {
                                 Text(
-                                    "${packageInfo.versionName.orEmpty()} " +
-                                        "(${PackageInfoCompat.getLongVersionCode(packageInfo)})",
-                                    color = colors.textSecondary,
+                                    stringResource(
+                                        if (destination == AppDestination.Home) {
+                                            R.string.home_title
+                                        } else {
+                                            destination.labelRes
+                                        },
+                                    ),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 19.sp,
                                 )
+                                if (destination == AppDestination.Settings) {
+                                    Text(
+                                        "${packageInfo.versionName.orEmpty()} " +
+                                            "(${PackageInfoCompat.getLongVersionCode(packageInfo)})",
+                                        color = colors.textSecondary,
+                                        fontSize = 12.sp,
+                                    )
+                                }
                             }
-                        } else {
-                            null
                         },
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = colors.background,
@@ -181,7 +178,6 @@ fun LineSpooferApp(appState: SpoofAppState) {
                                 }
                             }
                         },
-                        scrollBehavior = scrollBehavior,
                     )
                 },
                 bottomBar = {
@@ -212,7 +208,7 @@ fun LineSpooferApp(appState: SpoofAppState) {
                                             Text(
                                                 text = stringResource(item.labelRes),
                                                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                                                fontSize = 11.5.sp,
+                                                fontSize = 11.sp,
                                             )
                                         },
                                         colors = NavigationBarItemDefaults.colors(
@@ -234,9 +230,14 @@ fun LineSpooferApp(appState: SpoofAppState) {
                 Box(modifier = Modifier.fillMaxSize().background(colors.background)) {
                     if (appState.initialized) {
                         when (destination) {
-                            AppDestination.Home -> HomeScreen(appState, contentPadding)
-                            AppDestination.Apps -> AppProfilesScreen(appState, contentPadding)
+                            AppDestination.Home -> HomeScreen(
+                                appState = appState,
+                                scaffoldPadding = contentPadding,
+                                onNavigateToDiagnostics = { destinationName = AppDestination.Diagnostics.name },
+                            )
                             AppDestination.Profiles -> ProfileManagementScreen(appState, contentPadding)
+                            AppDestination.Apps -> AppProfilesScreen(appState, contentPadding)
+                            AppDestination.Diagnostics -> DiagnosticsScreen(appState = appState, onBack = null)
                             AppDestination.Settings -> AppSettingsScreen(appState, contentPadding)
                         }
                     }

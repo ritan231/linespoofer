@@ -8,6 +8,8 @@
     <string name="tab_app_settings">Pengaturan</string>
     <string name="tab_app_profiles">Aplikasi</string>
     <string name="tab_profile_management">Profil</string>
+    <string name="tab_diagnostics">Diagnostik</string>
+    <string name="diagnostics_inspect_button">Periksa</string>
     <string name="back">Kembali</string>
     <string name="navigation_expand">Perluas navigasi</string>
     <string name="navigation_collapse">Ciutkan navigasi</string>

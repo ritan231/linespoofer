@@ -27,10 +27,6 @@ public final class GpuHooks {
     }
 
     public static void hook(XC_LoadPackage.LoadPackageParam lpparam) {
-        if (!ConfigManager.isGpuSpoofEnabled()) {
-            return;
-        }
-
         hookGLESClass(GLES20.class);
         hookGLESClass(GLES30.class);
         hookGLESClass(GLES10.class);

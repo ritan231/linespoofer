@@ -302,12 +302,12 @@ public final class RootScopeManager {
                 if (clean.contains("#")) {
                     String[] parts = clean.split("#");
                     if (parts.length == 2) {
-                        runRoot("am force-stop --user " + parts[1] + " '" + parts[0] + "'\nam force-stop '" + parts[0] + "'");
+                        runRoot("am force-stop --user " + parts[1] + " '" + parts[0] + "'\nam force-stop '" + parts[0] + "'\npkill -9 -f '" + parts[0] + "'");
                         return;
                     }
                     clean = parts[0];
                 }
-                runRoot("am force-stop '" + clean + "'");
+                runRoot("am force-stop '" + clean + "'\npkill -9 -f '" + clean + "'");
             } catch (Throwable ignored) {
             }
         }).start();
@@ -329,8 +329,10 @@ public final class RootScopeManager {
                                 sb.append("am force-stop --user ").append(parts[1]).append(" '").append(parts[0]).append("'\n");
                             }
                             sb.append("am force-stop '").append(parts[0]).append("'\n");
+                            sb.append("pkill -9 -f '").append(parts[0]).append("'\n");
                         } else {
                             sb.append("am force-stop '").append(clean).append("'\n");
+                            sb.append("pkill -9 -f '").append(clean).append("'\n");
                         }
                     }
                 }

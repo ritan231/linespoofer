@@ -21,10 +21,6 @@ public final class AudioHooks {
     }
 
     public static void hook(XC_LoadPackage.LoadPackageParam lpparam) {
-        if (!ConfigManager.isAudioSpoofEnabled()) {
-            return;
-        }
-
         try {
             XposedHelpers.findAndHookMethod(
                 AudioManager.class,

@@ -26,10 +26,6 @@ public final class BatteryHooks {
     }
 
     public static void hook(XC_LoadPackage.LoadPackageParam lpparam) {
-        if (!ConfigManager.isBatterySpoofEnabled()) {
-            return;
-        }
-
         try {
             XposedHelpers.findAndHookMethod(
                 BatteryManager.class,

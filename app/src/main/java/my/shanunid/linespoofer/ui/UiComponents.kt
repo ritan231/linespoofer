@@ -262,6 +262,12 @@ object AppIconLoader {
         return memoryCache[cleanPkg] ?: memoryCache[packageName]
     }
 
+    fun putInCache(packageName: String, bitmap: ImageBitmap) {
+        val cleanPkg = packageName.substringBefore("#")
+        memoryCache.put(cleanPkg, bitmap)
+        memoryCache.put(packageName, bitmap)
+    }
+
     fun loadIcon(context: android.content.Context, packageName: String): ImageBitmap? {
         val cleanPkg = packageName.substringBefore("#")
         (memoryCache[cleanPkg] ?: memoryCache[packageName])?.let { return it }
@@ -271,8 +277,7 @@ object AppIconLoader {
             val drawable = appInfo.loadIcon(pm)
             val bitmap = drawable.toBitmap(96, 96)
             val imageBitmap = bitmap.asImageBitmap()
-            memoryCache.put(cleanPkg, imageBitmap)
-            memoryCache.put(packageName, imageBitmap)
+            putInCache(packageName, imageBitmap)
             imageBitmap
         } catch (t: Throwable) {
             null

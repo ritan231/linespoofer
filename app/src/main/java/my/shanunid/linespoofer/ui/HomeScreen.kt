@@ -20,18 +20,22 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.AspectRatio
 import androidx.compose.material.icons.outlined.BatteryChargingFull
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Wifi
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -54,7 +58,11 @@ import my.shanunid.linespoofer.R
 import my.shanunid.linespoofer.utils.ConfigManager
 
 @Composable
-fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
+fun HomeScreen(
+    appState: SpoofAppState,
+    scaffoldPadding: PaddingValues,
+    onNavigateToDiagnostics: () -> Unit = {},
+) {
     val config = appState.loadedConfig ?: return
     val profile = config.profile
     val moduleActivated = appState.isModuleActivated()
@@ -169,6 +177,66 @@ fun HomeScreen(appState: SpoofAppState, scaffoldPadding: PaddingValues) {
         }
 
         item(key = "spacer_hero", contentType = "spacer") { Spacer(modifier = Modifier.height(14.dp)) }
+
+        // Live Verification Action Banner (Instant Access to Live Verifier)
+        item(key = "live_diagnostics_card", contentType = "card") {
+            MiuiCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onNavigateToDiagnostics() }
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MiuiXColors.BlueContainer),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.CheckCircle,
+                                contentDescription = null,
+                                tint = MiuiXColors.Green,
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = stringResource(R.string.settings_diagnostics_title),
+                                color = colors.textPrimary,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                text = "SIM • Locale • FPS • Battery • Net",
+                                color = colors.textSecondary,
+                                fontSize = 12.sp,
+                            )
+                        }
+                    }
+                    FilledTonalButton(
+                        onClick = onNavigateToDiagnostics,
+                        shape = RoundedCornerShape(12.dp),
+                    ) {
+                        Text(stringResource(R.string.diagnostics_inspect_button))
+                        Spacer(Modifier.width(4.dp))
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, modifier = Modifier.size(16.dp))
+                    }
+                }
+            }
+        }
+
+        item(key = "spacer_diag", contentType = "spacer") { Spacer(modifier = Modifier.height(12.dp)) }
 
         // 2. HyperOS Quick Telemetry Grid (2x2 Cards)
         item(key = "telemetry_row1", contentType = "telemetry") {

@@ -23,10 +23,6 @@ public final class BluetoothHooks {
     }
 
     public static void hook(XC_LoadPackage.LoadPackageParam lpparam) {
-        if (!ConfigManager.isBluetoothSpoofEnabled()) {
-            return;
-        }
-
         try {
             XposedHelpers.findAndHookMethod(
                 BluetoothAdapter.class,
