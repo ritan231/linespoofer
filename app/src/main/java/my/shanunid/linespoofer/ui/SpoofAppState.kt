@@ -34,7 +34,9 @@ import my.shanunid.linespoofer.data.DevicePresetCatalog
 import my.shanunid.linespoofer.data.DeviceProfile
 import my.shanunid.linespoofer.utils.ConfigManager
 import my.shanunid.linespoofer.utils.RandomGenerator
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -474,7 +476,7 @@ class SpoofAppState(val activity: AppCompatActivity) {
             cachedInstalledApps = sorted
 
             // Background pre-warm icon cache so LazyColumn scrolling achieves 120 FPS without binder IPC stalls
-            kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+            CoroutineScope(Dispatchers.IO).launch {
                 for (app in sorted) {
                     if (AppIconLoader.getCached(app.packageName) == null) {
                         AppIconLoader.loadIcon(activity, app.packageName)

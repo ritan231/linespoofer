@@ -84,7 +84,6 @@ private enum class NavigationType {
 
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalMaterial3ExpressiveApi::class,
     ExperimentalMaterial3WindowSizeClassApi::class,
 )
 @Composable
